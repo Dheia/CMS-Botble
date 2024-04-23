@@ -24,9 +24,9 @@
     </div>
 
     <x-slot:header-layout>
-        @if (\Botble\Base\Supports\Core::make()->isSkippedLicenseReminder())
+        <!-- @if (\Botble\Base\Supports\Core::make()->isSkippedLicenseReminder())
             @include('core/base::system.license-invalid', ['hidden' => false])
-        @endif
+        @endif -->
     </x-slot:header-layout>
 
     <x-slot:footer>
