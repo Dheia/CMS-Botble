@@ -1,20 +1,22 @@
 <script>
-    jQuery(document).ready(function () {
+    jQuery(document).ready(function() {
         'use strict';
-        $("{{ $validator['selector'] }}").each(function () {
+        $("{{ $validator['selector'] }}").each(function() {
             $(this).validate({
-                errorElement: 'span',
+                errorElement: 'div',
                 errorClass: 'invalid-feedback',
 
-                errorPlacement: function (error, element) {
-                    if (element.parent('.input-group').length ||
-                        element.prop('type') === 'checkbox' || element.prop('type') === 'radio') {
+                errorPlacement: function(error, element) {
+                    if (element.closest('[data-bb-toggle="tree-checkboxes"]').length) {
+                        error.insertAfter(element.closest('[data-bb-toggle="tree-checkboxes"]'));
+                    } else if (element.parent('.input-group').length || element.prop('type') === 'checkbox' || element.prop('type') === 'radio') {
                         error.insertAfter(element.parent());
                     } else {
                         error.insertAfter(element);
                     }
                 },
-                highlight: function (element) {
+
+                highlight: function(element) {
                     $(element).closest('.form-control').removeClass('is-valid').addClass('is-invalid');
                 },
 
@@ -22,31 +24,29 @@
                     ignore: "{{ $validator['ignore'] }}",
                 @endif
 
-
-                unhighlight: function (element) {
+                unhighlight: function(element) {
                     $(element).closest('.form-control').removeClass('is-invalid').addClass('is-valid');
                 },
 
-                success: function (element) {
+                success: function(element) {
                     $(element).closest('.form-control').removeClass('is-invalid').addClass('is-valid');
                 },
 
                 focusInvalid: false,
                 @if (config('core.js-validation.js-validation.focus_on_error'))
-                invalidHandler: function (form, validator) {
+                    invalidHandler: function(form, validator) {
+                        if (!validator.numberOfInvalids()) {
+                            return;
+                        }
 
-                    if (!validator.numberOfInvalids())
-                        return;
-
-                    $('html, body').animate({
-                        scrollTop: $(validator.errorList[0].element).offset().top
-                    }, {{  config('core.js-validation.js-validation.duration_animate') }});
-                    $(validator.errorList[0].element).focus();
-
-                },
+                        $('html, body').animate({
+                            scrollTop: $(validator.errorList[0].element).offset().top
+                        }, {{ config('core.js-validation.js-validation.duration_animate') }});
+                        $(validator.errorList[0].element).focus();
+                    },
                 @endif
 
-                rules: {!! json_encode($validator['rules']) !!}
+                rules: {{ Js::from($validator['rules']) }}
             });
         });
     });

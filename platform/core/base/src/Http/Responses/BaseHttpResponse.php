@@ -30,35 +30,50 @@ class BaseHttpResponse extends Response implements Responsable
 
     public string $saveAction = 'save';
 
-    public function setData(mixed $data): self
+    public static function make(): static
+    {
+        return app(static::class);
+    }
+
+    public function setData(mixed $data): static
     {
         $this->data = $data;
 
         return $this;
     }
 
-    public function setPreviousUrl(string $previousUrl): self
+    public function setPreviousUrl(string $previousUrl): static
     {
         $this->previousUrl = $previousUrl;
 
         return $this;
     }
 
-    public function setNextUrl(string $nextUrl): self
+    public function setPreviousRoute(string $name, mixed $parameters = [], bool $absolute = true): static
+    {
+        return $this->setPreviousUrl(route($name, $parameters, $absolute));
+    }
+
+    public function setNextUrl(string $nextUrl): static
     {
         $this->nextUrl = $nextUrl;
 
         return $this;
     }
 
-    public function withInput(bool $withInput = true): self
+    public function setNextRoute(string $name, mixed $parameters = [], bool $absolute = true): static
+    {
+        return $this->setNextUrl(route($name, $parameters, $absolute));
+    }
+
+    public function withInput(bool $withInput = true): static
     {
         $this->withInput = $withInput;
 
         return $this;
     }
 
-    public function setCode(int $code): self
+    public function setCode(int $code): static
     {
         if ($code < 100 || $code >= 600) {
             return $this;
@@ -74,11 +89,32 @@ class BaseHttpResponse extends Response implements Responsable
         return $this->message;
     }
 
-    public function setMessage(string|null $message): self
+    public function setMessage(string|null $message): static
     {
         $this->message = BaseHelper::clean($message);
 
         return $this;
+    }
+
+    public function withCreatedSuccessMessage(): static
+    {
+        return $this->setMessage(
+            trans('core/base::notices.create_success_message')
+        );
+    }
+
+    public function withUpdatedSuccessMessage(): static
+    {
+        return $this->setMessage(
+            trans('core/base::notices.update_success_message')
+        );
+    }
+
+    public function withDeletedSuccessMessage(): static
+    {
+        return $this->setMessage(
+            trans('core/base::notices.delete_success_message')
+        );
     }
 
     public function isError(): bool
@@ -86,14 +122,14 @@ class BaseHttpResponse extends Response implements Responsable
         return $this->error;
     }
 
-    public function setError(bool $error = true): self
+    public function setError(bool $error = true): static
     {
         $this->error = $error;
 
         return $this;
     }
 
-    public function setAdditional(array $additional): self
+    public function setAdditional(array $additional): static
     {
         $this->additional = $additional;
 
@@ -129,7 +165,7 @@ class BaseHttpResponse extends Response implements Responsable
                 ->json($data, $this->code);
         }
 
-        if ($request->input('submit') === $this->saveAction && ! empty($this->previousUrl)) {
+        if ($this->isSaving() && ! empty($this->previousUrl)) {
             return $this->responseRedirect($this->previousUrl);
         } elseif (! empty($this->nextUrl)) {
             return $this->responseRedirect($this->nextUrl);
@@ -150,5 +186,30 @@ class BaseHttpResponse extends Response implements Responsable
         return redirect()
             ->to($url)
             ->with($this->error ? 'error_msg' : 'success_msg', $this->message);
+    }
+
+    public function isSaving(): bool
+    {
+        return $this->getSubmitterValue() === $this->saveAction;
+    }
+
+    protected function getSubmitterValue(): string
+    {
+        return (string)request()->input('submitter');
+    }
+
+    public function toArray(): array
+    {
+        $data = [
+            'error' => $this->error,
+            'data' => $this->data,
+            'message' => $this->message,
+        ];
+
+        if ($this->additional) {
+            $data = array_merge($data, ['additional' => $this->additional]);
+        }
+
+        return $data;
     }
 }

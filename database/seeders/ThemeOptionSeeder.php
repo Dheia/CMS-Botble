@@ -4,25 +4,24 @@ namespace Database\Seeders;
 
 use Botble\Base\Supports\BaseSeeder;
 use Botble\Page\Models\Page;
-use Botble\Setting\Facades\Setting;
-use Botble\Theme\Facades\ThemeOption;
-use Carbon\Carbon;
+use Botble\Theme\Database\Traits\HasThemeOptionSeeder;
 
 class ThemeOptionSeeder extends BaseSeeder
 {
+    use HasThemeOptionSeeder;
+
     public function run(): void
     {
         $this->uploadFiles('general');
 
-        Setting::newQuery()->where('key', 'LIKE', ThemeOption::getOptionKey('%'))->delete();
-
-        $data = [
+        $this->createThemeOptions([
             'site_title' => 'Just another Botble CMS site',
             'seo_description' => 'With experience, we make sure to get every project done very fast and in time with high quality using our Botble CMS https://1.envato.market/LWRBY',
-            'copyright' => sprintf('©%s Botble Technologies. All right reserved.', Carbon::now()->format('Y')),
-            'favicon' => 'general/favicon.png',
+            'copyright' => '©%Y Your Company. All rights reserved.',
+            'favicon' => $this->filePath('general/favicon.png'),
+            'logo' => $this->filePath('general/logo.png'),
             'website' => 'https://botble.com',
-            'contact_email' => 'support@botble.com',
+            'contact_email' => 'support@company.com',
             'site_description' => 'With experience, we make sure to get every project done very fast and in time with high quality using our Botble CMS https://1.envato.market/LWRBY',
             'phone' => '+(123) 345-6789',
             'address' => '214 West Arnold St. New York, NY 10002',
@@ -31,61 +30,52 @@ class ThemeOptionSeeder extends BaseSeeder
             'cookie_consent_learn_more_text' => 'Cookie Policy',
             'homepage_id' => Page::query()->value('id'),
             'blog_page_id' => Page::query()->skip(1)->value('id'),
-            'logo' => 'general/logo.png',
             'primary_color' => '#AF0F26',
             'primary_font' => 'Roboto',
-        ];
-
-        Setting::set($this->prepareThemeOptions($data));
-
-        Setting::set(
-            ThemeOption::getOptionKey('social_links'),
-            json_encode([
+            'social_links' => [
                 [
                     [
-                        'key' => 'social-name',
+                        'key' => 'name',
                         'value' => 'Facebook',
                     ],
                     [
-                        'key' => 'social-icon',
-                        'value' => 'fab fa-facebook',
+                        'key' => 'icon',
+                        'value' => 'ti ti-brand-facebook',
                     ],
                     [
-                        'key' => 'social-url',
+                        'key' => 'url',
                         'value' => 'https://facebook.com',
                     ],
                 ],
                 [
                     [
-                        'key' => 'social-name',
-                        'value' => 'Twitter',
+                        'key' => 'name',
+                        'value' => 'X (Twitter)',
                     ],
                     [
-                        'key' => 'social-icon',
-                        'value' => 'fab fa-twitter',
+                        'key' => 'icon',
+                        'value' => 'ti ti-brand-x',
                     ],
                     [
-                        'key' => 'social-url',
-                        'value' => 'https://twitter.com',
+                        'key' => 'url',
+                        'value' => 'https://x.com',
                     ],
                 ],
                 [
                     [
-                        'key' => 'social-name',
-                        'value' => 'Youtube',
+                        'key' => 'name',
+                        'value' => 'YouTube',
                     ],
                     [
-                        'key' => 'social-icon',
-                        'value' => 'fab fa-youtube',
+                        'key' => 'icon',
+                        'value' => 'ti ti-brand-youtube',
                     ],
                     [
-                        'key' => 'social-url',
+                        'key' => 'url',
                         'value' => 'https://youtube.com',
                     ],
                 ],
-            ])
-        );
-
-        Setting::save();
+            ],
+        ]);
     }
 }

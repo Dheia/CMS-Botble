@@ -2,14 +2,11 @@
 
 namespace Botble\SocialLogin\Http\Controllers;
 
-use Botble\Base\Facades\Assets;
-use Botble\Base\Facades\PageTitle;
+use Botble\Base\Facades\BaseHelper;
 use Botble\Base\Http\Controllers\BaseController;
 use Botble\Base\Http\Responses\BaseHttpResponse;
 use Botble\Media\Facades\RvMedia;
-use Botble\Setting\Supports\SettingStore;
 use Botble\SocialLogin\Facades\SocialService;
-use Botble\SocialLogin\Http\Requests\SocialLoginRequest;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -19,17 +16,21 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Laravel\Socialite\AbstractUser;
 use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\InvalidStateException;
 
 class SocialLoginController extends BaseController
 {
-    public function redirectToProvider(string $provider, Request $request, BaseHttpResponse $response)
+    public function redirectToProvider(string $provider, Request $request)
     {
+        $this->ensureProviderIsExisted($provider);
+
         $guard = $this->guard($request);
 
         if (! $guard) {
-            return $response
+            return $this
+                ->httpResponse()
                 ->setError()
-                ->setNextUrl(route('public.index'));
+                ->setNextUrl(BaseHelper::getHomepageUrl());
         }
 
         $this->setProvider($provider);
@@ -71,14 +72,17 @@ class SocialLoginController extends BaseController
         return true;
     }
 
-    public function handleProviderCallback(string $provider, BaseHttpResponse $response)
+    public function handleProviderCallback(string $provider)
     {
+        $this->ensureProviderIsExisted($provider);
+
         $guard = $this->guard();
 
         if (! $guard) {
-            return $response
+            return $this
+                ->httpResponse()
                 ->setError()
-                ->setNextUrl(route('public.index'))
+                ->setNextUrl(BaseHelper::getHomepageUrl())
                 ->setMessage(__('An error occurred while trying to login'));
         }
 
@@ -102,14 +106,20 @@ class SocialLoginController extends BaseController
                 $message = __('An error occurred while trying to login');
             }
 
-            return $response
+            if ($exception instanceof InvalidStateException) {
+                $message = __('InvalidStateException occurred while trying to login');
+            }
+
+            return $this
+                ->httpResponse()
                 ->setError()
                 ->setNextUrl($providerData['login_url'])
                 ->setMessage($message);
         }
 
         if (! $oAuth->getEmail()) {
-            return $response
+            return $this
+                ->httpResponse()
                 ->setError()
                 ->setNextUrl($providerData['login_url'])
                 ->setMessage(__('Cannot login, no email provided!'));
@@ -120,6 +130,12 @@ class SocialLoginController extends BaseController
         $account = $model->where('email', $oAuth->getEmail())->first();
 
         if (! $account) {
+            $beforeProcessData = apply_filters('social_login_before_creating_account', null, $oAuth, $providerData);
+
+            if ($beforeProcessData instanceof BaseHttpResponse) {
+                return $beforeProcessData;
+            }
+
             $avatarId = null;
 
             try {
@@ -131,7 +147,7 @@ class SocialLoginController extends BaseController
                     }
                 }
             } catch (Exception $exception) {
-                info($exception->getMessage());
+                BaseHelper::logError($exception);
             }
 
             $data = [
@@ -151,44 +167,14 @@ class SocialLoginController extends BaseController
 
         Auth::guard($guard)->login($account, true);
 
-        return $response
-            ->setNextUrl($providerData['redirect_url'] ?: route('public.index'))
+        return $this
+            ->httpResponse()
+            ->setNextUrl($providerData['redirect_url'] ?: BaseHelper::getHomepageUrl())
             ->setMessage(trans('core/acl::auth.login.success'));
     }
 
-    public function getSettings()
+    protected function ensureProviderIsExisted(string $provider): void
     {
-        PageTitle::setTitle(trans('plugins/social-login::social-login.settings.title'));
-
-        Assets::addScriptsDirectly('vendor/core/plugins/social-login/js/social-login.js');
-
-        return view('plugins/social-login::settings');
-    }
-
-    public function postSettings(SocialLoginRequest $request, BaseHttpResponse $response, SettingStore $setting)
-    {
-        $prefix = 'social_login_';
-
-        $setting->set($prefix . 'enable', $request->input($prefix . 'enable'));
-
-        foreach (SocialService::getProviders() as $provider => $item) {
-            $prefix = 'social_login_' . $provider . '_';
-
-            $setting->set($prefix . 'enable', $request->input($prefix . 'enable'));
-
-            foreach ($item['data'] as $input) {
-                if (! in_array(app()->environment(), SocialService::getEnvDisableData()) ||
-                    ! in_array($input, Arr::get($item, 'disable', []))
-                ) {
-                    $setting->set($prefix . $input, $request->input($prefix . $input));
-                }
-            }
-        }
-
-        $setting->save();
-
-        return $response
-            ->setPreviousUrl(route('social-login.settings'))
-            ->setMessage(trans('core/base::notices.update_success_message'));
+        abort_if(! in_array($provider, SocialService::getProviderKeys(), true), 404);
     }
 }

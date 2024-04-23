@@ -14,10 +14,10 @@ return new class () extends Migration {
             $table->text('request')->nullable();
             $table->string('action', 120);
             $table->text('user_agent')->nullable();
-            $table->string('ip_address', 39)->nullable();
+            $table->ipAddress()->nullable();
             $table->foreignId('reference_user');
             $table->foreignId('reference_id');
-            $table->string('reference_name', 255);
+            $table->string('reference_name');
             $table->string('type', 20);
             $table->timestamps();
         });

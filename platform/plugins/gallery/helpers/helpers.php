@@ -1,8 +1,8 @@
 <?php
 
-use Botble\Gallery\Facades\Gallery;
-use Botble\Gallery\Repositories\Interfaces\GalleryInterface;
-use Botble\Gallery\Repositories\Interfaces\GalleryMetaInterface;
+use Botble\Base\Enums\BaseStatusEnum;
+use Botble\Gallery\Models\Gallery as GalleryModel;
+use Botble\Gallery\Models\GalleryMeta;
 use Botble\Theme\Facades\Theme;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -10,10 +10,13 @@ use Illuminate\Support\Collection;
 if (! function_exists('gallery_meta_data')) {
     function gallery_meta_data(Model $object, array $select = ['gallery_meta.id', 'gallery_meta.images']): array
     {
-        $meta = app(GalleryMetaInterface::class)->getFirstBy([
-            'reference_id' => $object->getKey(),
-            'reference_type' => get_class($object),
-        ], $select);
+        $meta = GalleryMeta::query()
+            ->where([
+                'reference_id' => $object->getKey(),
+                'reference_type' => get_class($object),
+            ])
+            ->select($select)
+            ->first();
 
         if (! empty($meta)) {
             $images = $meta->images;
@@ -31,15 +34,29 @@ if (! function_exists('gallery_meta_data')) {
 if (! function_exists('get_galleries')) {
     function get_galleries(int $limit = 8, array $with = ['slugable', 'user']): Collection
     {
-        return app(GalleryInterface::class)->getFeaturedGalleries($limit, $with);
+        return GalleryModel::query()
+            ->with($with)
+            ->where([
+                'status' => BaseStatusEnum::PUBLISHED,
+                'is_featured' => 1,
+            ])
+            ->select([
+                'id',
+                'name',
+                'user_id',
+                'image',
+                'created_at',
+            ])
+            ->orderBy('order')
+            ->orderByDesc('created_at')
+            ->limit($limit)
+            ->get();
     }
 }
 
 if (! function_exists('render_galleries')) {
     function render_galleries(int $limit): string
     {
-        Gallery::registerAssets();
-
         $galleries = get_galleries($limit);
 
         $view = apply_filters('galleries_box_template_view', 'plugins/gallery::shortcodes.gallery');
@@ -51,7 +68,10 @@ if (! function_exists('render_galleries')) {
 if (! function_exists('get_list_galleries')) {
     function get_list_galleries(array $condition): Collection
     {
-        return app(GalleryInterface::class)->allBy($condition, ['slugable', 'user']);
+        return GalleryModel::query()
+            ->where($condition)
+            ->with(['slugable', 'user'])
+            ->get();
     }
 }
 

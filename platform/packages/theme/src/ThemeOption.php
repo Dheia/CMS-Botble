@@ -6,12 +6,17 @@ use Botble\Base\Facades\BaseHelper;
 use Botble\Base\Facades\Form;
 use Botble\Language\Facades\Language;
 use Botble\Setting\Facades\Setting;
-use Exception;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Traits\Conditionable;
+use Illuminate\Support\Traits\Tappable;
+use Throwable;
 
 class ThemeOption
 {
+    use Conditionable;
+    use Tappable;
+
     public array $fields = [];
 
     public array $sections = [];
@@ -433,13 +438,19 @@ class ThemeOption
     public function renderField(array $field): string|null
     {
         try {
-            if ($this->hasOption($field['attributes']['name'])) {
-                $field['attributes']['value'] = $this->getOption($field['attributes']['name']);
+            $attributes = Arr::get($field, 'attributes');
+
+            $name = $attributes['name'] ?? $field['id'] ?? null;
+
+            $attributes['name'] = $name;
+
+            if (Arr::get($field, 'type') !== 'hidden' && $this->hasOption($name)) {
+                $attributes['value'] = $this->getOption($name);
             }
 
-            return call_user_func_array([Form::class, $field['type']], array_values($field['attributes']));
-        } catch (Exception $exception) {
-            info($exception->getMessage());
+            return call_user_func_array([Form::class, $field['type']], array_values($attributes));
+        } catch (Throwable $exception) {
+            BaseHelper::logError($exception);
 
             return null;
         }
@@ -469,6 +480,14 @@ class ThemeOption
         return $value;
     }
 
+    public function getOptions(): array
+    {
+        return Setting::newQuery()
+            ->where('key', 'like', $this->getOptionKey('%'))
+            ->pluck('value', 'key')
+            ->all();
+    }
+
     public function saveOptions(): bool
     {
         return setting()->save();
@@ -488,5 +507,18 @@ class ThemeOption
         }
 
         return false;
+    }
+
+    public function prepareFromArray(array $options, string $locale = null, string $defaultLocale = null): array
+    {
+        return collect($options)
+            ->mapWithKeys(function (string|array $value, string $key) use ($locale, $defaultLocale) {
+                if (is_array($value)) {
+                    $value = json_encode($value);
+                }
+
+                return [$this->getOptionKey($key, $locale != $defaultLocale ? $locale : null) => $value];
+            })
+            ->all();
     }
 }

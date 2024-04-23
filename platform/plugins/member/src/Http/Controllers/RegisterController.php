@@ -2,12 +2,11 @@
 
 namespace Botble\Member\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use Botble\ACL\Traits\RegistersUsers;
-use Botble\Base\Http\Responses\BaseHttpResponse;
-use Botble\Member\Http\Requests\RegisterRequest;
+use Botble\Base\Http\Controllers\BaseController;
+use Botble\Member\Forms\Fronts\Auth\RegisterForm;
+use Botble\Member\Http\Requests\Fronts\Auth\RegisterRequest;
 use Botble\Member\Models\Member;
-use Botble\Member\Repositories\Interfaces\MemberInterface;
 use Botble\SeoHelper\Facades\SeoHelper;
 use Botble\Theme\Facades\Theme;
 use Carbon\Carbon;
@@ -17,15 +16,11 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
 
-class RegisterController extends Controller
+class RegisterController extends BaseController
 {
     use RegistersUsers;
 
     protected string $redirectTo = '/';
-
-    public function __construct(protected MemberInterface $memberRepository)
-    {
-    }
 
     public function showRegistrationForm()
     {
@@ -35,36 +30,31 @@ class RegisterController extends Controller
             session(['url.intended' => url()->previous()]);
         }
 
-        Theme::breadcrumb()
-            ->add(__('Home'), route('public.index'))
-            ->add(__('Register'), route('public.member.register'));
+        Theme::breadcrumb()->add(__('Register'), route('public.member.register'));
 
-        if (view()->exists(Theme::getThemeNamespace() . '::views.member.auth.register')) {
-            return Theme::scope('member.auth.register')->render();
-        }
-
-        return view('plugins/member::auth.register');
+        return Theme::scope(
+            'member.auth.register',
+            ['form' => RegisterForm::create()],
+            'plugins/member::themes.auth.register'
+        )->render();
     }
 
-    public function confirm(
-        int|string $id,
-        Request $request,
-        BaseHttpResponse $response,
-        MemberInterface $memberRepository
-    ) {
+    public function confirm(int|string $id, Request $request)
+    {
         if (! URL::hasValidSignature($request)) {
             abort(404);
         }
 
-        $member = $memberRepository->findOrFail($id);
+        $member = Member::query()->findOrFail($id);
 
         $member->confirmed_at = Carbon::now();
-        $this->memberRepository->createOrUpdate($member);
+        $member->save();
 
         $this->guard()->login($member);
 
-        return $response
-            ->setNextUrl(route('public.member.dashboard'))
+        return $this
+            ->httpResponse()
+            ->setNextRoute('public.member.dashboard')
             ->setMessage(trans('plugins/member::member.confirmation_successful'));
     }
 
@@ -73,18 +63,24 @@ class RegisterController extends Controller
         return auth('member');
     }
 
-    public function resendConfirmation(Request $request, MemberInterface $memberRepository, BaseHttpResponse $response)
+    public function resendConfirmation(Request $request)
     {
-        $member = $memberRepository->getFirstBy(['email' => $request->input('email')]);
+        /**
+         * @var Member $member
+         */
+        $member = Member::query()->where('email', $request->input('email'))->first();
+
         if (! $member) {
-            return $response
+            return $this
+                ->httpResponse()
                 ->setError()
                 ->setMessage(__('Cannot find this account!'));
         }
 
         $this->sendConfirmationToUser($member);
 
-        return $response
+        return $this
+            ->httpResponse()
             ->setMessage(trans('plugins/member::member.confirmation_resent'));
     }
 
@@ -98,7 +94,7 @@ class RegisterController extends Controller
         }
     }
 
-    public function register(Request $request, BaseHttpResponse $response)
+    public function register(Request $request)
     {
         $this->validator($request->input())->validate();
 
@@ -109,18 +105,22 @@ class RegisterController extends Controller
 
             $this->registered($request, $member);
 
-            return $response
+            return $this
+                ->httpResponse()
                 ->setNextUrl($this->redirectPath())
                 ->setMessage(trans('plugins/member::member.confirmation_info'));
         }
 
         $member->confirmed_at = Carbon::now();
-        $this->memberRepository->createOrUpdate($member);
+        $member->save();
+
         $this->guard()->login($member);
 
         $this->registered($request, $member);
 
-        return $response->setNextUrl($this->redirectPath());
+        return $this
+            ->httpResponse()
+            ->setNextUrl($this->redirectPath());
     }
 
     protected function validator(array $data)
@@ -130,7 +130,7 @@ class RegisterController extends Controller
 
     protected function create(array $data)
     {
-        return $this->memberRepository->create([
+        return Member::query()->create([
             'first_name' => $data['first_name'],
             'last_name' => $data['last_name'],
             'email' => $data['email'],

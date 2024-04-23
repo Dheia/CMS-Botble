@@ -1,5 +1,5 @@
 <p class="search-result-title">{{ __('Search result') }}: </p>
-@if (count($posts) > 0)
+@if (! empty($posts))
     <div class="search-list">
         <div class="row">
             @foreach ($posts as $post)

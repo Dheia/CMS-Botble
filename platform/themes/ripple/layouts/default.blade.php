@@ -19,5 +19,3 @@
     </div>
 </section>
 {!! Theme::partial('footer') !!}
-
-

@@ -10,6 +10,9 @@ use Illuminate\Support\HtmlString;
 use Illuminate\Support\Traits\Macroable;
 use stdClass;
 
+/**
+ * @deprecated use Breadcrumb::class instead
+ */
 class BreadcrumbsManager
 {
     use Macroable;
@@ -29,14 +32,14 @@ class BreadcrumbsManager
     ) {
     }
 
-    public function register(string $name, callable $callback): void
+    public function register(string $name, callable $callback, bool $modify = false): void
     {
-        $this->for($name, $callback);
+        $this->for($name, $callback, $modify);
     }
 
-    public function for(string $name, callable $callback): void
+    public function for(string $name, callable $callback, bool $modify = false): void
     {
-        if (! isset($this->callbacks[$name])) {
+        if (! isset($this->callbacks[$name]) || $modify) {
             $this->callbacks[$name] = $callback;
         }
     }
@@ -112,14 +115,14 @@ class BreadcrumbsManager
             try {
                 [$name, $params] = $this->getCurrentRoute();
             } catch (Exception) {
-                return new Collection();
+                return collect();
             }
         }
 
         try {
             return $this->generator->generate($this->callbacks, $this->before, $this->after, $name, $params);
         } catch (Exception) {
-            return new Collection();
+            return collect();
         }
     }
 

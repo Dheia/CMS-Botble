@@ -2,99 +2,112 @@
 
 namespace Botble\Member\Forms;
 
-use Botble\Base\Facades\Assets;
-use Botble\Base\Facades\BaseHelper;
+use Botble\Base\Forms\FieldOptions\DatePickerFieldOption;
+use Botble\Base\Forms\FieldOptions\DescriptionFieldOption;
+use Botble\Base\Forms\FieldOptions\EmailFieldOption;
+use Botble\Base\Forms\FieldOptions\MediaImageFieldOption;
+use Botble\Base\Forms\FieldOptions\OnOffFieldOption;
+use Botble\Base\Forms\FieldOptions\StatusFieldOption;
+use Botble\Base\Forms\FieldOptions\TextFieldOption;
+use Botble\Base\Forms\Fields\DatePickerField;
+use Botble\Base\Forms\Fields\MediaImageField;
+use Botble\Base\Forms\Fields\OnOffField;
+use Botble\Base\Forms\Fields\SelectField;
+use Botble\Base\Forms\Fields\TextareaField;
+use Botble\Base\Forms\Fields\TextField;
 use Botble\Base\Forms\FormAbstract;
 use Botble\Member\Http\Requests\MemberCreateRequest;
 use Botble\Member\Models\Member;
-use Carbon\Carbon;
 
 class MemberForm extends FormAbstract
 {
-    public function buildForm(): void
+    public function setup(): void
     {
-        Assets::addScriptsDirectly(['/vendor/core/plugins/member/js/member-admin.js']);
-
         $this
-            ->setupModel(new Member())
+            ->model(Member::class)
             ->setValidatorClass(MemberCreateRequest::class)
-            ->withCustomFields()
-            ->add('first_name', 'text', [
-                'label' => trans('plugins/member::member.first_name'),
-                'label_attr' => ['class' => 'control-label required'],
-                'attr' => [
-                    'placeholder' => trans('core/base::forms.name_placeholder'),
-                    'data-counter' => 120,
-                ],
+            ->add(
+                'first_name',
+                TextField::class,
+                TextFieldOption::make()
+                    ->label(trans('plugins/member::member.first_name'))
+                    ->required()
+                    ->maxLength(120)
+                    ->toArray()
+            )
+            ->add(
+                'last_name',
+                TextField::class,
+                TextFieldOption::make()
+                    ->label(trans('plugins/member::member.last_name'))
+                    ->required()
+                    ->maxLength(120)
+                    ->toArray()
+            )
+            ->add('email', TextField::class, EmailFieldOption::make()->required()->colspan(2)->toArray())
+            ->add(
+                'phone',
+                TextField::class,
+                TextFieldOption::make()
+                    ->label(trans('plugins/member::member.phone'))
+                    ->placeholder(trans('plugins/member::member.phone_placeholder'))
+                    ->maxLength(15)
+                    ->toArray()
+            )
+            ->add(
+                'dob',
+                DatePickerField::class,
+                DatePickerFieldOption::make()->label(trans('plugins/member::member.dob'))->toArray()
+            )
+            ->add('description', TextareaField::class, DescriptionFieldOption::make()->colspan(2)->toArray())
+            ->add(
+                'is_change_password',
+                OnOffField::class,
+                OnOffFieldOption::make()
+                    ->label(trans('plugins/member::member.form.change_password'))
+                    ->attributes([
+                        'data-bb-toggle' => 'collapse',
+                        'data-bb-target' => '#password-collapse',
+                    ])
+                    ->defaultValue(0)
+                    ->toArray()
+            )
+            ->add('openRow1', 'html', [
+                'html' => '<div class="row" id="password-collapse" data-bb-value="1"' . ($this->getModel()->id ? ' style="display: none"' : '') . '>',
             ])
-            ->add('last_name', 'text', [
-                'label' => trans('plugins/member::member.last_name'),
-                'label_attr' => ['class' => 'control-label required'],
-                'attr' => [
-                    'placeholder' => trans('core/base::forms.name_placeholder'),
-                    'data-counter' => 120,
-                ],
+            ->add(
+                'password',
+                'password',
+                TextFieldOption::make()
+                    ->label(trans('plugins/member::member.form.password'))
+                    ->required()
+                    ->maxLength(60)
+                    ->wrapperAttributes([
+                        'class' => $this->formHelper->getConfig('defaults.wrapper_class') . ' col-md-6',
+                    ])
+                    ->toArray()
+            )
+            ->add(
+                'password_confirmation',
+                'password',
+                TextFieldOption::make()
+                    ->label(trans('plugins/member::member.form.password_confirmation'))
+                    ->required()
+                    ->maxLength(60)
+                    ->wrapperAttributes([
+                        'class' => $this->formHelper->getConfig('defaults.wrapper_class') . ' col-md-6',
+                    ])
+                    ->toArray()
+            )
+            ->add('closeRow1', 'html', [
+                'html' => '</div>',
             ])
-            ->add('email', 'text', [
-                'label' => trans('plugins/member::member.form.email'),
-                'label_attr' => ['class' => 'control-label required'],
-                'attr' => [
-                    'placeholder' => trans('plugins/member::member.email_placeholder'),
-                    'data-counter' => 60,
-                ],
-            ])
-            ->add('phone', 'text', [
-                'label' => trans('plugins/member::member.phone'),
-                'label_attr' => ['class' => 'control-label'],
-                'attr' => [
-                    'placeholder' => trans('plugins/member::member.phone_placeholder'),
-                    'data-counter' => 20,
-                ],
-            ])
-            ->add('dob', 'datePicker', [
-                'label' => trans('plugins/member::member.dob'),
-                'label_attr' => ['class' => 'control-label'],
-                'default_value' => BaseHelper::formatDate(Carbon::now()),
-            ])
-            ->add('description', 'textarea', [
-                'label' => trans('core/base::forms.description'),
-                'label_attr' => ['class' => 'control-label'],
-                'attr' => [
-                    'rows' => 4,
-                    'placeholder' => trans('core/base::forms.description_placeholder'),
-                    'data-counter' => 400,
-                ],
-            ])
-            ->add('is_change_password', 'checkbox', [
-                'label' => trans('plugins/member::member.form.change_password'),
-                'label_attr' => ['class' => 'control-label'],
-                'value' => 1,
-            ])
-            ->add('password', 'password', [
-                'label' => trans('plugins/member::member.form.password'),
-                'label_attr' => ['class' => 'control-label required'],
-                'attr' => [
-                    'data-counter' => 60,
-                ],
-                'wrapper' => [
-                    'class' => $this->formHelper->getConfig('defaults.wrapper_class') . ($this->getModel()->id ? ' hidden' : null),
-                ],
-            ])
-            ->add('password_confirmation', 'password', [
-                'label' => trans('plugins/member::member.form.password_confirmation'),
-                'label_attr' => ['class' => 'control-label required'],
-                'attr' => [
-                    'data-counter' => 60,
-                ],
-                'wrapper' => [
-                    'class' => $this->formHelper->getConfig('defaults.wrapper_class') . ($this->getModel()->id ? ' hidden' : null),
-                ],
-            ])
-            ->add('avatar_image', 'mediaImage', [
-                'label' => trans('core/base::forms.image'),
-                'label_attr' => ['class' => 'control-label'],
-                'value' => $this->getModel()->avatar->url,
-            ])
-            ->setBreakFieldPoint('avatar_image');
+            ->add('status', SelectField::class, StatusFieldOption::make()->toArray())
+            ->add(
+                'avatar_image',
+                MediaImageField::class,
+                MediaImageFieldOption::make()->value($this->getModel()->avatar->url)->toArray()
+            )
+            ->setBreakFieldPoint('status');
     }
 }

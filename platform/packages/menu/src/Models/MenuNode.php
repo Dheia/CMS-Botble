@@ -3,12 +3,15 @@
 namespace Botble\Menu\Models;
 
 use Botble\Base\Casts\SafeContent;
+use Botble\Base\Facades\BaseHelper;
 use Botble\Base\Models\BaseModel;
+use Botble\Media\Facades\RvMedia;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Facades\Request;
+use Illuminate\Support\HtmlString;
 
 class MenuNode extends BaseModel
 {
@@ -52,23 +55,23 @@ class MenuNode extends BaseModel
 
     protected function url(): Attribute
     {
-        return Attribute::make(
-            get: function ($value) {
-                if ($value) {
-                    return apply_filters(MENU_FILTER_NODE_URL, $value);
-                }
+        return Attribute::get(function ($value) {
+            $value = html_entity_decode(BaseHelper::clean($value));
 
-                if (! $this->reference_type) {
-                    return '/';
-                }
+            if ($value) {
+                return apply_filters(MENU_FILTER_NODE_URL, $value);
+            }
 
-                if (! $this->reference) {
-                    return '/';
-                }
+            if (! $this->reference_type) {
+                return '/';
+            }
 
-                return (string)$this->reference->url;
-            },
-        );
+            if (! $this->reference) {
+                return '/';
+            }
+
+            return (string)$this->reference->url;
+        });
     }
 
     protected function title(): Attribute
@@ -89,12 +92,35 @@ class MenuNode extends BaseModel
         );
     }
 
-    protected function active(): Attribute
+    protected function iconHtml(): Attribute
     {
         return Attribute::make(
             get: function () {
-                return rtrim(url($this->url), '/') == rtrim(Request::url(), '/');
+                $iconImage = $iconImage = $this->getMetaData('icon_image', true);
+
+                if ($iconImage) {
+                    return RvMedia::image($iconImage, 'icon', attributes: ['class' => 'menu-icon-image']);
+                }
+
+                $icon = $this->icon_font;
+
+                if (! $icon) {
+                    return null;
+                }
+
+                if (BaseHelper::hasIcon($icon)) {
+                    $icon = BaseHelper::renderIcon($icon);
+                } else {
+                    $icon = sprintf('<i class="%s"></i>', $icon);
+                }
+
+                return new HtmlString($icon);
             },
         );
+    }
+
+    protected function active(): Attribute
+    {
+        return Attribute::get(fn () => rtrim(url($this->url), '/') == rtrim(Request::url(), '/'));
     }
 }

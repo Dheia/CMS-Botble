@@ -17,10 +17,11 @@ class UserWidgetHook
             ->setPermission('users.index')
             ->setTitle(trans('core/acl::users.users'))
             ->setKey('widget_total_users')
-            ->setIcon('fas fa-users')
-            ->setColor('#3598dc')
+            ->setIcon('ti ti-users')
+            ->setColor('info')
             ->setStatsTotal($users)
             ->setRoute(route('users.index'))
+            ->setColumn('col-12 col-md-6 col-lg-3')
             ->init($widgets, $widgetSettings);
     }
 }

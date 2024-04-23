@@ -2,8 +2,11 @@
 
 namespace Botble\Language\Providers;
 
+use Botble\Base\Facades\BaseHelper;
 use Botble\Base\Facades\Html;
 use Botble\Base\Facades\MetaBox;
+use Botble\Base\Forms\FieldOptions\HtmlFieldOption;
+use Botble\Base\Forms\Fields\HtmlField;
 use Botble\Base\Forms\FormAbstract;
 use Botble\Base\Models\BaseModel;
 use Botble\Base\Supports\ServiceProvider;
@@ -11,8 +14,10 @@ use Botble\Language\Facades\Language;
 use Botble\Language\Models\Language as LanguageModel;
 use Botble\Language\Models\LanguageMeta;
 use Botble\Menu\Models\Menu;
+use Botble\Setting\Forms\GeneralSettingForm;
 use Botble\Table\CollectionDataTable;
 use Botble\Table\EloquentDataTable;
+use Botble\Theme\Events\RenderingThemeOptionSettings;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
@@ -29,23 +34,52 @@ class HookServiceProvider extends ServiceProvider
         add_action(BASE_ACTION_META_BOXES, [$this, 'addLanguageBox'], 50, 2);
         add_action(BASE_ACTION_TOP_FORM_CONTENT_NOTIFICATION, [$this, 'addCurrentLanguageEditingAlert'], 55, 2);
         add_action(BASE_ACTION_BEFORE_EDIT_CONTENT, [$this, 'getCurrentAdminLanguage'], 55, 2);
+
         add_filter(FILTER_SLUG_PREFIX, [$this, 'setSlugPrefix'], 500);
-        add_filter(BASE_FILTER_GET_LIST_DATA, [$this, 'addLanguageColumn'], 50, 2);
-        add_filter(BASE_FILTER_TABLE_HEADINGS, [$this, 'addLanguageTableHeading'], 50, 2);
         add_filter(LANGUAGE_FILTER_SWITCHER, [$this, 'languageSwitcher'], 50, 2);
         add_filter(BASE_FILTER_BEFORE_GET_FRONT_PAGE_ITEM, [$this, 'checkItemLanguageBeforeShow'], 50, 2);
         add_filter(BASE_FILTER_BEFORE_GET_SINGLE, [$this, 'getRelatedDataForOtherLanguage'], 50, 2);
+
+        add_filter(BASE_FILTER_GET_LIST_DATA, [$this, 'addLanguageColumn'], 50, 2);
+        add_filter(BASE_FILTER_TABLE_HEADINGS, [$this, 'addLanguageTableHeading'], 50, 2);
+
         add_filter(BASE_FILTER_TABLE_BUTTONS, [$this, 'addLanguageSwitcherToTable'], 247, 2);
         add_filter(BASE_FILTER_TABLE_QUERY, [$this, 'getDataByCurrentLanguage'], 157);
         add_filter(BASE_FILTER_BEFORE_GET_ADMIN_LIST_ITEM, [$this, 'checkItemLanguageBeforeGetAdminListItem'], 50);
+
         add_filter(BASE_FILTER_SITE_LANGUAGE_DIRECTION, fn () => Language::getCurrentLocaleRTL() ? 'rtl' : 'ltr', 1);
         add_filter(MENU_FILTER_NODE_URL, [$this, 'updateMenuNodeUrl'], 1);
-        add_filter(BASE_FILTER_BEFORE_RENDER_FORM, [$this, 'changeDataBeforeRenderingForm'], 1134, 2);
-        add_filter('theme-options-action-meta-boxes', [$this, 'addLanguageMetaBoxForThemeOptionsAndWidgets'], 55, 2);
+
+        $this->app['events']->listen(RenderingThemeOptionSettings::class, function () {
+            add_filter('theme-options-action-meta-boxes', [$this, 'addLanguageMetaBoxForThemeOptionsAndWidgets'], 55, 2);
+        });
+
         add_filter('widget-top-meta-boxes', [$this, 'addLanguageMetaBoxForThemeOptionsAndWidgets'], 55, 2);
         add_filter('setting_email_template_meta_boxes', [$this, 'settingEmailTemplateMetaBoxes'], 55, 2);
+        add_filter('payment_method_after_settings', [$this, 'settingEmailTemplateMetaBoxes'], 55, 2);
         add_filter('setting_email_template_path', [$this, 'settingEmailTemplatePath'], 55, 3);
         add_filter('setting_email_subject_key', [$this, 'settingEmailSubjectKey'], 55);
+        add_filter('payment_setting_key', [$this, 'paymentSettingKey'], 55);
+
+        FormAbstract::beforeRendering([$this, 'changeDataBeforeRenderingForm'], 1134);
+
+        GeneralSettingForm::extend(function (GeneralSettingForm $form) {
+            $form
+                ->remove('locale_direction')
+                ->modify('locale', HtmlField::class, HtmlFieldOption::make()->view('plugins/language::forms.general-setting-form-label')->toArray());
+        });
+
+        add_filter('cms_language_flag', function (string|null $flag, string|null $name = null) {
+            if (! $name) {
+                return $flag;
+            }
+
+            if ($languageFlag = LanguageModel::query()->where('lang_name', $name)->value('lang_flag')) {
+                return $languageFlag;
+            }
+
+            return $flag;
+        }, 50, 2);
     }
 
     public function settingEmailTemplateMetaBoxes(string|null $data, array $params = []): string
@@ -57,7 +91,7 @@ class HookServiceProvider extends ServiceProvider
         }
 
         return $data . view('plugins/language::partials.admin-list-language-chooser', [
-                'route' => 'setting.email.template.edit',
+                'route' => 'settings.email.template.edit',
                 'params' => $params,
                 'languages' => $languages,
             ])->render();
@@ -75,6 +109,20 @@ class HookServiceProvider extends ServiceProvider
         return $path;
     }
 
+    public function paymentSettingKey(string $key): string
+    {
+        $currentLocale = is_in_admin(true) ? Language::getCurrentAdminLocale() : Language::getCurrentLocale();
+        $locale = $currentLocale !== Language::getDefaultLocale() ? $currentLocale : null;
+
+        if ($locale && in_array($locale, array_keys(Language::getSupportedLocales()))) {
+            if (str_contains($key, 'name') || str_contains($key, 'description')) {
+                return "{$key}_{$locale}";
+            }
+        }
+
+        return $key;
+    }
+
     public function settingEmailSubjectKey(string $key): string
     {
         $currentLocale = is_in_admin(true) ? Language::getCurrentAdminLocale() : Language::getCurrentLocale();
@@ -87,14 +135,14 @@ class HookServiceProvider extends ServiceProvider
         return $key;
     }
 
-    public function addLanguageBox(string $priority, string|Model|null $object): void
+    public function addLanguageBox(string $priority, array|string|Model|null $object = null): void
     {
-        if (! empty($object) && in_array(get_class($object), Language::supportedModels())) {
+        if ($object instanceof BaseModel && in_array($object::class, Language::supportedModels())) {
             MetaBox::addMetaBox(
                 'language_wrap',
                 trans('plugins/language::language.name'),
                 [$this, 'languageMetaField'],
-                get_class($object),
+                $object::class,
                 'top'
             );
         }
@@ -124,7 +172,10 @@ class HookServiceProvider extends ServiceProvider
             return $data;
         }
 
-        return $data . view('plugins/language::partials.admin-list-language-chooser', compact('route', 'languages'))->render();
+        return $data . view(
+            'plugins/language::partials.admin-list-language-chooser',
+            compact('route', 'languages')
+        )->render();
     }
 
     public function setSlugPrefix(string $prefix): string
@@ -177,7 +228,7 @@ class HookServiceProvider extends ServiceProvider
             $langMetaOrigin = LanguageMeta::query()
                 ->where([
                     'reference_id' => $refFrom,
-                    'reference_type' => get_class($reference),
+                    'reference_type' => $reference::class,
                 ])
                 ->value('lang_meta_origin');
 
@@ -257,12 +308,10 @@ class HookServiceProvider extends ServiceProvider
 
     public function addCurrentLanguageEditingAlert(Request $request, $data = null): void
     {
-        $model = $data;
-        if (is_object($data)) {
-            $model = get_class($data);
-        }
-
-        if ($data && in_array($model, Language::supportedModels()) && Language::getActiveLanguage()->count() > 1) {
+        if (
+            $data instanceof BaseModel &&
+            in_array($data::class, Language::supportedModels()) &&
+            Language::getActiveLanguage()->count() > 1) {
             $code = Language::getCurrentAdminLocaleCode();
             if (empty($code)) {
                 $code = $this->getCurrentAdminLanguage($request, $data);
@@ -300,27 +349,18 @@ class HookServiceProvider extends ServiceProvider
 
     public function addLanguageTableHeading(array $headings, string|Model $model): array
     {
-        if (in_array(get_class($model), Language::supportedModels())) {
-            if (is_in_admin() && Auth::check() && ! Auth::user()->hasAnyPermission($this->getRoutes())) {
+        if (
+            $model instanceof BaseModel &&
+            in_array($model::class, Language::supportedModels()) &&
+            ($countLanguage = count(Language::getActiveLanguage())) &&
+            $countLanguage > 1 &&
+            $countLanguage < 4
+        ) {
+            if (is_in_admin() && Auth::guard()->check() && ! Auth::guard()->user()->hasAnyPermission($this->getRoutes())) {
                 return $headings;
             }
 
-            $languages = Language::getActiveLanguage(['lang_code', 'lang_name', 'lang_flag']);
-            $heading = '';
-            foreach ($languages as $language) {
-                $heading .= language_flag($language->lang_flag, $language->lang_name);
-            }
-
-            return array_merge($headings, [
-                'language' => [
-                    'name' => 'language_meta.lang_meta_id',
-                    'title' => $heading,
-                    'class' => 'text-center language-header no-sort',
-                    'width' => (count($languages) * 40) . 'px',
-                    'orderable' => false,
-                    'searchable' => false,
-                ],
-            ]);
+            return array_merge($headings, Language::getTableHeading());
         }
 
         return $headings;
@@ -330,10 +370,16 @@ class HookServiceProvider extends ServiceProvider
         EloquentDataTable|CollectionDataTable $data,
         string|Model $model
     ): EloquentDataTable|CollectionDataTable {
-        if ($model && in_array(get_class($model), Language::supportedModels())) {
+        if (
+            $model instanceof BaseModel &&
+            in_array($model::class, Language::supportedModels()) &&
+            ($countLanguage = count(Language::getActiveLanguage())) &&
+            $countLanguage > 1 &&
+            $countLanguage < 4
+        ) {
             $route = $this->getRoutes();
 
-            if (is_in_admin() && Auth::check() && ! Auth::user()->hasAnyPermission($route)) {
+            if (is_in_admin() && Auth::guard()->check() && ! Auth::guard()->user()->hasAnyPermission($route)) {
                 return $data;
             }
 
@@ -397,7 +443,8 @@ class HookServiceProvider extends ServiceProvider
         $model = $data->getModel();
 
         if (
-            in_array(get_class($model), Language::supportedModels()) &&
+            $model instanceof BaseModel &&
+            in_array($model::class, Language::supportedModels()) &&
             ! empty($languageCode) &&
             ! $model instanceof LanguageModel &&
             ! $model instanceof LanguageMeta &&
@@ -429,7 +476,9 @@ class HookServiceProvider extends ServiceProvider
             $model = $query->getModel();
         }
 
-        if (in_array(get_class($model), Language::supportedModels()) &&
+        if (
+            $model instanceof BaseModel &&
+            in_array($model::class, Language::supportedModels()) &&
             ! $model instanceof LanguageModel &&
             ! $model instanceof LanguageMeta
         ) {
@@ -443,7 +492,7 @@ class HookServiceProvider extends ServiceProvider
                     if ($current->lang_meta_code != Language::getCurrentLocaleCode()) {
                         if (
                             ! setting('language_show_default_item_if_current_version_not_existed', 1) &&
-                            get_class($model) != Menu::class
+                            ! $model instanceof Menu
                         ) {
                             return $data;
                         }
@@ -451,7 +500,7 @@ class HookServiceProvider extends ServiceProvider
                         $referenceId = LanguageMeta::query()
                             ->where('lang_meta_origin', $current->lang_meta_origin)
                             ->where('reference_id', '!=', $data->getKey())
-                            ->where('reference_type', get_class($model))
+                            ->where('reference_type', $model::class)
                             ->where('lang_meta_code', Language::getCurrentLocaleCode())
                             ->value('reference_id');
 
@@ -468,14 +517,18 @@ class HookServiceProvider extends ServiceProvider
 
     public function addLanguageSwitcherToTable(array $buttons, string $model): array
     {
-        if (in_array($model, Language::supportedModels())) {
+        if (
+            in_array($model, Language::supportedModels())
+            && ($countLanguage = count(Language::getActiveLanguage()))
+            && $countLanguage > 1
+        ) {
             $activeLanguages = Language::getActiveLanguage(['lang_code', 'lang_name', 'lang_flag']);
             $languageButtons = [];
             $currentLanguage = Language::getCurrentAdminLocaleCode();
 
             foreach ($activeLanguages as $item) {
                 $languageButtons[] = [
-                    'className' => 'change-data-language-item ' . ($item->lang_code == $currentLanguage ? 'active' : ''),
+                    'className' => 'change-data-language-item ' . ($item->lang_code === $currentLanguage ? 'active' : ''),
                     'text' => Html::tag(
                         'span',
                         $item->lang_name,
@@ -494,23 +547,17 @@ class HookServiceProvider extends ServiceProvider
             ];
 
             $flag = $activeLanguages->where('lang_code', $currentLanguage)->first();
+
             if (! empty($flag)) {
                 $flag = language_flag($flag->lang_flag, $flag->lang_name);
             } else {
-                $flag = Html::tag('i', '', ['class' => 'fa fa-flag'])->toHtml();
+                $flag = BaseHelper::renderIcon('ti ti-flag');
             }
 
             $language = [
                 'language' => [
                     'extend' => 'collection',
-                    'text' => $flag . Html::tag(
-                        'span',
-                        ' ' . trans('plugins/language::language.change_language') . ' ' . Html::tag(
-                            'span',
-                            '',
-                            ['class' => 'caret']
-                        )->toHtml()
-                    )->toHtml(),
+                    'text' => $flag . Html::tag('span', trans('plugins/language::language.change_language'))->toHtml(),
                     'buttons' => $languageButtons,
                 ],
             ];
@@ -526,9 +573,12 @@ class HookServiceProvider extends ServiceProvider
         $model = $query->getModel();
 
         if (
-            in_array(get_class($model), Language::supportedModels()) &&
-            ($languageCode = Language::getCurrentAdminLocaleCode()) &&
-            $languageCode !== 'all'
+            $model instanceof BaseModel
+            && in_array($model::class, Language::supportedModels())
+            && ($countLanguage = count(Language::getActiveLanguage()))
+            && $countLanguage > 1
+            && ($languageCode = Language::getCurrentAdminLocaleCode())
+            && $languageCode !== 'all'
         ) {
             Language::initModelRelations();
 
@@ -541,21 +591,24 @@ class HookServiceProvider extends ServiceProvider
         return $query;
     }
 
-    public function changeDataBeforeRenderingForm(FormAbstract $form, BaseModel $data): FormAbstract
+    public function changeDataBeforeRenderingForm(FormAbstract $form): FormAbstract
     {
+        $model = $form->getModel();
+
         if (
+            $model instanceof BaseModel &&
             is_in_admin() &&
             Language::getCurrentAdminLocaleCode() != Language::getDefaultLocaleCode() &&
-            in_array(get_class($data), Language::supportedModels())
+            in_array($model::class, Language::supportedModels())
         ) {
             $refLang = Language::getRefLang();
             $refFrom = Language::getRefFrom();
 
-            if ($refLang && $refFrom) {
-                $data = $data->getModel()->find($refFrom);
+            if ($refLang && $refFrom && $model instanceof Builder) {
+                $model = $model->getModel()->find($refFrom);
 
-                if ($data) {
-                    $form->setModel($data->replicate());
+                if ($model) {
+                    $form->setupModel($model->replicate());
                 }
             }
         }

@@ -1,26 +1,55 @@
-<span class="log-icon log-icon-{{ $history->type }}"></span>
-<span>
-    @if ($history->user->id)
-        <a href="{{ route('users.profile.view', $history->user->id) }}" class="d-inline-block">{{ $history->user->name }}</a>
-    @else
-        <span class="d-inline-block">{{ trans('plugins/audit-log::history.system') }}</span>
-    @endif
-    <span class="d-inline-block">
-        @if (Lang::has('plugins/audit-log::history.' . $history->action)) {{ trans('plugins/audit-log::history.' . $history->action) }} @else {{ $history->action }} @endif
-    </span>
-    @if ($history->module)
-        <span class="d-inline-block">
-            @if (Lang::has('plugins/audit-log::history.' . $history->module)) {{ trans('plugins/audit-log::history.' . $history->module) }} @else {{ $history->module }} @endif
-        </span>
-    @endif
-    @if ($history->reference_name)
-        @if (empty($history->user) || $history->user->name != $history->reference_name)
-            <span class="d-inline-block">
-                "{{ Str::limit($history->reference_name, 40) }}"
-            </span>
+<div class="row">
+    <div class="col-auto">
+        @if ($history->user->id)
+            <img
+                src="{{ $history->user->avatar_url }}"
+                class="avatar"
+                alt="{{ $history->user->name }}"
+            />
+        @else
+            <img
+                src="{{ asset(RvMedia::getDefaultImage()) }}"
+                class="avatar"
+                alt="{{ trans('plugins/audit-log::history.system') }}"
+            />
         @endif
-    @endif
-    .
-</span>
-<span class="small italic d-inline-block">{{ $history->created_at->diffForHumans() }} </span>
-<span class="d-inline-block">(<a href="https://ipinfo.io/{{ $history->ip_address }}" target="_blank" title="{{ $history->ip_address }}" rel="nofollow">{{ $history->ip_address }}</a>)</span>
+    </div>
+    <div class="col">
+        <div class="text-truncate">
+            <strong>
+                @if ($history->user->id)
+                    <a href="{{ Auth::guard()->user()->url }}">{{ $history->user->name }}</a>
+                @else
+                    {{ trans('plugins/audit-log::history.system') }}
+                @endif
+            </strong>
+
+            @if (Lang::has("plugins/audit-log::history.$history->action"))
+                {{ trans("plugins/audit-log::history.$history->action") }}
+            @else
+                {{ $history->action }}
+            @endif
+
+            @if ($history->module)
+                @if (Lang::has("plugins/audit-log::history.$history->module"))
+                    {{ trans("plugins/audit-log::history.$history->module") }}
+                @else
+                    {{ $history->module }}
+                @endif
+            @endif
+
+            @if ($history->reference_name && (empty($history->user) || $history->user->name != $history->reference_name))
+                <span title="{{ $history->reference_name }}">"{{ Str::limit($history->reference_name, 40) }}"</span>
+            @endif
+        </div>
+        <div class="text-muted">
+            {{ $history->created_at->diffForHumans() }}
+            (<a
+                href="https://ipinfo.io/{{ $history->ip_address }}"
+                target="_blank"
+                title="{{ $history->ip_address }}"
+                rel="nofollow"
+            >{{ $history->ip_address }}</a>)
+        </div>
+    </div>
+</div>

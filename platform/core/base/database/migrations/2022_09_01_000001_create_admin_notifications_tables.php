@@ -13,7 +13,7 @@ return new class () extends Migration {
                 $table->string('title');
                 $table->string('action_label')->nullable();
                 $table->string('action_url')->nullable();
-                $table->string('description', 400);
+                $table->string('description', 400)->nullable();
                 $table->timestamp('read_at')->nullable();
                 $table->timestamps();
             });

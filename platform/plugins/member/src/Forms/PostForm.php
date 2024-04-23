@@ -2,59 +2,58 @@
 
 namespace Botble\Member\Forms;
 
+use Botble\Base\Forms\FieldOptions\TagFieldOption;
+use Botble\Base\Forms\FieldOptions\TextareaFieldOption;
+use Botble\Base\Forms\Fields\TagField;
 use Botble\Blog\Forms\PostForm as BasePostForm;
 use Botble\Blog\Models\Post;
+use Botble\Blog\Models\Tag;
 use Botble\Member\Forms\Fields\CustomEditorField;
 use Botble\Member\Forms\Fields\CustomImageField;
 use Botble\Member\Http\Requests\PostRequest;
 
 class PostForm extends BasePostForm
 {
-    public function buildForm(): void
+    public function setup(): void
     {
-        parent::buildForm();
-
-        if (! $this->formHelper->hasCustomField('customEditor')) {
-            $this->formHelper->addCustomField('customEditor', CustomEditorField::class);
-        }
-
-        if (! $this->formHelper->hasCustomField('customImage')) {
-            $this->formHelper->addCustomField('customImage', CustomImageField::class);
-        }
-
-        $tags = null;
-
-        if ($this->getModel()) {
-            $tags = $this->getModel()->tags()->pluck('name')->all();
-            $tags = implode(',', $tags);
-        }
+        parent::setup();
 
         $this
-            ->setupModel(new Post())
+            ->model(Post::class)
             ->setFormOption('template', 'plugins/member::forms.base')
-            ->setFormOption('enctype', 'multipart/form-data')
+            ->hasFiles()
             ->setValidatorClass(PostRequest::class)
-            ->setActionButtons(view('plugins/member::forms.actions')->render())
+            ->setBreakFieldPoint('categories[]')
+            ->addCustomField('customImage', CustomImageField::class)
             ->remove('status')
             ->remove('is_featured')
             ->remove('content')
-            ->addAfter('description', 'content', 'customEditor', [
-                'label' => trans('core/base::forms.content'),
-                'label_attr' => ['class' => 'control-label'],
-                'attr' => [
-                    'rows' => 4,
-                ],
-            ])
-            ->modify('tag', 'tags', [
-                'label' => trans('plugins/blog::posts.form.tags'),
-                'label_attr' => ['class' => 'control-label'],
-                'value' => $tags,
-                'attr' => [
-                    'placeholder' => trans('plugins/blog::base.write_some_tags'),
-                    'data-url' => route('public.member.tags.all'),
-                ],
-            ], true);
-
-        $this->setBreakFieldPoint('categories[]');
+            ->addAfter(
+                'description',
+                'content',
+                CustomEditorField::class,
+                TextareaFieldOption::make()->label(trans('core/base::forms.content'))->rows(4)->toArray()
+            )
+            ->modify(
+                'tag',
+                TagField::class,
+                TagFieldOption::make()
+                    ->label(trans('plugins/blog::posts.form.tags'))
+                    ->when($this->getModel()->id, function (TagFieldOption $fieldOption) {
+                        return $fieldOption
+                            ->value(
+                                $this->getModel()
+                                    ->tags()
+                                    ->select('name')
+                                    ->get()
+                                    ->map(fn (Tag $item) => $item->name)
+                                    ->implode(',')
+                            );
+                    })
+                    ->placeholder(trans('plugins/blog::base.write_some_tags'))
+                    ->ajaxUrl(route('public.member.tags.all'))
+                    ->toArray(),
+                true
+            );
     }
 }

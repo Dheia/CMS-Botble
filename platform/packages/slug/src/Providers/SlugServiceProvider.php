@@ -3,19 +3,20 @@
 namespace Botble\Slug\Providers;
 
 use Botble\Base\Facades\BaseHelper;
-use Botble\Base\Facades\DashboardMenu;
 use Botble\Base\Facades\MacroableModels;
+use Botble\Base\Facades\PanelSectionManager;
 use Botble\Base\Models\BaseModel;
+use Botble\Base\PanelSections\PanelSectionItem;
 use Botble\Base\Supports\ServiceProvider;
 use Botble\Base\Traits\LoadAndPublishDataTrait;
 use Botble\Page\Models\Page;
+use Botble\Setting\PanelSections\SettingCommonPanelSection;
 use Botble\Slug\Facades\SlugHelper as SlugHelperFacade;
 use Botble\Slug\Models\Slug;
 use Botble\Slug\Repositories\Eloquent\SlugRepository;
 use Botble\Slug\Repositories\Interfaces\SlugInterface;
 use Botble\Slug\SlugCompiler;
 use Botble\Slug\SlugHelper;
-use Illuminate\Routing\Events\RouteMatched;
 
 class SlugServiceProvider extends ServiceProvider
 {
@@ -25,10 +26,6 @@ class SlugServiceProvider extends ServiceProvider
 
     public function register(): void
     {
-        $this
-            ->setNamespace('packages/slug')
-            ->loadAndPublishTranslations();
-
         $this->app->bind(SlugInterface::class, function () {
             return new SlugRepository(new Slug());
         });
@@ -41,8 +38,10 @@ class SlugServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this
+            ->setNamespace('packages/slug')
             ->loadAndPublishConfigurations(['general'])
             ->loadHelpers()
+            ->loadAndPublishTranslations()
             ->loadAndPublishViews()
             ->loadRoutes()
             ->loadMigrations()
@@ -51,16 +50,17 @@ class SlugServiceProvider extends ServiceProvider
         $this->app->register(EventServiceProvider::class);
         $this->app->register(CommandServiceProvider::class);
 
-        $this->app['events']->listen(RouteMatched::class, function () {
-            DashboardMenu::registerItem([
-                'id' => 'cms-packages-slug-permalink',
-                'priority' => 5,
-                'parent_id' => 'cms-core-settings',
-                'name' => 'packages/slug::slug.permalink_settings',
-                'icon' => null,
-                'url' => route('slug.settings'),
-                'permissions' => ['settings.options'],
-            ]);
+        PanelSectionManager::default()->beforeRendering(function () {
+            PanelSectionManager::registerItem(
+                SettingCommonPanelSection::class,
+                fn () => PanelSectionItem::make('permalink')
+                    ->setTitle(trans('packages/slug::slug.permalink_settings'))
+                    ->withIcon('ti ti-link')
+                    ->withDescription(trans('packages/slug::slug.permalink_settings_description'))
+                    ->withPriority(90)
+                    ->withRoute('slug.settings')
+                    ->withPermission('settings.options')
+            );
         });
 
         $this->app->booted(function () {
@@ -84,50 +84,56 @@ class SlugServiceProvider extends ServiceProvider
                     ]);
                 });
 
-                MacroableModels::addMacro($item, 'getSlugAttribute', function () {
-                    /**
-                     * @var BaseModel $this
-                     */
-                    return $this->slugable ? $this->slugable->key : '';
-                });
-
-                MacroableModels::addMacro($item, 'getSlugIdAttribute', function () {
-                    /**
-                     * @var BaseModel $this
-                     */
-                    return $this->slugable ? $this->slugable->getKey() : '';
-                });
-
-                MacroableModels::addMacro(
-                    $item,
-                    'getUrlAttribute',
-                    function () {
+                if (! method_exists($item, 'getSlugAttribute') && ! method_exists($item, 'slug') && ! property_exists($item, 'slug')) {
+                    MacroableModels::addMacro($item, 'getSlugAttribute', function () {
                         /**
                          * @var BaseModel $this
                          */
-                        $model = $this;
+                        return $this->slugable ? $this->slugable->key : '';
+                    });
+                }
 
-                        $slug = $model->slugable;
+                if (! method_exists($item, 'getSlugIdAttribute') && ! method_exists($item, 'slugId') && ! property_exists($item, 'slug_id')) {
+                    MacroableModels::addMacro($item, 'getSlugIdAttribute', function () {
+                        /**
+                         * @var BaseModel $this
+                         */
+                        return $this->slugable ? $this->slugable->getKey() : '';
+                    });
+                }
 
-                        if (
-                            ! $slug ||
-                            ! $slug->key ||
-                            (get_class($model) == Page::class && BaseHelper::isHomepage($model->getKey()))
-                        ) {
-                            return route('public.index');
+                if (! method_exists($item, 'getUrlAttribute') && ! method_exists($item, 'url') && ! property_exists($item, 'url')) {
+                    MacroableModels::addMacro(
+                        $item,
+                        'getUrlAttribute',
+                        function () {
+                            /**
+                             * @var BaseModel $this
+                             */
+                            $model = $this;
+
+                            $slug = $model->slugable;
+
+                            if (
+                                ! $slug ||
+                                ! $slug->key ||
+                                ($model instanceof Page && BaseHelper::isHomepage($model->getKey()))
+                            ) {
+                                return BaseHelper::getHomepageUrl();
+                            }
+
+                            $prefix = SlugHelperFacade::getTranslator()->compile(
+                                apply_filters(FILTER_SLUG_PREFIX, $slug->prefix),
+                                $model
+                            );
+
+                            return apply_filters(
+                                'slug_filter_url',
+                                url(ltrim($prefix . '/' . $slug->key, '/')) . SlugHelperFacade::getPublicSingleEndingURL()
+                            );
                         }
-
-                        $prefix = SlugHelperFacade::getTranslator()->compile(
-                            apply_filters(FILTER_SLUG_PREFIX, $slug->prefix),
-                            $model
-                        );
-
-                        return apply_filters(
-                            'slug_filter_url',
-                            url(ltrim($prefix . '/' . $slug->key, '/')) . SlugHelperFacade::getPublicSingleEndingURL()
-                        );
-                    }
-                );
+                    );
+                }
             }
 
             $this->app->register(HookServiceProvider::class);

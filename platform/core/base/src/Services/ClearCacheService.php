@@ -2,7 +2,7 @@
 
 namespace Botble\Base\Services;
 
-use Botble\Menu\Facades\Menu;
+use Botble\Media\Facades\RvMedia;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Cache;
@@ -41,25 +41,16 @@ class ClearCacheService
         }
     }
 
-    public function clearMenuCache(): void
-    {
-        Menu::clearCacheMenuItems();
-    }
-
     public function clearBootstrapCache(): void
     {
-        if ($pluginCachePath = $this->app->bootstrapPath('cache/plugins.php')) {
-            $this->files->delete($pluginCachePath);
+        foreach ($this->files->glob($this->app->bootstrapPath('cache/*.php')) as $view) {
+            $this->files->delete($view);
         }
-
-        $this->clearServicesCache();
-
-        $this->clearPackagesCache();
     }
 
     public function clearCompiledViews(): void
     {
-        foreach ($this->files->glob(config('view.compiled') . '/*') as $view) {
+        foreach ($this->files->glob(config('view.compiled') . '/*.php') as $view) {
             $this->files->delete($view);
         }
     }
@@ -84,8 +75,8 @@ class ClearCacheService
             return;
         }
 
-        foreach ($this->files->allFiles($logPath) as $file) {
-            $this->files->delete($file->getPathname());
+        foreach ($this->files->glob($logPath . '/*.log') as $file) {
+            $this->files->delete($file);
         }
     }
 
@@ -101,7 +92,9 @@ class ClearCacheService
 
     public function clearPurifier(): void
     {
-        if (! $this->files->isDirectory($purifierPath = config('purifier.cachePath'))) {
+        $purifierPath = config('purifier.cachePath');
+
+        if (! $purifierPath || ! $this->files->isDirectory($purifierPath)) {
             return;
         }
 
@@ -110,7 +103,9 @@ class ClearCacheService
 
     public function clearDebugbar(): void
     {
-        if (! $this->files->isDirectory($debugbarPath = config('debugbar.storage.path'))) {
+        $debugbarPath = config('debugbar.storage.path');
+
+        if (! $debugbarPath || ! $this->files->isDirectory($debugbarPath)) {
             return;
         }
 
@@ -127,5 +122,7 @@ class ClearCacheService
         $this->clearLogs();
         $this->clearPurifier();
         $this->clearDebugbar();
+
+        RvMedia::refreshCache();
     }
 }

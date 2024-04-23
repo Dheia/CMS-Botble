@@ -9,7 +9,6 @@ use Botble\Media\Facades\RvMedia;
 use Botble\Media\Models\MediaFile;
 use Botble\Member\Notifications\ConfirmEmailNotification;
 use Botble\Member\Notifications\ResetPasswordNotification;
-use Exception;
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Auth\Passwords\CanResetPassword;
@@ -25,6 +24,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
+use Throwable;
 
 class Member extends BaseModel implements
     AuthenticatableContract,
@@ -58,12 +58,23 @@ class Member extends BaseModel implements
     ];
 
     protected $casts = [
+        'password' => 'hashed',
         'confirmed_at' => 'datetime',
         'dob' => 'date',
         'first_name' => SafeContent::class,
         'last_name' => SafeContent::class,
         'description' => SafeContent::class,
     ];
+
+    protected static function booted(): void
+    {
+        static::deleting(function (Member $account) {
+            $folder = Storage::path($account->upload_folder);
+            if (File::isDirectory($folder) && Str::endsWith($account->upload_folder, '/' . $account->getKey())) {
+                File::deleteDirectory($folder);
+            }
+        });
+    }
 
     public function sendPasswordResetNotification($token): void
     {
@@ -80,84 +91,64 @@ class Member extends BaseModel implements
         return $this->belongsTo(MediaFile::class)->withDefault();
     }
 
+    public function posts(): MorphMany
+    {
+        return $this->morphMany('Botble\Blog\Models\Post', 'author');
+    }
+
     protected function firstName(): Attribute
     {
-        return Attribute::make(
-            get: fn ($value) => ucfirst($value),
-        );
+        return Attribute::get(fn ($value) => ucfirst((string)$value));
     }
 
     protected function lastName(): Attribute
     {
-        return Attribute::make(
-            get: fn ($value) => ucfirst($value),
-        );
+        return Attribute::get(fn ($value) => ucfirst((string)$value));
     }
 
     protected function name(): Attribute
     {
-        return Attribute::make(
-            get: fn () => $this->first_name . ' ' . $this->last_name,
-        );
+        return Attribute::get(fn () => trim($this->first_name . ' ' . $this->last_name));
     }
 
     protected function avatarUrl(): Attribute
     {
-        return Attribute::make(
-            get: function () {
-                if ($this->avatar->url) {
-                    return RvMedia::url($this->avatar->url);
-                }
+        return Attribute::get(function () {
+            if ($this->avatar->url) {
+                return RvMedia::url($this->avatar->url);
+            }
 
-                try {
-                    return (new Avatar())->create($this->name)->toBase64();
-                } catch (Exception) {
-                    return RvMedia::getDefaultImage();
-                }
-            },
-        );
+            try {
+                return Avatar::createBase64Image($this->name);
+            } catch (Throwable) {
+                return RvMedia::getDefaultImage();
+            }
+        });
     }
 
     protected function avatarThumbUrl(): Attribute
     {
-        return Attribute::make(
-            get: function () {
-                if ($this->avatar->url) {
-                    return RvMedia::getImageUrl($this->avatar->url, 'thumb');
-                }
+        return Attribute::get(function () {
+            if ($this->avatar->url) {
+                return RvMedia::getImageUrl($this->avatar->url, 'thumb');
+            }
 
-                try {
-                    return (new Avatar())->create($this->name)->toBase64();
-                } catch (Exception) {
-                    return RvMedia::getDefaultImage();
-                }
-            },
-        );
-    }
-
-    public function posts(): MorphMany
-    {
-        return $this->morphMany('Botble\Blog\Models\Post', 'author');
+            try {
+                return Avatar::createBase64Image($this->name);
+            } catch (Throwable) {
+                return RvMedia::getDefaultImage();
+            }
+        })->shouldCache();
     }
 
     protected function uploadFolder(): Attribute
     {
         return Attribute::make(
             get: function () {
-                $folder = $this->id ? 'members/' . $this->id : 'members';
+                $folder = $this->getKey() ? 'members/' . $this->getKey() : 'members';
 
                 return apply_filters('member_account_upload_folder', $folder, $this);
             }
-        );
-    }
-
-    protected static function booted(): void
-    {
-        static::deleted(function (Member $account) {
-            $folder = Storage::path($account->upload_folder);
-            if (File::isDirectory($folder) && Str::endsWith($account->upload_folder, '/' . $account->id)) {
-                File::deleteDirectory($folder);
-            }
-        });
+        )->shouldCache();
     }
 }

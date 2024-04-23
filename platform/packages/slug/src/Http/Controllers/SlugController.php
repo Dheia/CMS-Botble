@@ -2,18 +2,18 @@
 
 namespace Botble\Slug\Http\Controllers;
 
-use Botble\Base\Facades\PageTitle;
-use Botble\Base\Http\Controllers\BaseController;
-use Botble\Base\Http\Responses\BaseHttpResponse;
 use Botble\Menu\Facades\Menu;
+use Botble\Setting\Http\Controllers\SettingController;
 use Botble\Setting\Supports\SettingStore;
+use Botble\Slug\Events\UpdatedPermalinkSettings;
+use Botble\Slug\Forms\SlugSettingForm;
 use Botble\Slug\Http\Requests\SlugRequest;
 use Botble\Slug\Http\Requests\SlugSettingsRequest;
-use Botble\Slug\Repositories\Interfaces\SlugInterface;
+use Botble\Slug\Models\Slug;
 use Botble\Slug\Services\SlugService;
 use Illuminate\Support\Str;
 
-class SlugController extends BaseController
+class SlugController extends SettingController
 {
     public function store(SlugRequest $request, SlugService $slugService)
     {
@@ -24,44 +24,48 @@ class SlugController extends BaseController
         );
     }
 
-    public function getSettings()
+    public function edit()
     {
-        PageTitle::setTitle(trans('packages/slug::slug.settings.title'));
+        $this->pageTitle(trans('packages/slug::slug.settings.title'));
 
-        return view('packages/slug::settings');
+        return SlugSettingForm::create()->renderForm();
     }
 
-    public function postSettings(
-        SlugSettingsRequest $request,
-        SlugInterface $slugRepository,
-        BaseHttpResponse $response,
-        SettingStore $settingStore
-    ) {
+    public function update(SlugSettingsRequest $request, SettingStore $settingStore)
+    {
         $hasChangedEndingUrl = false;
 
-        foreach ($request->except(['_token']) as $settingKey => $settingValue) {
+        foreach ($request->except(['_token', 'ref_lang']) as $settingKey => $settingValue) {
             if (Str::contains($settingKey, '-model-key')) {
                 continue;
             }
 
-            if ($settingKey == 'public_single_ending_url') {
-                $settingValue = ltrim($settingValue, '.');
+            if (Str::startsWith($settingKey, 'public_single_ending_url')) {
+                if ($settingValue) {
+                    $settingValue = ltrim($settingValue, '.');
+                }
 
                 if ($settingStore->get($settingKey) !== $settingValue) {
                     $hasChangedEndingUrl = true;
                 }
             }
 
-            if ($settingStore->get($settingKey) !== (string)$settingValue) {
-                $slugRepository->update(
-                    ['reference_type' => $request->input($settingKey . '-model-key')],
-                    ['prefix' => (string)$settingValue]
-                );
+            $prefix = (string)$settingValue;
+            $reference = $request->input($settingKey . '-model-key');
+
+            if ($reference && $settingStore->get($settingKey) !== $prefix) {
+                if (! $request->filled('ref_lang')) {
+                    Slug::query()
+                        ->where('reference_type', $reference)
+                        ->update(['prefix' => $prefix]);
+                }
+
+                event(new UpdatedPermalinkSettings($reference, $prefix, $request));
 
                 Menu::clearCacheMenuItems();
             }
 
-            $settingStore->set($settingKey, (string)$settingValue);
+            $settingStore->set($settingKey, $prefix);
         }
 
         $settingStore->save();
@@ -70,8 +74,9 @@ class SlugController extends BaseController
             Menu::clearCacheMenuItems();
         }
 
-        return $response
-            ->setPreviousUrl(route('slug.settings'))
-            ->setMessage(trans('core/base::notices.update_success_message'));
+        return $this
+            ->httpResponse()
+            ->setPreviousRoute('slug.settings')
+            ->withUpdatedSuccessMessage();
     }
 }

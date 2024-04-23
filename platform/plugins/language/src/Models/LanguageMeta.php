@@ -21,6 +21,13 @@ class LanguageMeta extends BaseModel
         'reference_type',
     ];
 
+    protected static function booted(): void
+    {
+        self::deleted(function (LanguageMeta $languageMeta) {
+            $languageMeta->reference()->delete();
+        });
+    }
+
     public function reference(): BelongsTo
     {
         return $this->morphTo();
@@ -39,7 +46,7 @@ class LanguageMeta extends BaseModel
             $originValue = md5($model->getKey() . get_class($model) . time());
         }
 
-        LanguageMeta::create([
+        LanguageMeta::query()->create([
             'reference_id' => $model->getKey(),
             'reference_type' => get_class($model),
             'lang_meta_code' => $locale,

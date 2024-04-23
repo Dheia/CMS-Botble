@@ -14,7 +14,7 @@ class DatabaseSettingStore extends SettingStore
 {
     protected bool $connectedDatabase = false;
 
-    public function forget($key): SettingStore
+    public function forget(string $key, bool $force = false): SettingStore
     {
         parent::forget($key);
 
@@ -42,20 +42,16 @@ class DatabaseSettingStore extends SettingStore
 
     protected function write(array $data): void
     {
-        $keys = $this->newQuery()->pluck('key');
+        $keys = $this->newQuery()->pluck('key')->all();
 
-        $insertData = Arr::dot($data);
-        $updateData = [];
+        $data = Arr::dot($data);
 
-        foreach ($keys as $key) {
-            if (isset($insertData[$key])) {
-                $updateData[$key] = $insertData[$key];
-            }
-            unset($insertData[$key]);
-        }
+        $updateData = Arr::only($data, $keys);
+        $insertData = Arr::except($data, $keys);
 
         foreach ($updateData as $key => $value) {
-            $this->newQuery()->where('key', $key)
+            $this->newQuery()
+                ->where('key', $key)
                 ->update(['value' => $value]);
         }
 
@@ -70,8 +66,8 @@ class DatabaseSettingStore extends SettingStore
 
         foreach ($data as $key => $value) {
             $data = compact('key', 'value');
-            if (BaseModel::determineIfUsingUuidsForId()) {
-                $data['id'] = BaseModel::newUniqueId();
+            if (BaseModel::getTypeOfId() !== 'BIGINT') {
+                $data['id'] = (new BaseModel())->newUniqueId();
             }
 
             $dbData[] = $data;
@@ -116,10 +112,20 @@ class DatabaseSettingStore extends SettingStore
         return $results;
     }
 
-    public function delete(array $keys = [], array $except = [])
+    public function delete(array|string $keys = [], array $except = [], bool $force = false)
     {
         if (! $keys && ! $except) {
             return false;
+        }
+
+        if (! is_array($keys)) {
+            $keys = [$keys];
+        }
+
+        foreach ($keys as $k => $v) {
+            if (! $force && in_array($k, $this->guard)) {
+                unset($keys[$k]);
+            }
         }
 
         $query = $this->newQuery();
@@ -133,5 +139,10 @@ class DatabaseSettingStore extends SettingStore
         }
 
         return $query->delete();
+    }
+
+    public function forceDelete(array|string $keys = [], array $except = [])
+    {
+        return $this->delete($keys, $except, true);
     }
 }

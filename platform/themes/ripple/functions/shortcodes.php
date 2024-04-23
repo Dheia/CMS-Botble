@@ -1,41 +1,79 @@
 <?php
 
-use Botble\Base\Enums\BaseStatusEnum;
-use Botble\Blog\Repositories\Interfaces\CategoryInterface;
+use Botble\Base\Forms\FieldOptions\SelectFieldOption;
+use Botble\Base\Forms\FieldOptions\TextFieldOption;
+use Botble\Base\Forms\Fields\NumberField;
+use Botble\Base\Forms\Fields\SelectField;
+use Botble\Base\Forms\Fields\TextField;
+use Botble\Base\Models\BaseQueryBuilder;
+use Botble\Blog\Models\Category;
 use Botble\Shortcode\Compilers\Shortcode as ShortcodeCompiler;
 use Botble\Shortcode\Facades\Shortcode;
+use Botble\Shortcode\Forms\ShortcodeForm;
 use Botble\Theme\Facades\Theme;
 use Botble\Theme\Supports\ThemeSupport;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Routing\Events\RouteMatched;
+use Illuminate\Support\Arr;
 
-app()->booted(function () {
+app('events')->listen(RouteMatched::class, function () {
     ThemeSupport::registerGoogleMapsShortcode();
     ThemeSupport::registerYoutubeShortcode();
 
     if (is_plugin_active('blog')) {
-        Shortcode::register('featured-posts', __('Featured posts'), __('Featured posts'), function (ShortcodeCompiler $shortcode) {
-            $posts = get_featured_posts((int) $shortcode->limit ?: 5, [
-                'author',
-                'categories' => function ($query) {
-                    $query->limit(1);
-                },
-            ]);
+        Shortcode::setPreviewImage('blog-posts', Theme::asset()->url('images/ui-blocks/blog-posts.png'));
 
-            return Theme::partial('shortcodes.featured-posts', compact('posts'));
+        Shortcode::register(
+            'featured-posts',
+            __('Featured posts'),
+            __('Featured posts'),
+            function (ShortcodeCompiler $shortcode) {
+                $posts = get_featured_posts((int)$shortcode->limit ?: 5, [
+                    'author',
+                ]);
+
+                return Theme::partial('shortcodes.featured-posts', compact('posts'));
+            }
+        );
+
+        Shortcode::setAdminConfig('featured-posts', function (array $attributes) {
+            return ShortcodeForm::createFromArray($attributes)
+                ->add('limit', NumberField::class, TextFieldOption::make()->label(__('Limit'))->toArray());
         });
 
-        Shortcode::setAdminConfig('featured-posts', function (array $attributes, string|null $content) {
-            return Theme::partial('shortcodes.featured-posts-admin-config', compact('attributes', 'content'));
-        });
+        Shortcode::setPreviewImage('featured-posts', Theme::asset()->url('images/ui-blocks/featured-posts.png'));
 
-        Shortcode::register('recent-posts', __('Recent posts'), __('Recent posts'), function (ShortcodeCompiler $shortcode) {
-            $posts = get_latest_posts(7, [], ['slugable']);
+        Shortcode::register(
+            'recent-posts',
+            __('Recent posts'),
+            __('Recent posts'),
+            function (ShortcodeCompiler $shortcode) {
+                $posts = get_latest_posts(7, [], ['slugable']);
 
-            return Theme::partial('shortcodes.recent-posts', ['title' => $shortcode->title, 'posts' => $posts]);
-        });
+                $withSidebar = ($shortcode->with_sidebar ?: 'yes') === 'yes';
 
-        Shortcode::setAdminConfig('recent-posts', function (array $attributes, string|null $content) {
-            return Theme::partial('shortcodes.recent-posts-admin-config', compact('attributes', 'content'));
+                return Theme::partial('shortcodes.recent-posts', [
+                    'title' => $shortcode->title,
+                    'withSidebar' => $withSidebar,
+                    'posts' => $posts,
+                ]);
+            }
+        );
+
+        Shortcode::setPreviewImage('recent-posts', Theme::asset()->url('images/ui-blocks/recent-posts.png'));
+
+        Shortcode::setAdminConfig('recent-posts', function (array $attributes) {
+            return ShortcodeForm::createFromArray($attributes)
+                ->add('title', TextField::class, TextFieldOption::make()->label(__('Title'))->toArray())
+                ->add(
+                    'with_sidebar',
+                    SelectField::class,
+                    SelectFieldOption::make()
+                        ->label(__('With top sidebar?'))
+                        ->choices(['yes' => __('Yes'), 'no' => __('No')])
+                        ->defaultValue('yes')
+                        ->toArray()
+                );
         });
 
         Shortcode::register(
@@ -45,10 +83,10 @@ app()->booted(function () {
             function (ShortcodeCompiler $shortcode) {
                 $with = [
                     'slugable',
-                    'posts' => function (BelongsToMany $query) {
+                    'posts' => function (BelongsToMany|BaseQueryBuilder $query) {
                         $query
-                            ->where('status', BaseStatusEnum::PUBLISHED)
-                            ->orderBy('created_at', 'DESC');
+                            ->wherePublished()
+                            ->orderByDesc('created_at');
                     },
                     'posts.slugable',
                 ];
@@ -59,21 +97,18 @@ app()->booted(function () {
 
                 $posts = collect();
 
-                if ($shortcode->category_id) {
-                    $with['posts'] = function (BelongsToMany $query) {
+                if ($categoryId = $shortcode->category_id) {
+                    $with['posts'] = function (BelongsToMany|BaseQueryBuilder $query) {
                         $query
-                            ->where('status', BaseStatusEnum::PUBLISHED)
-                            ->orderBy('created_at', 'DESC')
+                            ->wherePublished()
+                            ->orderByDesc('created_at')
                             ->take(6);
                     };
 
-                    $category = app(CategoryInterface::class)
-                        ->getModel()
+                    $category = Category::query()
                         ->with($with)
-                        ->where([
-                            'status' => BaseStatusEnum::PUBLISHED,
-                            'id' => $shortcode->category_id,
-                        ])
+                        ->wherePublished()
+                        ->where('id', $categoryId)
                         ->select([
                             'id',
                             'name',
@@ -97,30 +132,77 @@ app()->booted(function () {
                     $posts = $posts->sortByDesc('created_at');
                 }
 
+                $withSidebar = ($shortcode->with_sidebar ?: 'yes') === 'yes';
+
                 return Theme::partial(
                     'shortcodes.featured-categories-posts',
-                    ['title' => $shortcode->title, 'posts' => $posts]
+                    [
+                        'title' => $shortcode->title,
+                        'withSidebar' => $withSidebar,
+                        'posts' => $posts,
+                    ]
                 );
             }
         );
 
-        Shortcode::setAdminConfig('featured-categories-posts', function (array $attributes) {
-            $categories = app(CategoryInterface::class)->pluck('name', 'id', ['status' => BaseStatusEnum::PUBLISHED]);
+        Shortcode::setPreviewImage(
+            'featured-categories-posts',
+            Theme::asset()->url('images/ui-blocks/featured-categories-posts.png')
+        );
 
-            return Theme::partial(
-                'shortcodes.featured-categories-posts-admin-config',
-                compact('attributes', 'categories')
-            );
+        Shortcode::setAdminConfig('featured-categories-posts', function (array $attributes) {
+            $categories = Category::query()
+                ->wherePublished()
+                ->select('name', 'id')
+                ->get()
+                ->mapWithKeys(fn ($item) => [$item->id => $item->name])
+                ->all();
+
+            return ShortcodeForm::createFromArray($attributes)
+                ->add('title', TextField::class, TextFieldOption::make()->label(__('Title'))->toArray())
+                ->add(
+                    'category_id',
+                    SelectField::class,
+                    SelectFieldOption::make()
+                        ->label(__('Category'))
+                        ->choices(['' => __('All')] + $categories)
+                        ->selected(Arr::get($attributes, 'category_id'))
+                        ->searchable()
+                        ->toArray()
+                )
+                ->add(
+                    'with_sidebar',
+                    SelectField::class,
+                    SelectFieldOption::make()
+                        ->label(__('With primary sidebar?'))
+                        ->choices(['yes' => __('Yes'), 'no' => __('No')])
+                        ->defaultValue('yes')
+                        ->toArray()
+                );
         });
     }
 
-    if (is_plugin_active('gallery')) {
-        Shortcode::register('all-galleries', __('All Galleries'), __('All Galleries'), function (ShortcodeCompiler $shortcode) {
-            return Theme::partial('shortcodes.all-galleries', ['limit' => (int)$shortcode->limit]);
-        });
+    if (is_plugin_active('contact')) {
+        Shortcode::setPreviewImage('contact-form', Theme::asset()->url('images/ui-blocks/contact-form.png'));
+    }
 
-        Shortcode::setAdminConfig('all-galleries', function (array $attributes, string|null $content) {
-            return Theme::partial('shortcodes.all-galleries-admin-config', compact('attributes', 'content'));
+    if (is_plugin_active('gallery')) {
+        Shortcode::setPreviewImage('gallery', Theme::asset()->url('images/ui-blocks/gallery.png'));
+
+        Shortcode::register(
+            'all-galleries',
+            __('All galleries'),
+            __('All galleries'),
+            function (ShortcodeCompiler $shortcode) {
+                return Theme::partial('shortcodes.all-galleries', ['limit' => (int)$shortcode->limit]);
+            }
+        );
+
+        Shortcode::setPreviewImage('all-galleries', Theme::asset()->url('images/ui-blocks/all-galleries.png'));
+
+        Shortcode::setAdminConfig('all-galleries', function (array $attributes) {
+            return ShortcodeForm::createFromArray($attributes)
+                ->add('limit', NumberField::class, TextFieldOption::make()->label(__('Limit'))->toArray());
         });
     }
 });

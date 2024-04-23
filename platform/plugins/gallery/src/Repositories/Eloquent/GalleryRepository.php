@@ -2,7 +2,6 @@
 
 namespace Botble\Gallery\Repositories\Eloquent;
 
-use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Gallery\Repositories\Interfaces\GalleryInterface;
 use Botble\Support\Repositories\Eloquent\RepositoriesAbstract;
 use Illuminate\Support\Collection;
@@ -13,9 +12,9 @@ class GalleryRepository extends RepositoriesAbstract implements GalleryInterface
     {
         $data = $this->model
             ->with($with)
-            ->where('status', BaseStatusEnum::PUBLISHED)
+            ->wherePublished()
             ->orderBy('order')
-            ->orderBy('created_at', 'desc');
+            ->orderByDesc('created_at');
 
         if ($limit) {
             $data->limit($limit);
@@ -28,10 +27,10 @@ class GalleryRepository extends RepositoriesAbstract implements GalleryInterface
     {
         $data = $this->model
             ->with('slugable')
-            ->where('status', BaseStatusEnum::PUBLISHED)
+            ->wherePublished()
             ->orderBy('order')
             ->select(['id', 'name', 'updated_at'])
-            ->orderBy('created_at', 'desc');
+            ->orderByDesc('created_at');
 
         return $this->applyBeforeExecuteQuery($data)->get();
     }
@@ -40,10 +39,8 @@ class GalleryRepository extends RepositoriesAbstract implements GalleryInterface
     {
         $data = $this->model
             ->with($with)
-            ->where([
-                'status' => BaseStatusEnum::PUBLISHED,
-                'is_featured' => 1,
-            ])
+            ->wherePublished()
+            ->where('is_featured', true)
             ->select([
                 'id',
                 'name',
@@ -52,7 +49,7 @@ class GalleryRepository extends RepositoriesAbstract implements GalleryInterface
                 'created_at',
             ])
             ->orderBy('order')
-            ->orderBy('created_at', 'desc')
+            ->orderByDesc('created_at')
             ->limit($limit);
 
         return $this->applyBeforeExecuteQuery($data)->get();

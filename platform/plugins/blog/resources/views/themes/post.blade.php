@@ -5,14 +5,14 @@
 <header>
     <h3>{{ $post->name }}</h3>
     <div>
-        @if (!$post->categories->isEmpty())
+        @if ($post->categories->isNotEmpty())
             <span>
                 <a href="{{ $post->categories->first()->url }}">{{ $post->categories->first()->name }}</a>
             </span>
         @endif
         <span>{{ $post->created_at->format('M d, Y') }}</span>
 
-        @if (!$post->tags->isEmpty())
+        @if ($post->tags->isNotEmpty())
             <span>
                 @foreach ($post->tags as $tag)
                     <a href="{{ $tag->url }}">{{ $tag->name }}</a>
@@ -25,7 +25,7 @@
     {!! BaseHelper::clean($post->content) !!}
 </div>
 <br />
-{!! apply_filters(BASE_FILTER_PUBLIC_COMMENT_AREA, null) !!}
+{!! apply_filters(BASE_FILTER_PUBLIC_COMMENT_AREA, null, $post) !!}
 
 @php $relatedPosts = get_related_posts($post->getKey(), 2); @endphp
 
@@ -35,7 +35,10 @@
             <div>
                 <article>
                     <div><a href="{{ $relatedItem->url }}"></a>
-                        <img src="{{ RvMedia::getImageUrl($relatedItem->image, null, false, RvMedia::getDefaultImage()) }}" alt="{{ $relatedItem->name }}">
+                        <img
+                            src="{{ RvMedia::getImageUrl($relatedItem->image, null, false, RvMedia::getDefaultImage()) }}"
+                            alt="{{ $relatedItem->name }}"
+                        >
                     </div>
                     <header><a href="{{ $relatedItem->url }}"> {{ $relatedItem->name }}</a></header>
                 </article>

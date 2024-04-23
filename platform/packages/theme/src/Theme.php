@@ -3,17 +3,23 @@
 namespace Botble\Theme;
 
 use Botble\Base\Facades\BaseHelper;
-use Botble\SeoHelper\Facades\SeoHelper;
+use Botble\Base\Facades\Html;
+use Botble\Media\Facades\RvMedia;
+use Botble\Setting\Facades\Setting;
 use Botble\Theme\Contracts\Theme as ThemeContract;
 use Botble\Theme\Exceptions\UnknownPartialFileException;
 use Botble\Theme\Exceptions\UnknownThemeException;
+use Botble\Theme\Supports\SocialLink;
+use Botble\Theme\Supports\ThemeSupport;
 use Closure;
 use Illuminate\Config\Repository;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Http\Response;
+use Illuminate\Routing\Router;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Route;
 use Illuminate\View\Factory;
 use Symfony\Component\HttpFoundation\Cookie;
 
@@ -24,6 +30,8 @@ class Theme implements ThemeContract
     protected array $themeConfig = [];
 
     protected string|null $theme = null;
+
+    protected string|null $inheritTheme = null;
 
     protected string $layout;
 
@@ -39,6 +47,8 @@ class Theme implements ThemeContract
 
     protected array $widgets = [];
 
+    protected array $bodyAttributes = [];
+
     public function __construct(
         protected Repository $config,
         protected Dispatcher $events,
@@ -48,8 +58,6 @@ class Theme implements ThemeContract
         protected Breadcrumb $breadcrumb
     ) {
         $this->uses($this->getThemeName())->layout(setting('layout', 'default'));
-
-        SeoHelper::meta()->setGoogle(setting('google_analytics'));
     }
 
     public function layout(string $layout): self
@@ -85,6 +93,13 @@ class Theme implements ThemeContract
             throw new UnknownThemeException('Theme [' . $theme . '] not found.');
         }
 
+        $this->inheritTheme = $this->getConfig('inherit');
+
+        // If inherit theme is set and not exists, so throw exception.
+        if ($this->hasInheritTheme() && ! $this->exists($this->getInheritTheme())) {
+            throw new UnknownThemeException('Parent theme [' . $this->getInheritTheme() . '] not found.');
+        }
+
         // Add location to look up view.
         $this->addPathLocation($this->path());
 
@@ -94,12 +109,27 @@ class Theme implements ThemeContract
         // Before from a public theme config.
         $this->fire('appendBefore', $this);
 
-        $assetPath = $this->getThemeAssetsPath();
-
         // Add asset path to asset container.
-        $this->asset->addPath($assetPath . '/' . $this->getConfig('containerDir.asset'));
+        $this->registerAssetsPath();
 
         return $this;
+    }
+
+    protected function registerAssetsPath(): void
+    {
+        $assetsPath = $this->getThemeAssetsPath();
+
+        $this->asset->addPath($assetsPath . '/' . $this->getConfig('containerDir.asset'));
+    }
+
+    public function hasInheritTheme(): bool
+    {
+        return $this->inheritTheme !== null;
+    }
+
+    public function getInheritTheme(): string|null
+    {
+        return $this->inheritTheme;
     }
 
     protected function getThemeAssetsPath(): string
@@ -141,28 +171,48 @@ class Theme implements ThemeContract
      */
     public function getConfig(string|null $key = null): mixed
     {
-        // Main package config.
         if (! $this->themeConfig) {
             $this->themeConfig = $this->config->get('packages.theme.general', []);
         }
 
-        // Config inside a public theme.
-        // This config having buffer by array object.
-        if ($this->theme && ! isset($this->themeConfig['themes'][$this->theme])) {
-            $this->themeConfig['themes'][$this->theme] = [];
+        $this->loadConfigFromTheme($this->theme);
 
-            // Require public theme config.
-            $minorConfigPath = theme_path($this->theme . '/config.php');
-
-            if ($this->files->exists($minorConfigPath)) {
-                $this->themeConfig['themes'][$this->theme] = $this->files->getRequire($minorConfigPath);
-            }
-        }
-
-        // Evaluate theme config.
         $this->themeConfig = $this->evaluateConfig($this->themeConfig);
 
         return empty($key) ? $this->themeConfig : Arr::get($this->themeConfig, $key);
+    }
+
+    public function getInheritConfig(string|null $key = null): mixed
+    {
+        if (! $this->hasInheritTheme()) {
+            return null;
+        }
+
+        $this->loadConfigFromTheme($theme = $this->getInheritTheme());
+
+        if (! isset($this->themeConfig['themes'][$theme])) {
+            return null;
+        }
+
+        $config = $this->themeConfig['themes'][$theme];
+
+        return empty($key) ? $config : Arr::get($config, $key);
+    }
+
+    protected function loadConfigFromTheme(string $theme): void
+    {
+        // Config inside a public theme.
+        // This config having buffer by array object.
+        if ($theme && ! isset($this->themeConfig['themes'][$theme])) {
+            $this->themeConfig['themes'][$theme] = [];
+
+            // Require public theme config.
+            $minorConfigPath = theme_path($theme . '/config.php');
+
+            if ($this->files->exists($minorConfigPath)) {
+                $this->themeConfig['themes'][$theme] = $this->files->getRequire($minorConfigPath);
+            }
+        }
     }
 
     /**
@@ -204,12 +254,8 @@ class Theme implements ThemeContract
         $hints[] = platform_path($location);
 
         // This is nice feature to use inherit from another.
-        if ($this->getConfig('inherit')) {
-            // Inherit from theme name.
-            $inherit = $this->getConfig('inherit');
-
-            // Inherit theme path.
-            $inheritPath = platform_path($this->path($inherit));
+        if ($this->hasInheritTheme()) {
+            $inheritPath = platform_path($this->path($this->getInheritTheme()));
 
             if ($this->files->isDirectory($inheritPath)) {
                 $hints[] = $inheritPath;
@@ -272,6 +318,18 @@ class Theme implements ThemeContract
      */
     public function fire(string $event, string|array|callable|null|object $args): void
     {
+        if ($this->hasInheritTheme()) {
+            $this->asset->isInheritTheme();
+
+            $onEvent = $this->getInheritConfig('events.' . $event);
+
+            if ($onEvent instanceof Closure) {
+                $onEvent($args);
+            }
+
+            $this->asset->isInheritTheme(false);
+        }
+
         $onEvent = $this->getConfig('events.' . $event);
 
         if ($onEvent instanceof Closure) {
@@ -284,6 +342,10 @@ class Theme implements ThemeContract
      */
     public function breadcrumb(): Breadcrumb
     {
+        if (! $this->breadcrumb->getCrumbs()) {
+            $this->breadcrumb->add(__('Home'), BaseHelper::getHomepageUrl());
+        }
+
         return $this->breadcrumb;
     }
 
@@ -356,8 +418,8 @@ class Theme implements ThemeContract
         }
 
         // Passing variable to closure.
-        $events =&$this->events;
-        $bindings =&$this->bindings;
+        $events = &$this->events;
+        $bindings = &$this->bindings;
 
         // Buffer processes to save request.
         return Arr::get($this->bindings, $name, function () use (&$events, &$bindings, $name) {
@@ -719,8 +781,8 @@ class Theme implements ThemeContract
 
         $content->withHeaders([
             'CMS-Version' => get_core_version(),
-            'Authorization-At' => setting('membership_authorization_at'),
-            'Activated-License' => ! empty(setting('licensed_to')) ? 'Yes' : 'No',
+            'Authorization-At' => Setting::get('membership_authorization_at'),
+            'Activated-License' => ! empty(Setting::get('licensed_to')) ? 'Yes' : 'No',
         ]);
 
         return $content;
@@ -734,22 +796,25 @@ class Theme implements ThemeContract
             'itemListElement' => [],
         ];
 
-        foreach ($this->breadcrumb->crumbs as $index => $item) {
+        $index = 1;
+
+        foreach ($this->breadcrumb->crumbs as $item) {
             $schema['itemListElement'][] = [
                 '@type' => 'ListItem',
-                'position' => $index + 1,
+                'position' => $index,
                 'name' => BaseHelper::clean($item['label']),
                 'item' => $item['url'],
             ];
+
+            $index++;
         }
 
         $schema = json_encode($schema);
 
-        $this->asset()->container('header')->writeScript(
-            'breadcrumb-schema',
-            $schema,
-            attributes: ['type' => 'application/ld+json']
-        );
+        $this
+            ->asset()
+            ->container('header')
+            ->writeScript('breadcrumb-schema', $schema, attributes: ['type' => 'application/ld+json']);
 
         return $this->view->make('packages/theme::partials.header')->render();
     }
@@ -779,6 +844,13 @@ class Theme implements ThemeContract
     public function routes(): void
     {
         require package_path('theme/routes/public.php');
+    }
+
+    public function registerRoutes(Closure|callable $closure): Router
+    {
+        return Route::group(['middleware' => ['web', 'core']], function () use ($closure) {
+            Route::group(apply_filters(BASE_FILTER_GROUP_PUBLIC_ROUTE, []), fn () => $closure());
+        });
     }
 
     public function loadView(string $view): string
@@ -813,9 +885,101 @@ class Theme implements ThemeContract
         $screenshot = public_path($this->getConfig('themeDir') . '/' . $themeName . '/screenshot.png');
 
         if (! File::exists($screenshot)) {
-            $screenshot = theme_path($theme . '/screenshot.png');
+            $screenshot = $this->path($theme) . '/screenshot.png';
+        }
+
+        if (! File::exists($screenshot)) {
+            return RvMedia::getDefaultImage();
         }
 
         return 'data:image/png;base64,' . base64_encode(File::get($screenshot));
+    }
+
+    public function registerThemeIconFields(array $icons, array $css = [], array $js = []): void
+    {
+        ThemeSupport::registerThemeIconFields($icons, $css, $js);
+    }
+
+    public function registerFacebookIntegration(): void
+    {
+        ThemeSupport::registerFacebookIntegration();
+    }
+
+    public function registerSocialLinks(): void
+    {
+        ThemeSupport::registerSocialLinks();
+    }
+
+    public function getSocialLinksRepeaterFields(): array
+    {
+        return ThemeSupport::getSocialLinksRepeaterFields();
+    }
+
+    /**
+     * @return array<SocialLink>
+     */
+    public function getSocialLinks(): array
+    {
+        return ThemeSupport::getSocialLinks();
+    }
+
+    public function convertSocialLinksToArray(array $data): array
+    {
+        return ThemeSupport::convertSocialLinksToArray($data);
+    }
+
+    public function getThemeIcons(): array
+    {
+        return ThemeSupport::getThemeIcons();
+    }
+
+    public function addBodyAttributes(array $bodyAttributes): static
+    {
+        $this->bodyAttributes = [...$this->bodyAttributes, ...$bodyAttributes];
+
+        return $this;
+    }
+
+    public function getBodyAttribute(string $attribute): string|null
+    {
+        return $this->bodyAttributes[$attribute] ?? null;
+    }
+
+    public function getBodyAttributes(): array
+    {
+        return $this->bodyAttributes;
+    }
+
+    public function bodyAttributes(): string
+    {
+        if (BaseHelper::isRtlEnabled()) {
+            $this->bodyAttributes['dir'] = 'rtl';
+        }
+
+        if ($this->get('bodyClass')) {
+            $this->bodyAttributes['class'] = $this->get('bodyClass');
+        }
+
+        return apply_filters('theme_body_attributes', Html::attributes($this->bodyAttributes));
+    }
+
+    public function registerPreloader(): void
+    {
+        ThemeSupport::registerPreloader();
+    }
+
+    public function getPreloaderVersions(): array
+    {
+        return ThemeSupport::getPreloaderVersions();
+    }
+
+    public function registerToastNotification(): void
+    {
+        ThemeSupport::registerToastNotification();
+    }
+
+    public function getSiteCopyright(): string|null
+    {
+        return ThemeSupport::getSiteCopyright();
     }
 }

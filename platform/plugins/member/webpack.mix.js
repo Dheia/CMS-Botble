@@ -1,24 +1,22 @@
-let mix = require('laravel-mix')
-
+const mix = require('laravel-mix')
 const path = require('path')
-let directory = path.basename(path.resolve(__dirname))
 
-const source = 'platform/plugins/' + directory
-const dist = 'public/vendor/core/plugins/' + directory
-
-mix.js(source + '/resources/assets/js/app.js', dist + '/js')
+const directory = path.basename(path.resolve(__dirname))
+const source = `platform/plugins/${directory}`
+const dist = `public/vendor/core/plugins/${directory}`
 
 mix
-    .js(source + '/resources/assets/js/member-admin.js', dist + '/js')
-    .js(source + '/resources/assets/js/activity-logs.js', dist + '/js')
-    .sass(source + '/resources/assets/sass/member.scss', dist + '/css')
-    .sass(source + '/resources/assets/sass/app.scss', dist + '/css')
+    .sass(`${source}/resources/sass/dashboard/style.scss`, `${dist}/css/dashboard`)
+    .sass(`${source}/resources/sass/dashboard/style-rtl.scss`, `${dist}/css/dashboard`)
+    .js(`${source}/resources/js/dashboard/script.js`, `${dist}/js/dashboard`)
+    .js(`${source}/resources/js/dashboard/activity-logs.js`, `${dist}/js/dashboard`)
+    .sass(`${source}/resources/sass/front-auth.scss`, `${dist}/css`)
 
 if (mix.inProduction()) {
     mix
-        .copy(dist + '/js/app.js', source + '/public/js')
-        .copy(dist + '/js/activity-logs.js', source + '/public/js')
-        .copy(dist + '/js/member-admin.js', source + '/public/js')
-        .copy(dist + '/css/member.css', source + '/public/css')
-        .copy(dist + '/css/app.css', source + '/public/css')
+        .copy(`${dist}/css/dashboard/style.css`, `${source}/public/css/dashboard`)
+        .copy(`${dist}/css/dashboard/style-rtl.css`, `${source}/public/css/dashboard`)
+        .copy(`${dist}/js/dashboard/script.js`, `${source}/public/js/dashboard`)
+        .copy(`${dist}/js/dashboard/activity-logs.js`, `${source}/public/js/dashboard`)
+        .copy(`${dist}/css/front-auth.css`, `${source}/public/css`)
 }

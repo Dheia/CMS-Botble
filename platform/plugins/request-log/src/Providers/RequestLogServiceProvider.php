@@ -2,16 +2,14 @@
 
 namespace Botble\RequestLog\Providers;
 
-use Botble\Base\Facades\DashboardMenu;
+use Botble\Base\Facades\PanelSectionManager;
+use Botble\Base\PanelSections\PanelSectionItem;
+use Botble\Base\PanelSections\System\SystemPanelSection;
 use Botble\Base\Supports\ServiceProvider;
 use Botble\Base\Traits\LoadAndPublishDataTrait;
-use Botble\RequestLog\Models\RequestLog;
 use Botble\RequestLog\Models\RequestLog as RequestLogModel;
 use Botble\RequestLog\Repositories\Eloquent\RequestLogRepository;
 use Botble\RequestLog\Repositories\Interfaces\RequestLogInterface;
-use Illuminate\Console\Scheduling\Schedule;
-use Illuminate\Database\Console\PruneCommand;
-use Illuminate\Routing\Events\RouteMatched;
 
 /**
  * @since 02/07/2016 09:50 AM
@@ -39,16 +37,16 @@ class RequestLogServiceProvider extends ServiceProvider
             ->loadMigrations()
             ->publishAssets();
 
-        $this->app['events']->listen(RouteMatched::class, function () {
-            DashboardMenu::registerItem([
-                'id' => 'cms-plugin-request-log',
-                'priority' => 8,
-                'parent_id' => 'cms-core-platform-administration',
-                'name' => 'plugins/request-log::request-log.name',
-                'icon' => null,
-                'url' => route('request-log.index'),
-                'permissions' => ['request-log.index'],
-            ]);
+        PanelSectionManager::group('system')->beforeRendering(function () {
+            PanelSectionManager::registerItem(
+                SystemPanelSection::class,
+                fn () => PanelSectionItem::make('request-logs')
+                    ->setTitle(trans('plugins/request-log::request-log.name'))
+                    ->withDescription(trans('plugins/request-log::request-log.description'))
+                    ->withIcon('ti ti-note')
+                    ->withPriority(10)
+                    ->withRoute('request-log.index')
+            );
         });
 
         $this->app->register(EventServiceProvider::class);
@@ -56,10 +54,6 @@ class RequestLogServiceProvider extends ServiceProvider
 
         $this->app->booted(function () {
             $this->app->register(HookServiceProvider::class);
-        });
-
-        $this->app->afterResolving(Schedule::class, function (Schedule $schedule) {
-            $schedule->command(PruneCommand::class, ['--model' => RequestLog::class])->dailyAt('00:30');
         });
     }
 }

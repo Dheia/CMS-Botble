@@ -13,7 +13,7 @@ return new class () extends Migration {
             $table->longText('description');
             $table->tinyInteger('is_featured')->unsigned()->default(0);
             $table->tinyInteger('order')->unsigned()->default(0);
-            $table->string('image', 255)->nullable();
+            $table->string('image')->nullable();
             $table->foreignId('user_id')->index();
             $table->string('status', 60)->default('published');
             $table->timestamps();

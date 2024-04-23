@@ -2,79 +2,49 @@
 
 namespace Botble\RequestLog\Http\Controllers;
 
-use Botble\Base\Events\DeletedContentEvent;
-use Botble\Base\Facades\PageTitle;
-use Botble\Base\Http\Controllers\BaseController;
-use Botble\Base\Http\Responses\BaseHttpResponse;
-use Botble\Base\Traits\HasDeleteManyItemsTrait;
+use Botble\Base\Facades\Assets;
+use Botble\Base\Http\Actions\DeleteResourceAction;
+use Botble\Base\Http\Controllers\BaseSystemController;
 use Botble\RequestLog\Models\RequestLog;
-use Botble\RequestLog\Repositories\Interfaces\RequestLogInterface;
 use Botble\RequestLog\Tables\RequestLogTable;
-use Exception;
 use Illuminate\Http\Request;
 
-class RequestLogController extends BaseController
+class RequestLogController extends BaseSystemController
 {
-    use HasDeleteManyItemsTrait;
-
-    public function __construct(protected RequestLogInterface $requestLogRepository)
-    {
-    }
-
-    public function getWidgetRequestErrors(Request $request, BaseHttpResponse $response)
+    public function getWidgetRequestErrors(Request $request)
     {
         $limit = $request->integer('paginate', 10);
         $limit = $limit > 0 ? $limit : 10;
 
-        $requests = $this->requestLogRepository
-            ->advancedGet([
-                'order_by' => ['created_at' => 'DESC'],
-                'paginate' => [
-                    'per_page' => $limit,
-                    'current_paged' => $request->integer('page', 1),
-                ],
-            ]);
+        $requests = RequestLog::query()
+            ->orderByDesc('created_at')
+            ->paginate($limit);
 
-        return $response
+        return $this
+            ->httpResponse()
             ->setData(view('plugins/request-log::widgets.request-errors', compact('requests', 'limit'))->render());
     }
 
     public function index(RequestLogTable $dataTable)
     {
-        PageTitle::setTitle(trans('plugins/request-log::request-log.name'));
+        Assets::addScriptsDirectly('vendor/core/plugins/request-log/js/request-log.js');
+
+        $this->pageTitle(trans('plugins/request-log::request-log.name'));
 
         return $dataTable->renderTable();
     }
 
-    public function destroy(RequestLog $log, Request $request, BaseHttpResponse $response)
+    public function destroy(RequestLog $log)
     {
-        try {
-            $this->requestLogRepository->delete($log);
-
-            event(new DeletedContentEvent(REQUEST_LOG_MODULE_SCREEN_NAME, $request, $log));
-
-            return $response->setMessage(trans('core/base::notices.delete_success_message'));
-        } catch (Exception $ex) {
-            return $response
-                ->setError()
-                ->setMessage($ex->getMessage());
-        }
+        return DeleteResourceAction::make($log);
     }
 
-    public function deletes(Request $request, BaseHttpResponse $response)
+    public function deleteAll()
     {
-        return $this->executeDeleteItems(
-            $request,
-            $response,
-            $this->requestLogRepository,
-            REQUEST_LOG_MODULE_SCREEN_NAME
-        );
-    }
+        RequestLog::query()->truncate();
 
-    public function deleteAll(BaseHttpResponse $response)
-    {
-        $this->requestLogRepository->getModel()->truncate();
-
-        return $response->setMessage(trans('core/base::notices.delete_success_message'));
+        return $this
+            ->httpResponse()
+            ->withDeletedSuccessMessage();
     }
 }

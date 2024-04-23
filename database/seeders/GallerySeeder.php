@@ -3,72 +3,41 @@
 namespace Database\Seeders;
 
 use Botble\Base\Supports\BaseSeeder;
-use Botble\Gallery\Models\Gallery;
-use Botble\Gallery\Models\GalleryMeta;
-use Botble\Slug\Facades\SlugHelper;
-use Botble\Slug\Models\Slug;
-use Illuminate\Support\Str;
+use Botble\Gallery\Database\Traits\HasGallerySeeder;
 
 class GallerySeeder extends BaseSeeder
 {
+    use HasGallerySeeder;
+
     public function run(): void
     {
-        $this->uploadFiles('galleries');
-
-        Gallery::query()->truncate();
-        GalleryMeta::query()->truncate();
-
         $galleries = [
-            [
-                'name' => 'Perfect',
-            ],
-            [
-                'name' => 'New Day',
-            ],
-            [
-                'name' => 'Happy Day',
-            ],
-            [
-                'name' => 'Nature',
-            ],
-            [
-                'name' => 'Morning',
-            ],
-            [
-                'name' => 'Photography',
-            ],
+            'Sunset',
+            'Ocean Views',
+            'Adventure Time',
+            'City Lights',
+            'Dreamscape',
+            'Enchanted Forest',
+            'Golden Hour',
+            'Serenity',
+            'Eternal Beauty',
+            'Moonlight Magic',
+            'Starry Night',
+            'Hidden Gems',
+            'Tranquil Waters',
+            'Urban Escape',
+            'Twilight Zone',
         ];
 
-        $faker = fake();
+        $faker = $this->fake();
 
-        $images = [];
-        for ($i = 0; $i < 10; $i++) {
-            $images[] = [
-                'img' => 'galleries/' . ($i + 1) . '.jpg',
-                'description' => $faker->text(150),
-            ];
-        }
-
-        foreach ($galleries as $index => $item) {
-            $item['description'] = $faker->text(150);
-            $item['image'] = 'galleries/' . ($index + 1) . '.jpg';
-            $item['user_id'] = 1;
-            $item['is_featured'] = true;
-
-            $gallery = Gallery::query()->create($item);
-
-            Slug::query()->create([
-                'reference_type' => Gallery::class,
-                'reference_id' => $gallery->id,
-                'key' => Str::slug($gallery->name),
-                'prefix' => SlugHelper::getPrefix(Gallery::class),
-            ]);
-
-            GalleryMeta::query()->create([
-                'images' => $images,
-                'reference_id' => $gallery->id,
-                'reference_type' => Gallery::class,
-            ]);
-        }
+        $this->createGalleries(
+            collect($galleries)->map(function (string $item, int $index) {
+                return ['name' => $item, 'is_featured' => $index < 6, 'image' => $this->filePath('news/' . ($index + 6) . '.jpg')];
+            })->toArray(),
+            array_map(function ($index) use ($faker) {
+                return ['img' => $this->filePath('news/' . $index . '.jpg'), 'description' => $faker->text(150)];
+            }, range(1, 20))
+        );
     }
 }

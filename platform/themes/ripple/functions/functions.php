@@ -1,82 +1,80 @@
 <?php
 
-use Botble\Base\Facades\Form;
 use Botble\Base\Facades\MetaBox;
+use Botble\Base\Forms\FieldOptions\MediaImageFieldOption;
+use Botble\Base\Forms\Fields\MediaImageField;
 use Botble\Base\Forms\FormAbstract;
-use Botble\Base\Forms\FormHelper;
+use Botble\Base\Rules\MediaImageRule;
 use Botble\Blog\Models\Post;
 use Botble\Media\Facades\RvMedia;
+use Botble\Member\Forms\PostForm as MemberPostForm;
 use Botble\Page\Models\Page;
-use Botble\Theme\Facades\Theme;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\Request as IlluminateRequest;
-use Theme\Ripple\Fields\ThemeIconField;
+use Botble\Theme\Supports\ThemeSupport;
+use Botble\Widget\Events\RenderingWidgetSettings;
+use Illuminate\Routing\Events\RouteMatched;
 
-register_page_template([
-    'no-sidebar' => __('No sidebar'),
-]);
+app()->booted(function () {
+    RvMedia::addSize('featured', 565, 375)
+        ->addSize('medium', 540, 360);
+});
 
-register_sidebar([
-    'id' => 'top_sidebar',
-    'name' => __('Top sidebar'),
-    'description' => __('Area for widgets on the top sidebar'),
-]);
+app('events')->listen(RouteMatched::class, function () {
+    ThemeSupport::registerSocialLinks();
+    ThemeSupport::registerToastNotification();
+    ThemeSupport::registerPreloader();
+    ThemeSupport::registerSiteCopyright();
 
-register_sidebar([
-    'id' => 'footer_sidebar',
-    'name' => __('Footer sidebar'),
-    'description' => __('Area for footer widgets'),
-]);
+    register_page_template([
+        'no-sidebar' => __('No sidebar'),
+    ]);
 
-RvMedia::setUploadPathAndURLToPublic();
-RvMedia::addSize('featured', 565, 375)->addSize('medium', 540, 360);
+    app('events')->listen(RenderingWidgetSettings::class, function () {
+        register_sidebar([
+            'id' => 'top_sidebar',
+            'name' => __('Top sidebar'),
+            'description' => __('Area for widgets on the top sidebar'),
+        ]);
 
-add_filter(BASE_FILTER_BEFORE_RENDER_FORM, function (FormAbstract $form, Model $data): FormAbstract {
-    switch (get_class($data)) {
-        case Post::class:
-        case Page::class:
-            $bannerImage = MetaBox::getMetaData($data, 'banner_image', true);
+        register_sidebar([
+            'id' => 'footer_sidebar',
+            'name' => __('Footer sidebar'),
+            'description' => __('Area for footer widgets'),
+        ]);
+    });
 
-            $form
-                ->addAfter('image', 'banner_image', is_in_admin(true) ? 'mediaImage' : 'customImage', [
-                    'label' => __('Banner image (1920x170px)'),
-                    'label_attr' => ['class' => 'control-label'],
-                    'value' => $bannerImage,
-                ]);
+    FormAbstract::extend(function (FormAbstract $form): void {
+        $model = $form->getModel();
 
-            break;
-    }
-
-    return $form;
-}, 124, 3);
-
-add_action(
-    [BASE_ACTION_AFTER_CREATE_CONTENT, BASE_ACTION_AFTER_UPDATE_CONTENT],
-    function (string $type, IlluminateRequest $request, Model $object): void {
-        switch (get_class($object)) {
-            case Post::class:
-            case Page::class:
-                if ($request->has('banner_image')) {
-                    MetaBox::saveMetaBoxData($object, 'banner_image', $request->input('banner_image'));
-                }
-
-                break;
+        if (! $model instanceof Post && ! $model instanceof Page) {
+            return;
         }
-    },
-    175,
-    3
-);
 
-Form::component('themeIcon', Theme::getThemeNamespace() . '::partials.icons-field', [
-    'name',
-    'value' => null,
-    'attributes' => [],
-]);
+        $form
+            ->addAfter(
+                'image',
+                'banner_image',
+                MediaImageField::class,
+                MediaImageFieldOption::make()->label(__('Banner image (1920x170px)'))->metadata()->toArray()
+            );
+    }, 124);
 
-add_filter('form_custom_fields', function (FormAbstract $form, FormHelper $formHelper): FormAbstract {
-    if (! $formHelper->hasCustomField('themeIcon')) {
-        $form->addCustomField('themeIcon', ThemeIconField::class);
-    }
+    FormAbstract::afterSaving(function (FormAbstract $form): void {
+        if (! $form instanceof MemberPostForm) {
+            return;
+        }
 
-    return $form;
-}, 29, 2);
+        $request = $form->getRequest();
+
+        $request->validate([
+            'banner_image_input' => ['nullable', new MediaImageRule()],
+        ]);
+
+        if ($request->hasFile('banner_image_input')) {
+            $result = RvMedia::handleUpload($request->file('banner_image_input'), 0, 'members');
+
+            if (! $result['error']) {
+                MetaBox::saveMetaBoxData($form->getModel(), 'banner_image', $result['data']->url);
+            }
+        }
+    }, 175);
+});

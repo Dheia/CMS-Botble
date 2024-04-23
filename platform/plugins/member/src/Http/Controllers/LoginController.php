@@ -2,15 +2,17 @@
 
 namespace Botble\Member\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use Botble\ACL\Traits\AuthenticatesUsers;
 use Botble\ACL\Traits\LogoutGuardTrait;
+use Botble\Base\Facades\BaseHelper;
+use Botble\Base\Http\Controllers\BaseController;
+use Botble\Member\Forms\Fronts\Auth\LoginForm;
 use Botble\SeoHelper\Facades\SeoHelper;
 use Botble\Theme\Facades\Theme;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
-class LoginController extends Controller
+class LoginController extends BaseController
 {
     use AuthenticatesUsers, LogoutGuardTrait {
         AuthenticatesUsers::attemptLogin as baseAttemptLogin;
@@ -24,13 +26,13 @@ class LoginController extends Controller
             session(['url.intended' => url()->previous()]);
         }
 
-        Theme::breadcrumb()->add(__('Home'), route('public.index'))->add(__('Login'), route('public.member.login'));
+        Theme::breadcrumb()->add(__('Login'), route('public.member.login'));
 
-        if (view()->exists(Theme::getThemeNamespace() . '::views.member.auth.login')) {
-            return Theme::scope('member.auth.login')->render();
-        }
-
-        return view('plugins/member::auth.login');
+        return Theme::scope(
+            'member.auth.login',
+            ['form' => LoginForm::create()],
+            'plugins/member::themes.auth.login'
+        )->render();
     }
 
     public function login(Request $request)
@@ -108,6 +110,6 @@ class LoginController extends Controller
 
         $this->loggedOut($request);
 
-        return redirect()->route('public.index');
+        return redirect()->to(BaseHelper::getHomepageUrl());
     }
 }

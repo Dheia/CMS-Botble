@@ -5,7 +5,6 @@ namespace Botble\Gallery\Services;
 use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Gallery\Facades\Gallery;
 use Botble\Gallery\Models\Gallery as GalleryModel;
-use Botble\Gallery\Repositories\Interfaces\GalleryInterface;
 use Botble\Media\Facades\RvMedia;
 use Botble\SeoHelper\Facades\SeoHelper;
 use Botble\SeoHelper\SeoOpenGraph;
@@ -28,7 +27,7 @@ class GalleryService
             'status' => BaseStatusEnum::PUBLISHED,
         ];
 
-        if (Auth::check() && request()->input('preview')) {
+        if (Auth::guard()->check() && request()->input('preview')) {
             Arr::forget($condition, 'status');
         }
 
@@ -36,11 +35,10 @@ class GalleryService
             return $slug;
         }
 
-        $gallery = app(GalleryInterface::class)->getFirstBy($condition, ['*'], ['slugable']);
-
-        if (! $gallery) {
-            abort(404);
-        }
+        $gallery = GalleryModel::query()
+            ->where($condition)
+            ->with(['slugable'])
+            ->firstOrFail();
 
         SeoHelper::setTitle($gallery->name)
             ->setDescription($gallery->description);
@@ -64,13 +62,12 @@ class GalleryService
         do_action(BASE_ACTION_PUBLIC_RENDER_SINGLE, GALLERY_MODULE_SCREEN_NAME, $gallery);
 
         Theme::breadcrumb()
-            ->add(__('Home'), route('public.index'))
             ->add(__('Galleries'), Gallery::getGalleriesPageUrl())
             ->add($gallery->name, $gallery->url);
 
         if (function_exists('admin_bar')) {
             admin_bar()
-                ->registerLink(trans('plugins/gallery::gallery.edit_this_gallery'), route('galleries.edit', $gallery->id), null, 'galleries.edit');
+                ->registerLink(trans('plugins/gallery::gallery.edit_this_gallery'), route('galleries.edit', $gallery->getKey()), null, 'galleries.edit');
         }
 
         return [

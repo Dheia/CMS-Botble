@@ -5,6 +5,7 @@ namespace Botble\AuditLog\Listeners;
 use Botble\AuditLog\Events\AuditHandlerEvent;
 use Botble\AuditLog\Facades\AuditLog;
 use Botble\Base\Events\CreatedContentEvent;
+use Botble\Base\Facades\BaseHelper;
 use Exception;
 
 class CreatedContentListener
@@ -13,16 +14,18 @@ class CreatedContentListener
     {
         try {
             if ($event->data->getKey()) {
+                $model = $event->screen;
+
                 event(new AuditHandlerEvent(
-                    $event->screen,
+                    $model,
                     'created',
                     $event->data->getKey(),
-                    AuditLog::getReferenceName($event->screen, $event->data),
+                    AuditLog::getReferenceName($model, $event->data),
                     'info'
                 ));
             }
         } catch (Exception $exception) {
-            info($exception->getMessage());
+            BaseHelper::logError($exception);
         }
     }
 }

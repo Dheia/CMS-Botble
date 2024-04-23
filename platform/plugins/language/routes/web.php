@@ -1,14 +1,20 @@
 <?php
 
-use Botble\Base\Facades\BaseHelper;
+use Botble\Base\Facades\AdminHelper;
 use Illuminate\Support\Facades\Route;
 
-Route::group(['namespace' => 'Botble\Language\Http\Controllers', 'middleware' => ['web', 'core']], function () {
-    Route::group(['prefix' => BaseHelper::getAdminPrefix(), 'middleware' => 'auth'], function () {
+Route::group(['namespace' => 'Botble\Language\Http\Controllers'], function () {
+    AdminHelper::registerRoutes(function () {
         Route::group(['prefix' => 'settings/languages'], function () {
             Route::get('', [
                 'as' => 'languages.index',
                 'uses' => 'LanguageController@index',
+            ]);
+
+            Route::get('options', [
+                'as' => 'settings.language',
+                'uses' => 'LanguageController@index',
+                'permission' => 'languages.index',
             ]);
 
             Route::post('store', [
@@ -44,7 +50,7 @@ Route::group(['namespace' => 'Botble\Language\Http\Controllers', 'middleware' =>
 
             Route::post('edit-setting', [
                 'as' => 'languages.settings',
-                'uses' => 'LanguageController@postEditSettings',
+                'uses' => 'Settings\LanguageSettingController@update',
                 'permission' => 'languages.edit',
             ]);
         });

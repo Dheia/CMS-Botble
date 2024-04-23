@@ -2,9 +2,9 @@
 
 namespace Botble\Base\Supports;
 
+use Botble\Base\Contracts\BaseModel;
 use Botble\Base\Models\MetaBox as MetaBoxModel;
 use Closure;
-use Exception;
 use Illuminate\Database\Eloquent\Model;
 
 class MetaBox
@@ -86,10 +86,14 @@ class MetaBox
         ];
     }
 
-    public function doMetaBoxes(string $context, Model|string|null $object = null): void
+    public function doMetaBoxes(string $context, array|Model|string|null $object = null): void
     {
+        if (! $object) {
+            return;
+        }
+
         $data = '';
-        $reference = get_class($object);
+        $reference = $object instanceof BaseModel ? $object::class : $object;
         if (isset($this->metaBoxes[$reference][$context])) {
             foreach (['high', 'sorted', 'core', 'default', 'low'] as $priority) {
                 if (! isset($this->metaBoxes[$reference][$context][$priority])) {
@@ -128,31 +132,28 @@ class MetaBox
 
     public function saveMetaBoxData(Model $object, string $key, $value, $options = null): void
     {
+        if (! $object->getKey()) {
+            return;
+        }
+
         $key = apply_filters('stored_meta_box_key', $key, $object);
 
-        try {
-            $data = [
-                'meta_key' => $key,
-                'reference_id' => $object->getKey(),
-                'reference_type' => $object::class,
-            ];
+        $data = [
+            'meta_key' => $key,
+            'reference_id' => $object->getKey(),
+            'reference_type' => $object::class,
+        ];
 
-            $fieldMeta = MetaBoxModel::query()->where($data)->first();
+        $fieldMeta = MetaBoxModel::query()->firstOrNew($data);
 
-            if (! $fieldMeta) {
-                $fieldMeta = MetaBoxModel::query()->getModel();
-                $fieldMeta->fill($data);
-            }
+        $fieldMeta->fill($data);
 
-            if (! empty($options)) {
-                $fieldMeta->options = $options;
-            }
-
-            $fieldMeta->meta_value = [$value];
-            $fieldMeta->save();
-        } catch (Exception $exception) {
-            info($exception->getMessage());
+        if (! empty($options)) {
+            $fieldMeta->options = $options;
         }
+
+        $fieldMeta->meta_value = [$value];
+        $fieldMeta->save();
     }
 
     public function getMetaData(
@@ -187,6 +188,10 @@ class MetaBox
 
     public function deleteMetaData(Model $object, string $key): bool
     {
+        if (! $object->getKey()) {
+            return false;
+        }
+
         $key = apply_filters('stored_meta_box_key', $key, $object);
 
         return MetaBoxModel::query()->where([

@@ -2,19 +2,19 @@
 
 namespace Botble\Base\Models;
 
+use Botble\Base\Enums\BaseStatusEnum;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
-/**
- * @template TModelClass of \Illuminate\Database\Eloquent\Model
- * @extends Builder<TModelClass>
- */
 class BaseQueryBuilder extends Builder
 {
-    public function addSearch(string $column, string|null $term, bool $isPartial = true, bool $or = true): BaseQueryBuilder
+    public function addSearch(string $column, string|null $term, bool $isPartial = true, bool $or = true): static
     {
+        $term = trim($term);
+        $term = str_replace('&', '&amp;', $term);
+
         if (! $isPartial) {
-            $this->{$or ? 'orWhere' : 'where'}($column, 'LIKE', '%' . trim($term) . '%');
+            $this->{$or ? 'orWhere' : 'where'}($column, 'LIKE', '%' . $term . '%');
 
             return $this;
         }
@@ -41,5 +41,19 @@ class BaseQueryBuilder extends Builder
         }
 
         return '\\\\\\';
+    }
+
+    public function wherePublished($column = 'status'): static
+    {
+        $this->where($column, BaseStatusEnum::PUBLISHED);
+
+        return $this;
+    }
+
+    public function get($columns = ['*'])
+    {
+        $data = parent::get($columns);
+
+        return apply_filters('model_after_execute_get', $data, $this->getModel(), $columns);
     }
 }

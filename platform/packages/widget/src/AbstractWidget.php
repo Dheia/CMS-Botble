@@ -3,9 +3,12 @@
 namespace Botble\Widget;
 
 use Botble\Theme\Facades\Theme;
+use Botble\Widget\Forms\WidgetForm;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Str;
 use ReflectionClass;
 
 abstract class AbstractWidget
@@ -38,8 +41,12 @@ abstract class AbstractWidget
         return File::basename(File::dirname($reflection->getFilename()));
     }
 
-    public function getConfig(): array
+    public function getConfig(string $name = null, $default = null): array|int|string|null
     {
+        if ($name) {
+            return Arr::get($this->config, $name, $default);
+        }
+
         return $this->config;
     }
 
@@ -74,15 +81,18 @@ abstract class AbstractWidget
         $viewData = array_merge([
             'config' => $this->config,
             'sidebar' => $args[0],
+            'position' => $data->position,
+            'widgetId' => $data->widget_id,
         ], $this->data());
 
         $html = null;
 
         $widgetDirectory = $this->getWidgetDirectory();
+        $namespace = Str::afterLast($this->frontendTemplate, '.');
 
-        if (View::exists(Theme::getThemeNamespace('widgets.' . $widgetDirectory . '.templates.' . $this->frontendTemplate))) {
+        if (View::exists(Theme::getThemeNamespace('widgets.' . $widgetDirectory . '.templates.' . $namespace))) {
             $html = Theme::loadPartial(
-                $this->frontendTemplate,
+                $namespace,
                 Theme::getThemeNamespace('/../widgets/' . $widgetDirectory . '/templates'),
                 $viewData
             );
@@ -118,11 +128,19 @@ abstract class AbstractWidget
             }
         }
 
-        $widgetDirectory = $this->getWidgetDirectory();
+        $settingForm = $this->settingForm();
 
-        if (View::exists(Theme::getThemeNamespace('widgets.' . $widgetDirectory . '.templates.' . $this->backendTemplate))) {
+        return $settingForm instanceof WidgetForm ? $settingForm->renderForm() : $settingForm;
+    }
+
+    protected function settingForm(): WidgetForm|string|null
+    {
+        $widgetDirectory = $this->getWidgetDirectory();
+        $namespace = Str::afterLast($this->backendTemplate, '.');
+
+        if (View::exists(Theme::getThemeNamespace('widgets.' . $widgetDirectory . '.templates.' . $namespace))) {
             return Theme::loadPartial(
-                $this->backendTemplate,
+                $namespace,
                 Theme::getThemeNamespace('/../widgets/' . $widgetDirectory . '/templates'),
                 array_merge([
                     'config' => $this->config,

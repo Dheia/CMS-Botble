@@ -12,7 +12,6 @@ use Botble\Installer\Http\Middleware\CheckIfInstallingMiddleware;
 use Botble\Installer\Http\Middleware\RedirectIfNotInstalledMiddleware;
 use Carbon\Carbon;
 use Illuminate\Routing\Events\RouteMatched;
-use Throwable;
 
 class InstallerServiceProvider extends ServiceProvider
 {
@@ -20,7 +19,8 @@ class InstallerServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->setNamespace('packages/installer')
+        $this
+            ->setNamespace('packages/installer')
             ->loadHelpers()
             ->loadAndPublishConfigurations('installer')
             ->loadAndPublishTranslations()
@@ -39,12 +39,8 @@ class InstallerServiceProvider extends ServiceProvider
             }
         });
 
-        try {
-            $this->app['events']->listen([UpdatedEvent::class, FinishedSeederEvent::class], function () {
-                BaseHelper::saveFileData(storage_path(INSTALLED_SESSION_NAME), Carbon::now()->toDateTimeString());
-            });
-        } catch (Throwable $exception) {
-            info($exception->getMessage());
-        }
+        $this->app['events']->listen([UpdatedEvent::class, FinishedSeederEvent::class], function () {
+            BaseHelper::saveFileData(storage_path(INSTALLED_SESSION_NAME), Carbon::now()->toDateTimeString());
+        });
     }
 }

@@ -14,11 +14,20 @@
     }
 @endphp
 
-{!! Form::customSelect($name, ['' => __('-- Select --')] + array_combine($field['options'], $field['options']), $selected, ['class' => 'select2_google_fonts_picker']) !!}
+{!! Form::customSelect(
+    $name,
+    ['' => __('-- Select --')] + array_combine($field['options'], $field['options']),
+    $selected,
+    ['data-bb-toggle' => 'google-font-selector'],
+) !!}
 
 @once
     @push('footer')
-        {!! Html::style(BaseHelper::getGoogleFontsURL() . '/css?family=' . implode('|', array_map('urlencode', array_filter($field['options']))) . '&display=swap') !!}
+        {!! Html::style(
+            BaseHelper::getGoogleFontsURL() .
+                '/css?family=' .
+                implode('|', array_map('urlencode', array_filter($field['options']))) .
+                '&display=swap',
+        ) !!}
     @endpush
 @endonce
-

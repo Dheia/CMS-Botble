@@ -3,7 +3,6 @@
 namespace Theme\Ripple\Http\Controllers;
 
 use Botble\Base\Facades\BaseHelper;
-use Botble\Base\Http\Responses\BaseHttpResponse;
 use Botble\Blog\Repositories\Interfaces\PostInterface;
 use Botble\Theme\Facades\Theme;
 use Botble\Theme\Http\Controllers\PublicController;
@@ -18,7 +17,7 @@ class RippleController extends PublicController
      *
      * @group Blog
      */
-    public function getSearch(Request $request, PostInterface $postRepository, BaseHttpResponse $response)
+    public function getSearch(Request $request, PostInterface $postRepository)
     {
         $query = BaseHelper::stringify($request->input('q'));
 
@@ -32,11 +31,14 @@ class RippleController extends PublicController
             ];
 
             if ($data['count'] > 0) {
-                return $response->setData(apply_filters(BASE_FILTER_SET_DATA_SEARCH, $data, 10, 1));
+                return $this
+                    ->httpResponse()
+                    ->setData(apply_filters(BASE_FILTER_SET_DATA_SEARCH, $data, 10, 1));
             }
         }
 
-        return $response
+        return $this
+            ->httpResponse()
             ->setError()
             ->setMessage(__('No results found, please try with different keywords.'));
     }

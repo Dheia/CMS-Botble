@@ -3,13 +3,22 @@
 namespace Botble\Menu;
 
 use Botble\Base\Enums\BaseStatusEnum;
-use Botble\Base\Events\CreatedContentEvent;
-use Botble\Base\Events\UpdatedContentEvent;
+use Botble\Base\Facades\BaseHelper;
 use Botble\Base\Facades\Html;
+use Botble\Base\Facades\MetaBox;
+use Botble\Base\Forms\FieldOptions\InputFieldOption;
+use Botble\Base\Forms\FieldOptions\TextFieldOption;
+use Botble\Base\Forms\Fields\ColorField;
+use Botble\Base\Forms\Fields\CoreIconField;
+use Botble\Base\Forms\Fields\TextField;
+use Botble\Base\Forms\FormAbstract;
 use Botble\Base\Models\BaseModel;
 use Botble\Base\Supports\RepositoryHelper;
+use Botble\Menu\Forms\MenuNodeForm;
+use Botble\Menu\Http\Requests\MenuRequest;
 use Botble\Menu\Models\Menu as MenuModel;
 use Botble\Menu\Models\MenuNode;
+use Botble\Support\Http\Requests\Request as BaseRequest;
 use Botble\Support\Services\Cache\Cache;
 use Botble\Theme\Facades\Theme;
 use Exception;
@@ -41,7 +50,6 @@ class Menu
 
         return $this->data
             ->where('slug', $slug)
-            ->where('status', BaseStatusEnum::PUBLISHED)
             ->isNotEmpty();
     }
 
@@ -76,23 +84,25 @@ class Menu
         int|string $parentId,
         bool $hasChild = false
     ): array {
+        /**
+         * @var MenuNode $node
+         */
+
         $node = MenuNode::query()->findOrNew(Arr::get($menuItem, 'id'));
 
-        $node->fill($menuItem);
-        $node->menu_id = $menuId;
-        $node->parent_id = $parentId;
-        $node->has_child = $hasChild;
+        MenuNodeForm::createFromModel($node)
+            ->saving(function (MenuNodeForm $form) use ($hasChild, $parentId, $menuId, $menuItem) {
+                $node = $form->getModel();
+                $node->fill($menuItem);
+                $node->menu_id = $menuId;
+                $node->parent_id = $parentId;
+                $node->has_child = $hasChild;
 
-        $node = $this->getReferenceMenuNode($menuItem, $node);
-        $node->save();
+                $node = $this->getReferenceMenuNode($menuItem, $node);
+                $node->save();
+            });
 
         $menuItem['id'] = $node->getKey();
-
-        if ($node->wasRecentlyCreated) {
-            event(new CreatedContentEvent(MENU_NODE_MODULE_SCREEN_NAME, request(), $node));
-        } else {
-            event(new UpdatedContentEvent(MENU_NODE_MODULE_SCREEN_NAME, request(), $node));
-        }
 
         return $menuItem;
     }
@@ -198,7 +208,7 @@ class Menu
         ]);
 
         $items = MenuModel::query()
-            ->where('status', BaseStatusEnum::PUBLISHED)
+            ->wherePublished()
             ->with($with);
 
         return RepositoryHelper::applyBeforeExecuteQuery($items, new MenuModel())->get();
@@ -222,6 +232,14 @@ class Menu
 
         if (! $menu) {
             $menu = $this->data->where('slug', $slug)->first();
+        }
+
+        if (! $menu) {
+            $menu = RepositoryHelper::applyBeforeExecuteQuery(
+                MenuModel::query()->where('slug', $slug),
+                new MenuModel(),
+                true
+            )->first();
         }
 
         if (! $menu) {
@@ -266,7 +284,7 @@ class Menu
         $options = Menu::generateSelect([
             'model' => new $model(),
             'options' => [
-                'class' => 'list-item',
+                'class' => 'list-unstyled list-item',
             ],
         ]);
 
@@ -296,7 +314,7 @@ class Menu
                 $items = $items->where('status', BaseStatusEnum::PUBLISHED);
             }
 
-            $items = apply_filters(BASE_FILTER_BEFORE_GET_ADMIN_LIST_ITEM, $items, $model, get_class($model))->get();
+            $items = apply_filters(BASE_FILTER_BEFORE_GET_ADMIN_LIST_ITEM, $items, $model, $model::class)->get();
         } else {
             $items = Arr::get($args, 'items', []);
         }
@@ -350,9 +368,162 @@ class Menu
                 $node->save();
             }
         } catch (Exception $exception) {
-            info($exception->getMessage());
+            BaseHelper::logError($exception);
         }
 
         return $this;
+    }
+
+    public function useMenuItemIconImage(): void
+    {
+        FormAbstract::beforeRendering(function (FormAbstract $form): FormAbstract {
+            $model = $form->getModel();
+
+            if ($model instanceof MenuNode) {
+                $form
+                    ->modify('icon_font', $form->getFormHelper()->hasCustomField('themeIcon') ? 'themeIcon' : CoreIconField::class, [
+                        'attr' => [
+                            'placeholder' => null,
+                        ],
+                        'empty_value' => __('-- None --'),
+                    ])
+                ->addAfter('icon_font', 'icon_image', 'mediaImage', [
+                    'label' => __('Icon image'),
+                    'attr' => [
+                        'data-update' => 'icon_image',
+                    ],
+                    'value' => $model->icon_image ?: $model->getMetaData('icon_image', true),
+                    'help_block' => [
+                        'text' => __('It will replace Icon Font if it is present.'),
+                    ],
+                    'wrapper' => [
+                        'style' => 'display: block;',
+                    ],
+                ]);
+            }
+
+            return $form;
+        }, 124);
+
+        FormAbstract::beforeSaving(function (FormAbstract $form) {
+            $model = $form->getModel();
+
+            if ($model instanceof MenuNode) {
+                $request = $form->getRequest();
+
+                if ($request->has('data.icon_image')) {
+                    if ($iconImage = $request->input('data.icon_image')) {
+                        MetaBox::saveMetaBoxData($model, 'icon_image', $iconImage);
+                    } else {
+                        MetaBox::deleteMetaData($model, 'icon_image');
+                    }
+
+                    return;
+                }
+
+                if ($menuNodes = $request->input('menu_nodes')) {
+                    $menuNodes = json_decode($menuNodes, true);
+
+                    if ($menuNodes) {
+                        $this->saveMenuNodeImages($menuNodes, $model);
+                    }
+                }
+            }
+        }, 170);
+
+        add_filter('menu_nodes_item_data', function (MenuNode $data): MenuNode {
+            $data->icon_image = $data->getMetaData('icon_image', true);
+
+            return $data;
+        }, 170);
+
+        add_filter('cms_menu_load_with_relations', function (array $relations): array {
+            return array_merge($relations, ['menuNodes.metadata', 'menuNodes.child.metadata']);
+        }, 170);
+    }
+
+    public function saveMenuNodeImages(array $nodes, MenuNode $model): void
+    {
+        foreach ($nodes as $node) {
+            if ($node['menuItem']['id'] == $model->getKey() && isset($node['menuItem']['icon_image'])) {
+                if ($iconImage = $node['menuItem']['icon_image']) {
+                    MetaBox::saveMetaBoxData($model, 'icon_image', $iconImage);
+                } else {
+                    MetaBox::deleteMetaData($model, 'icon_image');
+                }
+            }
+
+            if (! empty($node['children'])) {
+                $this->saveMenuNodeImages($node['children'], $model);
+            }
+        }
+    }
+
+    public function useMenuItemBadge(): void
+    {
+        MenuNodeForm::extend(function (MenuNodeForm $form) {
+            $form->add(
+                'badge_text',
+                TextField::class,
+                TextFieldOption::make()
+                    ->label(trans('packages/menu::menu.badge_text'))
+                    ->value($form->getModel()->getMetaData('badge_text', true))
+                    ->toArray()
+            )
+                ->add(
+                    'badge_color',
+                    ColorField::class,
+                    InputFieldOption::make()
+                        ->value($form->getModel()->getMetaData('badge_color', true) ?: '#ffffff')
+                        ->label(trans('packages/menu::menu.badge_color'))
+                        ->toArray()
+                );
+
+            return $form;
+        });
+
+        MenuNodeForm::beforeSaving(function (FormAbstract $form) {
+            $model = $form->getModel();
+
+            if ($model instanceof MenuNode) {
+                $request = $form->getRequest();
+
+                if ($menuNodes = $request->input('menu_nodes')) {
+                    $menuNodes = json_decode($menuNodes, true);
+
+                    $this->saveMenuNodeBadges($menuNodes, $model);
+                }
+            }
+
+            return $form;
+        }, 170);
+
+        add_filter('core_request_rules', function (array $rules, BaseRequest $request) {
+            if ($request instanceof MenuRequest) {
+                $rules['badge_text'] = ['nullable', 'string'];
+                $rules['badge_color'] = ['nullable', 'string'];
+            }
+
+            return $rules;
+        }, 10, 2);
+    }
+
+    public function saveMenuNodeBadges(array $nodes, MenuNode $model): void
+    {
+        foreach ($nodes as $node) {
+            if ($node['menuItem']['id'] == $model->getKey()) {
+                if (isset($node['menuItem']['badge_text'])) {
+                    MetaBox::saveMetaBoxData($model, 'badge_text', $node['menuItem']['badge_text']);
+                }
+
+                if (isset($node['menuItem']['badge_color'])) {
+                    MetaBox::saveMetaBoxData($model, 'badge_color', $node['menuItem']['badge_color']);
+                }
+            }
+
+            if (! empty($node['children'])) {
+                $this->saveMenuNodeBadges($node['children'], $model);
+            }
+        }
     }
 }

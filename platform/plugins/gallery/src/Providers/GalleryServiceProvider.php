@@ -12,13 +12,12 @@ use Botble\Gallery\Repositories\Eloquent\GalleryMetaRepository;
 use Botble\Gallery\Repositories\Eloquent\GalleryRepository;
 use Botble\Gallery\Repositories\Interfaces\GalleryInterface;
 use Botble\Gallery\Repositories\Interfaces\GalleryMetaInterface;
-use Botble\Language\Facades\Language;
 use Botble\LanguageAdvanced\Supports\LanguageAdvancedManager;
 use Botble\SeoHelper\Facades\SeoHelper;
 use Botble\Slug\Facades\SlugHelper;
+use Botble\Theme\Events\ThemeRoutingBeforeEvent;
 use Botble\Theme\Facades\SiteMapManager;
 use Illuminate\Foundation\AliasLoader;
-use Illuminate\Routing\Events\RouteMatched;
 
 class GalleryServiceProvider extends ServiceProvider
 {
@@ -54,46 +53,37 @@ class GalleryServiceProvider extends ServiceProvider
 
         $this->app->register(EventServiceProvider::class);
 
-        SiteMapManager::registerKey(['galleries']);
-
-        $this->app['events']->listen(RouteMatched::class, function () {
-            DashboardMenu::registerItem([
-                'id' => 'cms-plugins-gallery',
-                'priority' => 5,
-                'parent_id' => null,
-                'name' => 'plugins/gallery::gallery.menu_name',
-                'icon' => 'fa fa-camera',
-                'url' => route('galleries.index'),
-                'permissions' => ['galleries.index'],
-            ]);
+        $this->app['events']->listen(ThemeRoutingBeforeEvent::class, function () {
+            SiteMapManager::registerKey(['galleries']);
         });
 
-        $useLanguageV2 = $this->app['config']->get('plugins.gallery.general.use_language_v2', false) &&
-            defined('LANGUAGE_ADVANCED_MODULE_SCREEN_NAME');
-
-        if (defined('LANGUAGE_MODULE_SCREEN_NAME')) {
-            if ($useLanguageV2) {
-                LanguageAdvancedManager::registerModule(Gallery::class, [
-                    'name',
-                    'description',
+        DashboardMenu::default()->beforeRetrieving(function () {
+            DashboardMenu::make()
+                ->registerItem([
+                    'id' => 'cms-plugins-gallery',
+                    'priority' => 5,
+                    'name' => 'plugins/gallery::gallery.menu_name',
+                    'icon' => 'ti ti-camera',
+                    'route' => 'galleries.index',
                 ]);
+        });
 
-                LanguageAdvancedManager::registerModule(GalleryMeta::class, [
-                    'images',
-                ]);
+        if (defined('LANGUAGE_MODULE_SCREEN_NAME') && defined('LANGUAGE_ADVANCED_MODULE_SCREEN_NAME')) {
+            LanguageAdvancedManager::registerModule(Gallery::class, [
+                'name',
+                'description',
+            ]);
 
-                LanguageAdvancedManager::addTranslatableMetaBox('gallery_wrap');
+            LanguageAdvancedManager::registerModule(GalleryMeta::class, [
+                'images',
+            ]);
 
-                foreach (\Gallery::getSupportedModules() as $item) {
-                    $translatableColumns = array_merge(
-                        LanguageAdvancedManager::getTranslatableColumns($item),
-                        ['gallery']
-                    );
+            LanguageAdvancedManager::addTranslatableMetaBox('gallery_wrap');
 
-                    LanguageAdvancedManager::registerModule($item, $translatableColumns);
-                }
-            } else {
-                Language::registerModule(Gallery::class);
+            foreach (GalleryFacade::getSupportedModules() as $item) {
+                $translatableColumns = array_merge(LanguageAdvancedManager::getTranslatableColumns($item), ['gallery']);
+
+                LanguageAdvancedManager::registerModule($item, $translatableColumns);
             }
         }
 

@@ -12,13 +12,13 @@
                         <p>{{ theme_option('site_description') }}</p>
                         <div class="person-detail">
                             @if ($address = theme_option('address'))
-                                <p><i class="ion-home"></i>{{ $address }}</p>
+                                <p>{!! BaseHelper::renderIcon('ti ti-home') !!} {{ $address }}</p>
                             @endif
                             @if ($website = theme_option('website'))
-                                <p><i class="ion-earth"></i><a href="{{ $website }}">{{ $website }}</a></p>
+                                <p>{!! BaseHelper::renderIcon('ti ti-world') !!} {{ Html::link($website) }}</p>
                             @endif
                             @if ($email = theme_option('contact_email'))
-                                <p><i class="ion-email"></i><a href="mailto:{{ $email }}">{{ $email }}</a></p>
+                                <p>{!! BaseHelper::renderIcon('ti ti-mail') !!} {{ Html::mailto($email) }}</p>
                             @endif
                         </div>
                     </div>
@@ -31,24 +31,25 @@
     <div class="page-footer__bottom">
         <div class="container">
             <div class="row">
-                <div class="col-md-8 col-sm-6 text-start">
-                    <div class="page-copyright">
-                        <p>{!! BaseHelper::clean(theme_option('copyright')) !!}</p>
+                @if($copyright = theme_option('copyright'))
+                    <div class="col-md-8 col-sm-6 text-start">
+                        <div class="page-copyright">
+                            <p>{!! Theme::getSiteCopyright() !!}</p>
+                        </div>
                     </div>
-                </div>
-                @if (theme_option('social_links') && $socialLinks = json_decode(theme_option('social_links'), true))
+                @endif
+                @if ($socialLinks = Theme::getSocialLinks())
                     <div class="col-md-4 col-sm-6 text-end">
                         <div class="page-footer__social">
                             <ul class="social social--simple">
                                 @foreach($socialLinks as $socialLink)
-                                    @if (count($socialLink) == 3 && $socialLink[2]['value'])
-                                        <li>
-                                            <a href="{{ $socialLink[2]['value'] }}"
-                                               title="{{ $socialLink[0]['value'] }}" target="_blank">
-                                                <i class="hi-icon {{ $socialLink[1]['value'] }}"></i>
-                                            </a>
-                                        </li>
-                                    @endif
+                                    @continue(! $icon = $socialLink->getIconHtml())
+
+                                    <li>
+                                        <a {{ $socialLink->getAttributes() }}>
+                                            {{ $icon }}
+                                        </a>
+                                    </li>
                                 @endforeach
                             </ul>
                         </div>
@@ -58,7 +59,9 @@
         </div>
     </div>
 </footer>
-<div id="back2top"><i class="fa fa-angle-up"></i></div>
+<div id="back2top">
+    {!! BaseHelper::renderIcon('ti ti-arrow-narrow-up') !!}
+</div>
 
 {!! Theme::footer() !!}
 

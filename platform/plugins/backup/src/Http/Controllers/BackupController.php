@@ -6,23 +6,25 @@ use Botble\Backup\Http\Requests\BackupRequest;
 use Botble\Backup\Supports\Backup;
 use Botble\Base\Facades\Assets;
 use Botble\Base\Facades\BaseHelper;
-use Botble\Base\Facades\PageTitle;
-use Botble\Base\Http\Controllers\BaseController;
-use Botble\Base\Http\Responses\BaseHttpResponse;
+use Botble\Base\Http\Controllers\BaseSystemController;
 use Botble\Base\Supports\Helper;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-class BackupController extends BaseController
+class BackupController extends BaseSystemController
 {
+    protected string $databaseDriver;
+
     public function __construct(protected Backup $backup)
     {
+        $this->databaseDriver = DB::getConfig('driver');
     }
 
     public function getIndex()
     {
-        PageTitle::setTitle(trans('plugins/backup::backup.menu_name'));
+        $this->pageTitle(trans('plugins/backup::backup.menu_name'));
 
         Assets::addScriptsDirectly(['vendor/core/plugins/backup/js/backup.js'])
             ->addStylesDirectly(['vendor/core/plugins/backup/css/backup.css']);
@@ -31,11 +33,20 @@ class BackupController extends BaseController
 
         $backups = $this->backup->getBackupList();
 
-        return view('plugins/backup::index', compact('backups', 'backupManager'));
+        $driver = $this->databaseDriver;
+
+        return view('plugins/backup::index', compact('backups', 'backupManager', 'driver'));
     }
 
-    public function store(BackupRequest $request, BaseHttpResponse $response)
+    public function store(BackupRequest $request)
     {
+        if ($this->databaseDriver !== 'mysql') {
+            return $this
+                ->httpResponse()
+                ->setError()
+                ->setMessage(trans('plugins/backup::backup.database_driver_not_supported'));
+        }
+
         try {
             BaseHelper::maximumExecutionTimeAndMemoryLimit();
 
@@ -46,32 +57,45 @@ class BackupController extends BaseController
             do_action(BACKUP_ACTION_AFTER_BACKUP, BACKUP_MODULE_SCREEN_NAME, $request);
 
             $data['backupManager'] = $this->backup;
+            $data['driver'] = $this->databaseDriver;
 
-            return $response
+            return $this
+                ->httpResponse()
                 ->setData(view('plugins/backup::partials.backup-item', $data)->render())
                 ->setMessage(trans('plugins/backup::backup.create_backup_success'));
         } catch (Exception $exception) {
-            return $response
+            return $this
+                ->httpResponse()
                 ->setError()
                 ->setMessage($exception->getMessage());
         }
     }
 
-    public function destroy(string $folder, BaseHttpResponse $response)
+    public function destroy(string $folder)
     {
         try {
             $this->backup->deleteFolderBackup($this->backup->getBackupPath($folder));
 
-            return $response->setMessage(trans('plugins/backup::backup.delete_backup_success'));
+            return $this
+                ->httpResponse()
+                ->setMessage(trans('plugins/backup::backup.delete_backup_success'));
         } catch (Exception $exception) {
-            return $response
+            return $this
+                ->httpResponse()
                 ->setError()
                 ->setMessage($exception->getMessage());
         }
     }
 
-    public function getRestore(string $folder, Request $request, BaseHttpResponse $response)
+    public function getRestore(string $folder, Request $request)
     {
+        if ($this->databaseDriver !== 'mysql') {
+            return $this
+                ->httpResponse()
+                ->setError()
+                ->setMessage(trans('plugins/backup::backup.database_driver_not_supported'));
+        }
+
         try {
             $path = $this->backup->getBackupPath($folder);
 
@@ -85,7 +109,8 @@ class BackupController extends BaseController
             }
 
             if (! $hasSQL) {
-                return $response
+                return $this
+                    ->httpResponse()
                     ->setError()
                     ->setMessage(trans('plugins/backup::backup.cannot_restore_database'));
             }
@@ -98,21 +123,24 @@ class BackupController extends BaseController
                 }
             }
 
-            setting()->set('media_random_hash', md5((string)time()))->save();
+            setting()->forceSet('media_random_hash', md5((string)time()))->save();
 
             Helper::clearCache();
 
             do_action(BACKUP_ACTION_AFTER_RESTORE, BACKUP_MODULE_SCREEN_NAME, $request);
 
-            return $response->setMessage(trans('plugins/backup::backup.restore_backup_success'));
+            return $this
+                ->httpResponse()
+                ->setMessage(trans('plugins/backup::backup.restore_backup_success'));
         } catch (Exception $exception) {
-            return $response
+            return $this
+                ->httpResponse()
                 ->setError()
                 ->setMessage($exception->getMessage());
         }
     }
 
-    public function getDownloadDatabase(string $folder, BaseHttpResponse $response)
+    public function getDownloadDatabase(string $folder)
     {
         $path = $this->backup->getBackupPath($folder);
 
@@ -122,12 +150,13 @@ class BackupController extends BaseController
             }
         }
 
-        return $response
+        return $this
+            ->httpResponse()
             ->setError()
             ->setMessage(trans('plugins/backup::backup.database_backup_not_existed'));
     }
 
-    public function getDownloadUploadFolder(string $folder, BaseHttpResponse $response)
+    public function getDownloadUploadFolder(string $folder)
     {
         $path = $this->backup->getBackupPath($folder);
 
@@ -137,7 +166,8 @@ class BackupController extends BaseController
             }
         }
 
-        return $response
+        return $this
+            ->httpResponse()
             ->setError()
             ->setMessage(trans('plugins/backup::backup.uploads_folder_backup_not_existed'));
     }

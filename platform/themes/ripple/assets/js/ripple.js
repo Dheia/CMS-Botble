@@ -60,6 +60,6 @@ export class Ripple {
     }
 }
 
-$(document).ready(function () {
+$(() => {
     new Ripple().bindActionToElement()
 })

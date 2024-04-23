@@ -370,6 +370,7 @@ class Language
         'zh_CN' => ['zh', 'zh_CN', '中文 (中国)', 'ltr', 'cn'],
         'zh_HK' => ['zh', 'zh_HK', '中文 (香港)', 'ltr', 'hk'],
         'zh_TW' => ['zh', 'zh_TW', '中文 (台灣)', 'ltr', 'tw'],
+        'tg' => ['tg', 'tg', 'Tajik', 'ltr', 'tj'],
     ];
 
     public static function getListLanguageFlags(): array
@@ -428,5 +429,29 @@ class Language
     public static function getListLanguages(): array
     {
         return self::$languages;
+    }
+
+    public static function getDefaultLanguage(): array
+    {
+        return [
+            'locale' => 'en',
+            'name' => 'English',
+            'flag' => 'us',
+        ];
+    }
+
+    public static function getLocales(): array
+    {
+        return collect(static::getListLanguages())->pluck('2', '0')->unique()->all();
+    }
+
+    public static function getLocaleKeys(): array
+    {
+        return array_unique(array_keys(static::getLocales()));
+    }
+
+    public static function getLanguageCodes(): array
+    {
+        return collect(static::getListLanguages())->pluck('1')->unique()->all();
     }
 }

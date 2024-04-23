@@ -3,6 +3,7 @@
 namespace Botble\Member\Models;
 
 use Botble\Base\Casts\SafeContent;
+use Botble\Base\Facades\BaseHelper;
 use Botble\Base\Facades\Html;
 use Botble\Base\Models\BaseModel;
 
@@ -29,7 +30,10 @@ class MemberActivityLog extends BaseModel
             $model->user_agent = $model->user_agent ?: request()->userAgent();
             $model->ip_address = $model->ip_address ?: request()->ip();
             $model->member_id = $model->member_id ?: auth('member')->id();
-            $model->reference_url = str_replace(route('public.index'), '', $model->reference_url);
+
+            if ($model->reference_ur) {
+                $model->reference_url = str_replace(BaseHelper::getHomepageUrl(), '', $model->reference_url);
+            }
         });
     }
 

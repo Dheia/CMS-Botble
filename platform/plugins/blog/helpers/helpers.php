@@ -1,13 +1,14 @@
 <?php
 
 use Botble\Base\Enums\BaseStatusEnum;
+use Botble\Base\Facades\BaseHelper;
 use Botble\Base\Models\BaseModel;
 use Botble\Base\Supports\SortItemsWithChildrenHelper;
 use Botble\Blog\Repositories\Interfaces\CategoryInterface;
 use Botble\Blog\Repositories\Interfaces\PostInterface;
 use Botble\Blog\Repositories\Interfaces\TagInterface;
 use Botble\Blog\Supports\PostFormat;
-use Botble\Page\Repositories\Interfaces\PageInterface;
+use Botble\Page\Models\Page;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
@@ -134,9 +135,9 @@ if (! function_exists('get_categories')) {
         $repo = app(CategoryInterface::class);
 
         $categories = $repo->getCategories(Arr::get($args, 'select', ['*']), [
-            'created_at' => 'DESC',
             'is_default' => 'DESC',
             'order' => 'ASC',
+            'created_at' => 'DESC',
         ], Arr::get($args, 'condition', ['status' => BaseStatusEnum::PUBLISHED]));
 
         $categories = sort_item_with_children($categories);
@@ -191,13 +192,13 @@ if (! function_exists('get_blog_page_url')) {
         $blogPageId = (int)theme_option('blog_page_id', setting('blog_page_id'));
 
         if (! $blogPageId) {
-            return route('public.index');
+            return BaseHelper::getHomepageUrl();
         }
 
-        $blogPage = app(PageInterface::class)->findById($blogPageId);
+        $blogPage = Page::query()->find($blogPageId);
 
         if (! $blogPage) {
-            return route('public.index');
+            return BaseHelper::getHomepageUrl();
         }
 
         return $blogPage->url;

@@ -3,6 +3,7 @@
 namespace Botble\ACL\Services;
 
 use Botble\ACL\Models\User;
+use Botble\Base\Facades\BaseHelper;
 use Botble\Support\Services\ProduceServiceInterface;
 use Exception;
 use Illuminate\Http\Request;
@@ -22,22 +23,26 @@ class ChangePasswordService implements ProduceServiceInterface
             }
         }
 
-        /**
-         * @var User $user
-         */
-        $user = User::query()->findOrFail($request->input('id', $currentUser->getKey()));
+        if (($userId = $request->input('id')) && $userId === $currentUser->getKey()) {
+            $user = $currentUser;
+        } else {
+            $user = User::query()->findOrFail($userId);
+        }
 
         $password = $request->input('password');
 
         $user->password = Hash::make($password);
         $user->save();
 
-        if ($user->id != $currentUser->getKey()) {
+        /**
+         * @var User $user
+         */
+        if ($user->getKey() != $currentUser->getKey()) {
             try {
                 Auth::setUser($user);
                 Auth::logoutOtherDevices($password);
             } catch (Throwable $exception) {
-                info($exception->getMessage());
+                BaseHelper::logError($exception);
             }
         }
 

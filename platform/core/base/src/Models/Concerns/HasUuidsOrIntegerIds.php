@@ -9,22 +9,26 @@ trait HasUuidsOrIntegerIds
     public static function bootHasUuidsOrIntegerIds(): void
     {
         static::creating(static function (self $model): void {
-            if (! self::determineIfUsingUuidsForId()) {
+            if (self::getTypeOfId() === 'BIGINT') {
                 return;
             }
 
-            $model->{$model->getKeyName()} = $model::newUniqueId();
+            $model->{$model->getKeyName()} = $model->newUniqueId();
         });
     }
 
-    public static function newUniqueId(): string
+    public function newUniqueId(): string|null
     {
-        return (string) Str::orderedUuid();
+        return match (self::getTypeOfId()) {
+            'ULID' => (string)Str::ulid(),
+            'BIGINT' => null,
+            default => (string)Str::orderedUuid(),
+        };
     }
 
     public function getKeyType(): string
     {
-        if (self::determineIfUsingUuidsForId()) {
+        if (self::getTypeOfId() !== 'BIGINT') {
             return 'string';
         }
 
@@ -33,7 +37,7 @@ trait HasUuidsOrIntegerIds
 
     public function getIncrementing(): bool
     {
-        if (self::determineIfUsingUuidsForId()) {
+        if (self::getTypeOfId() !== 'BIGINT') {
             return false;
         }
 
@@ -42,11 +46,24 @@ trait HasUuidsOrIntegerIds
 
     public static function determineIfUsingUuidsForId(): bool
     {
-        return (bool)config('core.base.general.using_uuids_for_id', false);
+        return self::getTypeOfId() === 'UUID';
+    }
+
+    public static function determineIfUsingUlidsForId(): bool
+    {
+        return self::getTypeOfId() === 'ULID';
     }
 
     public static function getTypeOfId(): string
     {
+        if (config('core.base.general.using_uuids_for_id', false)) {
+            return 'UUID';
+        }
+
+        if (config('core.base.general.using_ulids_for_id', false)) {
+            return 'ULID';
+        }
+
         return strtoupper(config('core.base.general.type_id', 'BIGINT'));
     }
 }

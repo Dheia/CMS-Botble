@@ -2,8 +2,10 @@
 
 namespace Botble\PluginManagement\Commands;
 
+use Botble\PluginManagement\Commands\Concern\HasPluginNameValidation;
 use Botble\PluginManagement\Services\MarketplaceService;
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Console\PromptsForMissingInput;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -11,24 +13,26 @@ use Symfony\Component\Console\Input\InputArgument;
 use Throwable;
 
 #[AsCommand('cms:plugin:install-from-marketplace', 'Install a plugin from https://marketplace.botble.com')]
-class PluginInstallFromMarketplaceCommand extends Command
+class PluginInstallFromMarketplaceCommand extends Command implements PromptsForMissingInput
 {
+    use HasPluginNameValidation;
+
     public function handle(MarketplaceService $marketplaceService): int
     {
-        $plugin = strtolower($this->argument('name'));
+        $name = $this->argument('name');
 
-        if (! preg_match('/^[a-z0-9\-_\/]+$/i', $plugin)) {
-            $this->components->error('Only alphabetic characters are allowed.');
+        $name = rtrim($name, '/');
 
-            exit(self::FAILURE);
-        }
+        $this->validatePluginName($name);
+
+        $plugin = strtolower($name);
 
         $response = $marketplaceService->callApi('post', '/products/check-update', [
             'products' => [$plugin => '0.0.0'],
         ]);
 
         if ($response->failed()) {
-            $this->error($response->reason());
+            $this->components->error($response->reason());
 
             return self::FAILURE;
         }
@@ -36,7 +40,7 @@ class PluginInstallFromMarketplaceCommand extends Command
         $pluginId = $response->json('data.0.id');
 
         if (! $pluginId) {
-            $this->error(sprintf('Plugin %s doesnt exists', $plugin));
+            $this->components->error(sprintf('Plugin %s doesnt exists', $plugin));
 
             return self::FAILURE;
         }
@@ -44,13 +48,13 @@ class PluginInstallFromMarketplaceCommand extends Command
         $response = $marketplaceService->callApi('get', '/products/' . $pluginId);
 
         if ($response instanceof JsonResponse) {
-            $this->error($response->getData()->message);
+            $this->components->error($response->getData()->message);
 
             return self::FAILURE;
         }
 
         if ($response->failed()) {
-            $this->error($response->reason());
+            $this->components->error($response->reason());
 
             return self::FAILURE;
         }
@@ -59,7 +63,7 @@ class PluginInstallFromMarketplaceCommand extends Command
 
         $version = $detail['data']['minimum_core_version'];
         if (version_compare($version, get_core_version(), '>')) {
-            $this->error(trans('packages/plugin-management::marketplace.minimum_core_version_error', compact('version')));
+            $this->components->error(trans('packages/plugin-management::marketplace.minimum_core_version_error', compact('version')));
 
             return self::FAILURE;
         }
@@ -67,10 +71,10 @@ class PluginInstallFromMarketplaceCommand extends Command
         $name = Str::afterLast($detail['data']['package_name'], '/');
 
         try {
-            $response = $marketplaceService->beginInstall($pluginId, 'plugin', $name);
+            $response = $marketplaceService->beginInstall($pluginId, $name);
 
             if ($response instanceof JsonResponse) {
-                $this->error($response->getData()->message);
+                $this->components->error($response->getData()->message);
 
                 return self::FAILURE;
             }
@@ -79,7 +83,7 @@ class PluginInstallFromMarketplaceCommand extends Command
 
             return self::SUCCESS;
         } catch (Throwable $exception) {
-            $this->error($exception->getMessage());
+            $this->components->error($exception->getMessage());
 
             return self::FAILURE;
         }

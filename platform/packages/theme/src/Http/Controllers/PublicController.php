@@ -3,6 +3,8 @@
 namespace Botble\Theme\Http\Controllers;
 
 use Botble\Base\Facades\BaseHelper;
+use Botble\Base\Http\Controllers\BaseController;
+use Botble\Base\Http\Responses\BaseHttpResponse;
 use Botble\Page\Models\Page;
 use Botble\Page\Services\PageService;
 use Botble\SeoHelper\Facades\SeoHelper;
@@ -12,70 +14,86 @@ use Botble\Theme\Events\RenderingSingleEvent;
 use Botble\Theme\Events\RenderingSiteMapEvent;
 use Botble\Theme\Facades\SiteMapManager;
 use Botble\Theme\Facades\Theme;
-use Illuminate\Routing\Controller;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
-class PublicController extends Controller
+class PublicController extends BaseController
 {
     public function getIndex()
     {
-        if (defined('PAGE_MODULE_SCREEN_NAME')) {
-            $homepageId = BaseHelper::getHomepageId();
-            if ($homepageId) {
-                $slug = SlugHelper::getSlug(null, SlugHelper::getPrefix(Page::class), Page::class, $homepageId);
+        Theme::addBodyAttributes(['id' => 'page-home']);
 
-                if ($slug) {
-                    $data = (new PageService())->handleFrontRoutes($slug);
+        if (
+            defined('PAGE_MODULE_SCREEN_NAME') &&
+            ($homepageId = BaseHelper::getHomepageId()) &&
+            ($slug = SlugHelper::getSlug(null, null, Page::class, $homepageId))
+        ) {
+            $data = (new PageService())->handleFrontRoutes($slug);
 
-                    if (! $data) {
-                        return Theme::scope('index')->render();
-                    }
-
-                    event(new RenderingSingleEvent($slug));
-
-                    return Theme::scope($data['view'], $data['data'], $data['default_view'])->render();
-                }
+            if (! $data) {
+                return Theme::scope('index')->render();
             }
+
+            event(new RenderingSingleEvent($slug));
+
+            return Theme::scope($data['view'], $data['data'], $data['default_view'])->render();
         }
 
         SeoHelper::setTitle(theme_option('site_title'));
-
-        Theme::breadcrumb()->add(__('Home'), route('public.index'));
 
         event(RenderingHomePageEvent::class);
 
         return Theme::scope('index')->render();
     }
 
-    public function getView(string|null $key = null)
+    public function getView(string|null $key = null, string $prefix = '')
     {
         if (empty($key)) {
             return $this->getIndex();
         }
 
-        $slug = SlugHelper::getSlug($key, '');
+        $slug = SlugHelper::getSlug($key, $prefix);
 
         if (! $slug) {
             abort(404);
         }
 
-        if (defined('PAGE_MODULE_SCREEN_NAME')) {
-            if ($slug->reference_type == Page::class && BaseHelper::isHomepage($slug->reference_id)) {
-                return redirect()->route('public.index');
-            }
+        if (
+            defined('PAGE_MODULE_SCREEN_NAME') &&
+            $slug->reference_type === Page::class &&
+            BaseHelper::isHomepage($slug->reference_id)
+        ) {
+            return redirect()->to(BaseHelper::getHomepageUrl());
         }
 
         $result = apply_filters(BASE_FILTER_PUBLIC_SINGLE_DATA, $slug);
 
-        if (isset($result['slug']) && $result['slug'] !== Str::replaceLast(SlugHelper::getPublicSingleEndingURL(), '', $key)) {
-            return redirect()->route('public.single', $result['slug']);
+        $extension = SlugHelper::getPublicSingleEndingURL();
+
+        if ($extension) {
+            $key = Str::replaceLast($extension, '', $key);
+        }
+
+        if ($result instanceof BaseHttpResponse) {
+            return $result;
+        }
+
+        if (isset($result['slug']) && $result['slug'] !== $key) {
+            $prefix = SlugHelper::getPrefix(get_class(Arr::first($result['data'])));
+
+            return redirect()->route('public.single', empty($prefix) ? $result['slug'] : "$prefix/{$result['slug']}");
         }
 
         event(new RenderingSingleEvent($slug));
 
         if (! empty($result) && is_array($result)) {
-            return Theme::scope($result['view'], $result['data'], Arr::get($result, 'default_view'))->render();
+            if (isset($result['view'])) {
+                Theme::addBodyAttributes(['id' => Str::slug(Str::snake(Str::afterLast($slug->reference_type, '\\'))) . '-' . $slug->reference_id]);
+
+                return Theme::scope($result['view'], $result['data'], Arr::get($result, 'default_view'))->render();
+            }
+
+            return $result;
         }
 
         abort(404);
@@ -98,5 +116,10 @@ class PublicController extends Controller
 
         // show your site map (options: 'xml' (default), 'html', 'txt', 'ror-rss', 'ror-rdf')
         return SiteMapManager::render($key ? $extension : 'sitemapindex');
+    }
+
+    public function getViewWithPrefix(string $prefix, string|null $slug = null)
+    {
+        return $this->getView($slug, $prefix);
     }
 }

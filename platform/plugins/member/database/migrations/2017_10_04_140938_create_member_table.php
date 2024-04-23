@@ -34,9 +34,9 @@ return new class () extends Migration {
             $table->id();
             $table->string('action', 120);
             $table->text('user_agent')->nullable();
-            $table->string('reference_url', 255)->nullable();
-            $table->string('reference_name', 255)->nullable();
-            $table->string('ip_address', 39)->nullable();
+            $table->string('reference_url')->nullable();
+            $table->string('reference_name')->nullable();
+            $table->ipAddress()->nullable();
             $table->foreignId('member_id')->index();
             $table->timestamps();
         });

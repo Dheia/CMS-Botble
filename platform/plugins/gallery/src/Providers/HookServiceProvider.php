@@ -2,18 +2,24 @@
 
 namespace Botble\Gallery\Providers;
 
-use Botble\Base\Enums\BaseStatusEnum;
+use Botble\Base\Facades\AdminHelper;
 use Botble\Base\Facades\Assets;
 use Botble\Base\Facades\Html;
 use Botble\Base\Facades\MetaBox;
+use Botble\Base\Forms\Fields\NumberField;
+use Botble\Base\Forms\Fields\TextField;
+use Botble\Base\Models\BaseModel;
 use Botble\Base\Supports\ServiceProvider;
 use Botble\Gallery\Facades\Gallery;
-use Botble\Gallery\Repositories\Interfaces\GalleryInterface;
+use Botble\Gallery\Models\Gallery as GalleryModel;
 use Botble\Gallery\Services\GalleryService;
 use Botble\Page\Models\Page;
-use Botble\Page\Repositories\Interfaces\PageInterface;
+use Botble\Page\Tables\PageTable;
 use Botble\Shortcode\Compilers\Shortcode;
+use Botble\Shortcode\Forms\ShortcodeForm;
 use Botble\Slug\Models\Slug;
+use Botble\Theme\Events\RenderingThemeOptionSettings;
+use Botble\Theme\Facades\Theme;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -31,26 +37,40 @@ class HookServiceProvider extends ServiceProvider
                 [$this, 'render']
             );
 
-            shortcode()->setAdminConfig('gallery', function ($attributes, $content) {
-                return view('plugins/gallery::shortcodes.gallery-admin-config', compact('attributes', 'content'))
-                    ->render();
+            shortcode()->setAdminConfig('gallery', function (array $attributes) {
+                return ShortcodeForm::createFromArray($attributes)
+                    ->add('title', TextField::class, [
+                        'label' => __('Title'),
+                    ])
+                    ->add('limit', NumberField::class, [
+                        'label' => __('Limit'),
+                    ]);
             });
         }
 
         add_filter(BASE_FILTER_PUBLIC_SINGLE_DATA, [$this, 'handleSingleView'], 11);
 
+        PageTable::beforeRendering(function () {
+            add_filter(PAGE_FILTER_PAGE_NAME_IN_ADMIN_LIST, [$this, 'addAdditionNameToPageName'], 147, 2);
+        });
+
         if (defined('PAGE_MODULE_SCREEN_NAME')) {
-            add_filter(PAGE_FILTER_PAGE_NAME_IN_ADMIN_LIST, [$this, 'addAdditionNameToPageName'], 11, 2);
+            add_filter(PAGE_FILTER_FRONT_PAGE_CONTENT, [$this, 'renderGalleriesPage'], 2, 2);
         }
 
-        if (function_exists('theme_option')) {
+        $this->app['events']->listen(RenderingThemeOptionSettings::class, function () {
             add_action(RENDERING_THEME_OPTIONS_PAGE, [$this, 'addThemeOptions'], 11);
-        }
+        });
     }
 
-    public function addGalleryBox(string $context, ?Model $object): void
+    public function addGalleryBox(string $context, array|string|Model|null $object = null): void
     {
-        if ($object && in_array(get_class($object), Gallery::getSupportedModules()) && $context == 'advanced') {
+        if (
+            AdminHelper::isInAdmin(true) &&
+            $object instanceof BaseModel &&
+            in_array($object::class, Gallery::getSupportedModules()) &&
+            $context == 'advanced'
+        ) {
             Assets::addStylesDirectly(['vendor/core/plugins/gallery/css/admin-gallery.css'])
                 ->addScriptsDirectly(['vendor/core/plugins/gallery/js/gallery-admin.js'])
                 ->addScripts(['sortable']);
@@ -59,7 +79,7 @@ class HookServiceProvider extends ServiceProvider
                 'gallery_wrap',
                 trans('plugins/gallery::gallery.gallery_box'),
                 [$this, 'galleryMetaField'],
-                get_class($object),
+                $object::class,
                 $context
             );
         }
@@ -79,11 +99,15 @@ class HookServiceProvider extends ServiceProvider
 
     public function render(Shortcode $shortcode): string
     {
-        Gallery::registerAssets();
-
         $limit = (int)$shortcode->limit;
 
-        $galleries = app(GalleryInterface::class)->getAll(limit: max($limit, 0));
+        $galleries = GalleryModel::query()
+            ->with(['slugable', 'user'])
+            ->wherePublished()
+            ->when($limit > 0, fn ($query) => $query->limit($limit))
+            ->orderBy('order')
+            ->orderByDesc('created_at')
+            ->get();
 
         $view = apply_filters('galleries_box_template_view', 'plugins/gallery::shortcodes.gallery');
 
@@ -95,9 +119,24 @@ class HookServiceProvider extends ServiceProvider
         return (new GalleryService())->handleFrontRoutes($slug);
     }
 
+    public function renderGalleriesPage(string|null $content, Page $page): string|null
+    {
+        if ($page->getKey() == theme_option('galleries_page_id')) {
+            $view = 'plugins/gallery::themes.galleries';
+
+            if (view()->exists($viewPath = Theme::getThemeNamespace() . '::views.galleries')) {
+                $view = $viewPath;
+            }
+
+            return view($view, ['galleries' => get_galleries()])->render();
+        }
+
+        return $content;
+    }
+
     public function addAdditionNameToPageName(string|null $name, Page $page): string|null
     {
-        if ($page->id == theme_option('galleries_page_id')) {
+        if ($page->getKey() == theme_option('galleries_page_id')) {
             $subTitle = Html::tag(
                 'span',
                 trans('plugins/gallery::gallery.galleries_page'),
@@ -115,25 +154,26 @@ class HookServiceProvider extends ServiceProvider
         return $name;
     }
 
-    public function addThemeOptions()
+    public function addThemeOptions(): void
     {
-        $pages = $this->app->make(PageInterface::class)->pluck('name', 'id', ['status' => BaseStatusEnum::PUBLISHED]);
+        $pages = Page::query()->wherePublished()->pluck('name', 'id')->all();
 
-        theme_option()
-            ->setField([
-
-                'id' => 'galleries_page_id',
-                'section_id' => 'opt-text-subsection-page',
-                'type' => 'customSelect',
-                'label' => trans('plugins/gallery::gallery.galleries_page'),
-                'attributes' => [
-                    'name' => 'galleries_page_id',
-                    'list' => ['' => trans('packages/page::pages.settings.select')] + $pages,
-                    'value' => '',
-                    'options' => [
-                        'class' => 'form-control',
+        if (! empty($pages)) {
+            theme_option()
+                ->setField([
+                    'id' => 'galleries_page_id',
+                    'section_id' => 'opt-text-subsection-page',
+                    'type' => 'customSelect',
+                    'label' => trans('plugins/gallery::gallery.galleries_page'),
+                    'attributes' => [
+                        'name' => 'galleries_page_id',
+                        'list' => ['' => trans('core/base::forms.select_placeholder')] + $pages,
+                        'value' => '',
+                        'options' => [
+                            'class' => 'form-control',
+                        ],
                     ],
-                ],
-            ]);
+                ]);
+        }
     }
 }

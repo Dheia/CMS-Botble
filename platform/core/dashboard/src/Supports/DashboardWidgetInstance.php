@@ -2,8 +2,8 @@
 
 namespace Botble\Dashboard\Supports;
 
-use Botble\Dashboard\Repositories\Interfaces\DashboardWidgetInterface;
-use Botble\Dashboard\Repositories\Interfaces\DashboardWidgetSettingInterface;
+use Botble\Dashboard\Models\DashboardWidget;
+use Botble\Dashboard\Models\DashboardWidgetSetting;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -16,13 +16,13 @@ class DashboardWidgetInstance
 
     protected string $title;
 
-    protected string $icon;
+    protected string $icon = '';
 
-    protected string $color;
+    protected string $color = '';
 
     protected string $route;
 
-    protected string $bodyClass;
+    protected string $bodyClass = '';
 
     protected bool $isEqualHeight = true;
 
@@ -189,9 +189,9 @@ class DashboardWidgetInstance
         return $this;
     }
 
-    public function init(array $widgets, Collection $widgetSettings): array
+    public function init(array &$widgets, Collection $widgetSettings): array
     {
-        if (! Auth::user()->hasPermission($this->permission)) {
+        if (! Auth::guard()->user()->hasPermission($this->permission)) {
             return $widgets;
         }
 
@@ -199,17 +199,17 @@ class DashboardWidgetInstance
         $widgetSetting = $widget ? $widget->settings->first() : null;
 
         if (! $widget) {
-            $widget = app(DashboardWidgetInterface::class)
-                ->firstOrCreate(['name' => $this->key]);
+            $widget = DashboardWidget::query()->firstOrCreate(['name' => $this->key]);
         }
 
         $widget->title = $this->title;
         $widget->icon = $this->icon;
         $widget->color = $this->color;
         $widget->route = $this->route;
+        $widget->column = $this->column;
+
         if ($this->type === 'widget') {
             $widget->bodyClass = $this->bodyClass;
-            $widget->column = $this->column;
 
             $settings = array_merge(
                 $widgetSetting && $widgetSetting->settings ? $widgetSetting->settings : [],
@@ -328,15 +328,15 @@ class DashboardWidgetInstance
 
     public function saveSettings(string $widgetName, array $settings): bool
     {
-        $widget = app(DashboardWidgetInterface::class)->getFirstBy(['name' => $widgetName]);
+        $widget = DashboardWidget::query()->where('name', $widgetName)->first();
 
         if (! $widget) {
             return false;
         }
 
-        $widgetSetting = app(DashboardWidgetSettingInterface::class)->firstOrCreate([
+        $widgetSetting = DashboardWidgetSetting::query()->firstOrCreate([
             'widget_id' => $widget->id,
-            'user_id' => Auth::id(),
+            'user_id' => Auth::guard()->id(),
         ]);
 
         $widgetSetting->settings = array_merge((array)$widgetSetting->settings, $settings);

@@ -2,15 +2,28 @@
 
 namespace Botble\Table\Abstracts;
 
-use Botble\Base\Events\UpdatedContentEvent;
+use Botble\ACL\Models\User;
+use Botble\Base\Contracts\BaseModel as BaseModelContract;
+use Botble\Base\Contracts\Builders\Extensible as ExtensibleContract;
 use Botble\Base\Facades\Assets;
-use Botble\Base\Facades\BaseHelper;
 use Botble\Base\Facades\Form;
 use Botble\Base\Facades\Html;
 use Botble\Base\Models\BaseModel;
-use Botble\Media\Facades\RvMedia;
+use Botble\Base\Supports\Builders\Extensible;
+use Botble\Base\Supports\Builders\RenderingExtensible;
+use Botble\Table\Abstracts\Concerns\DeprecatedFunctions;
+use Botble\Table\Abstracts\Concerns\HasActions;
+use Botble\Table\Abstracts\Concerns\HasBulkActions;
+use Botble\Table\Abstracts\Concerns\HasFilters;
+use Botble\Table\Abstracts\Concerns\HasHeaderActions;
+use Botble\Table\Columns\CheckboxColumn;
+use Botble\Table\Columns\Column;
+use Botble\Table\Columns\RowActionsColumn;
+use Botble\Table\Contracts\FormattedColumn;
+use Botble\Table\HeaderActions\HeaderAction;
 use Botble\Table\Supports\Builder as CustomTableBuilder;
 use Botble\Table\Supports\TableExportHandler;
+use Closure;
 use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
@@ -18,19 +31,31 @@ use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation as EloquentRelation;
 use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Request;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
+use Illuminate\Support\Traits\Conditionable;
+use LogicException;
 use Symfony\Component\HttpFoundation\Response;
+use Yajra\DataTables\DataTableAbstract;
 use Yajra\DataTables\DataTables;
 use Yajra\DataTables\Services\DataTable;
 
-abstract class TableAbstract extends DataTable
+abstract class TableAbstract extends DataTable implements ExtensibleContract
 {
+    use DeprecatedFunctions;
+    use Extensible;
+    use HasHeaderActions;
+    use HasActions;
+    use HasBulkActions;
+    use HasFilters;
+    use RenderingExtensible;
+    use Conditionable;
+
     public const TABLE_TYPE_ADVANCED = 'advanced';
 
     public const TABLE_TYPE_SIMPLE = 'simple';
@@ -45,23 +70,14 @@ abstract class TableAbstract extends DataTable
 
     protected $view = 'core/table::table';
 
-    protected string $filterTemplate = 'core/table::filter';
-
     protected array $options = [];
 
-    protected $hasCheckbox = true;
-
-    protected $hasOperations = true;
-
-    protected $hasActions = false;
-
-    protected string $bulkChangeUrl = '';
-
-    protected $hasFilter = false;
-
+    /**
+     * @deprecated since v6.8.0
+     */
     protected $repository;
 
-    protected BaseModel|null $model = null;
+    protected BaseModelContract|null $model = null;
 
     protected bool $useDefaultSorting = true;
 
@@ -69,7 +85,31 @@ abstract class TableAbstract extends DataTable
 
     protected bool $hasResponsive = true;
 
+    protected bool $hasColumnVisibility = true;
+
     protected string $exportClass = TableExportHandler::class;
+
+    /**
+     * @var \Closure(static $table): \Illuminate\Http\JsonResponse
+     */
+    protected Closure $onAjaxCallback;
+
+    /**
+     * @var \Botble\Table\Columns\Column[]
+     */
+    protected array $columns = [];
+
+    /**
+     * @var \Closure(\Illuminate\Contracts\Database\Eloquent\Builder $query): void
+     */
+    protected Closure $queryUsingCallback;
+
+    /**
+     * @var \Closure(\Illuminate\Contracts\Database\Eloquent\Builder $query): void
+     */
+    protected Closure $modifyQueryUsingCallback;
+
+    protected string $dom = "fBrt<'card-footer d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2'<'d-flex justify-content-between align-items-center gap-3'l<'m-0 text-muted'i>><'d-flex justify-content-center'p>>";
 
     public function __construct(protected DataTables $table, UrlGenerator $urlGenerator)
     {
@@ -77,19 +117,27 @@ abstract class TableAbstract extends DataTable
 
         $this->ajaxUrl = $urlGenerator->current();
 
-        if ($this->type == self::TABLE_TYPE_SIMPLE) {
-            $this->pageLength = -1;
-        }
-
         if (! $this->getOption('id')) {
-            $this->setOption('id', strtolower(Str::slug(Str::snake(get_class($this)))));
+            $this->setOption('id', strtolower(Str::slug(Str::snake($this::class))));
         }
 
         if (! $this->getOption('class')) {
-            $this->setOption('class', 'table table-striped table-hover vertical-middle');
+            $this->setOption('class', 'table card-table table-vcenter table-striped table-hover');
         }
 
-        $this->bulkChangeUrl = route('tables.bulk-change.save');
+        $this->setup();
+
+        $this->setupExtended();
+
+        $this->booted();
+    }
+
+    public function setup(): void
+    {
+    }
+
+    public function booted(): void
+    {
     }
 
     public function getOption(string $key): string|null
@@ -97,21 +145,9 @@ abstract class TableAbstract extends DataTable
         return Arr::get($this->options, $key);
     }
 
-    public function setOption(string $key, $value): self
+    public function setOption(string $key, $value): static
     {
         $this->options[$key] = $value;
-
-        return $this;
-    }
-
-    public function isHasFilter(): bool
-    {
-        return $this->hasFilter;
-    }
-
-    public function setHasFilter(bool $hasFilter): self
-    {
-        $this->hasFilter = $hasFilter;
 
         return $this;
     }
@@ -121,7 +157,7 @@ abstract class TableAbstract extends DataTable
         return $this->type;
     }
 
-    public function setType(string $type): self
+    public function setType(string $type): static
     {
         $this->type = $type;
 
@@ -133,9 +169,16 @@ abstract class TableAbstract extends DataTable
         return $this->view;
     }
 
-    public function setView(string $view): self
+    public function setView(string $view): static
     {
         $this->view = $view;
+
+        return $this;
+    }
+
+    public function setDom(string $dom): static
+    {
+        $this->dom = $dom;
 
         return $this;
     }
@@ -145,7 +188,7 @@ abstract class TableAbstract extends DataTable
         return $this->options;
     }
 
-    public function setOptions(array $options): self
+    public function setOptions(array $options): static
     {
         $this->options = array_merge($this->options, $options);
 
@@ -154,100 +197,174 @@ abstract class TableAbstract extends DataTable
 
     public function html()
     {
-        if ($this->request->has('filter_table_id')) {
+        if ($this->isFiltering()) {
             $this->bStateSave = false;
+        }
+
+        $parameters = [
+            'dom' => $this->getDom(),
+            'buttons' => $this->getBuilderParameters(),
+            'initComplete' => $this->htmlInitComplete(),
+            'drawCallback' => $this->htmlDrawCallback(),
+            'paging' => true,
+            'searching' => true,
+            'info' => true,
+            'searchDelay' => 350,
+            'bStateSave' => $this->bStateSave,
+            'lengthMenu' => [
+                array_values(
+                    array_unique(array_merge(Arr::sortRecursive([10, 30, 50, 100, 500, $this->pageLength]), [-1]))
+                ),
+                array_values(
+                    array_unique(
+                        array_merge(
+                            Arr::sortRecursive([10, 30, 50, 100, 500, $this->pageLength]),
+                            [trans('core/base::tables.all')]
+                        )
+                    )
+                ),
+            ],
+            'pageLength' => $this->pageLength,
+            'processing' => true,
+            'serverSide' => true,
+            'bServerSide' => true,
+            'bDeferRender' => true,
+            'bProcessing' => true,
+            'language' => [
+                'aria' => [
+                    'sortAscending' => 'orderby asc',
+                    'sortDescending' => 'orderby desc',
+                    'paginate' => [
+                        'next' => trans('pagination.next'),
+                        'previous' => trans('pagination.previous'),
+                    ],
+                ],
+                'emptyTable' => trans('core/base::tables.no_data'),
+                'info' => view('core/table::table-info')->render(),
+                'infoEmpty' => trans('core/base::tables.no_record'),
+                'lengthMenu' => Html::tag('span', '_MENU_', ['class' => 'dt-length-style'])->toHtml(),
+                'search' => '',
+                'searchPlaceholder' => trans('core/table::table.search'),
+                'zeroRecords' => trans('core/base::tables.no_record'),
+                'processing' => Html::image('vendor/core/core/base/images/loading-spinner-blue.gif'),
+                'paginate' => [
+                    'next' => trans('pagination.next'),
+                    'previous' => trans('pagination.previous'),
+                ],
+                'infoFiltered' => trans('core/table::table.filtered'),
+            ],
+            'aaSorting' => $this->useDefaultSorting ? [
+                [
+                    ($this->hasBulkActions() ? $this->defaultSortColumn : 0),
+                    'desc',
+                ],
+            ] : [],
+            'responsive' => $this->hasResponsive,
+            'autoWidth' => false,
+        ];
+
+        if (setting('datatables_pagination_type') == 'dropdown') {
+            $parameters['sPaginationType'] = 'listbox';
         }
 
         return $this->builder()
             ->columns($this->getColumns())
             ->ajax(['url' => $this->getAjaxUrl(), 'method' => 'POST'])
-            ->parameters([
-                'dom' => $this->getDom(),
-                'buttons' => $this->getBuilderParameters(),
-                'initComplete' => $this->htmlInitComplete(),
-                'drawCallback' => $this->htmlDrawCallback(),
-                'paging' => true,
-                'searching' => true,
-                'info' => true,
-                'searchDelay' => 350,
-                'bStateSave' => $this->bStateSave,
-                'lengthMenu' => [
-                    array_values(
-                        array_unique(array_merge(Arr::sortRecursive([10, 30, 50, 100, 500, $this->pageLength]), [-1]))
-                    ),
-                    array_values(
-                        array_unique(
-                            array_merge(
-                                Arr::sortRecursive([10, 30, 50, 100, 500, $this->pageLength]),
-                                [trans('core/base::tables.all')]
-                            )
-                        )
-                    ),
-                ],
-                'pageLength' => $this->pageLength,
-                'processing' => true,
-                'serverSide' => true,
-                'bServerSide' => true,
-                'bDeferRender' => true,
-                'bProcessing' => true,
-                'language' => [
-                    'aria' => [
-                        'sortAscending' => 'orderby asc',
-                        'sortDescending' => 'orderby desc',
-                        'paginate' => [
-                            'next' => trans('pagination.next'),
-                            'previous' => trans('pagination.previous'),
-                        ],
-                    ],
-                    'emptyTable' => trans('core/base::tables.no_data'),
-                    'info' => view('core/table::table-info')->render(),
-                    'infoEmpty' => trans('core/base::tables.no_record'),
-                    'lengthMenu' => Html::tag('span', '_MENU_', ['class' => 'dt-length-style'])->toHtml(),
-                    'search' => '',
-                    'searchPlaceholder' => trans('core/table::table.search'),
-                    'zeroRecords' => trans('core/base::tables.no_record'),
-                    'processing' => Html::image('vendor/core/core/base/images/loading-spinner-blue.gif'),
-                    'paginate' => [
-                        'next' => trans('pagination.next'),
-                        'previous' => trans('pagination.previous'),
-                    ],
-                    'infoFiltered' => trans('core/table::table.filtered'),
-                ],
-                'aaSorting' => $this->useDefaultSorting ? [
-                    [
-                        ($this->hasCheckbox ? $this->defaultSortColumn : 0),
-                        'desc',
-                    ],
-                ] : [],
-                'responsive' => $this->hasResponsive,
-                'autoWidth' => false,
-            ]);
+            ->parameters($parameters);
+    }
+
+    /**
+     * @param \Closure(static $table): \Illuminate\Http\JsonResponse $onAjaxCallback
+     */
+    public function onAjax(Closure $onAjaxCallback): static
+    {
+        $this->onAjaxCallback = $onAjaxCallback;
+
+        return $this;
+    }
+
+    public function ajax(): JsonResponse
+    {
+        if (isset($this->onAjaxCallback)) {
+            return call_user_func($this->onAjaxCallback, $this);
+        }
+
+        return $this->toJson($this->table->eloquent($this->query()));
     }
 
     public function getColumns(): array
     {
-        $columns = $this->columns();
+        $columns = array_merge($this->columns(), $this->columns);
 
-        if ($this->type != self::TABLE_TYPE_SIMPLE) {
+        if (! $this->isSimpleTable()) {
             foreach ($columns as $key => &$column) {
-                $column['class'] = Arr::get($column, 'class') . ' column-key-' . $key;
+                $className = implode(
+                    ' ',
+                    array_filter(
+                        [Arr::get($column, 'className'), Arr::get($column, 'class'), ' column-key-' . $key]
+                    )
+                );
+
+                $column['class'] = $className;
+                $column['className'] = $className;
             }
 
-            if ($this->hasCheckbox) {
+            if ($this->hasBulkActions()) {
                 $columns = array_merge($this->getCheckboxColumnHeading(), $columns);
             }
         }
 
         $columns = apply_filters(BASE_FILTER_TABLE_HEADINGS, $columns, $this->getModel());
 
-        if ($this->hasOperations && $this->type != self::TABLE_TYPE_SIMPLE) {
+        // TODO: Will be removed after operations removed.
+        if ($this->hasOperations()) {
             $columns = array_merge($columns, $this->getOperationsHeading());
+        }
+
+        if (! empty($this->getRowActions()) && ! $this->isSimpleTable()) {
+            $columns = array_merge($columns, $this->getRowActionsHeading());
+
+            foreach ($columns as $index => $item) {
+                if ($item instanceof Column && $item->name === 'operations') {
+                    unset($columns[$index]);
+
+                    break;
+                }
+            }
         }
 
         return $columns;
     }
 
-    protected function getModel(): BaseModel
+    /**
+     * @param BaseModel|class-string<BaseModel> $model
+     */
+    public function model(BaseModelContract|string $model): static
+    {
+        if (is_string($model)) {
+            throw_unless(
+                class_exists($model),
+                new LogicException(sprintf('Class [%s] does not exists.', $model))
+            );
+
+            throw_unless(
+                ($model = app($model)) instanceof BaseModelContract,
+                new LogicException(
+                    sprintf('Class [%s] must be an instance of %s.', $model::class, BaseModelContract::class)
+                )
+            );
+
+            $this->model = $model;
+
+            return $this;
+        }
+
+        $this->model = $model;
+
+        return $this;
+    }
+
+    protected function getModel(): BaseModelContract|Model
     {
         return $this->model ?: ($this->repository ? $this->repository->getModel() : new BaseModel());
     }
@@ -257,55 +374,54 @@ abstract class TableAbstract extends DataTable
         return [];
     }
 
-    public function getOperationsHeading()
+    public function addColumn(Column $column): static
     {
-        return [
-            'operations' => [
-                'title' => trans('core/base::tables.operations'),
-                'width' => '134px',
-                'class' => 'text-center',
-                'orderable' => false,
-                'searchable' => false,
-                'exportable' => false,
-                'printable' => false,
-                'responsivePriority' => 99,
-            ],
-        ];
+        $this->columns[] = $column;
+
+        return $this;
     }
 
-    protected function getOperations(string|null $edit, string|null $delete, Model $item, string|null $extra = null): string
+    /**
+     * @param \Botble\Table\Columns\Column[] $columns
+     */
+    public function addColumns(array $columns): static
     {
-        return apply_filters(
-            'table_operation_buttons',
-            view('core/table::partials.actions', compact('edit', 'delete', 'item', 'extra'))->render(),
-            $item,
-            $edit,
-            $delete,
-            $extra
-        );
+        foreach ($columns as $column) {
+            $this->addColumn($column);
+        }
+
+        return $this;
+    }
+
+    public function removeColumn(string $name): static
+    {
+        foreach ($this->columns as $index => $column) {
+            if ($column->get('data') === $name || $column->get('name') === $name) {
+                unset($this->columns[$index]);
+
+                break;
+            }
+        }
+
+        $this->columns = array_values($this->columns);
+
+        return $this;
+    }
+
+    public function removeColumns(array $columns): static
+    {
+        foreach ($columns as $column) {
+            $this->removeColumn($column);
+        }
+
+        return $this;
     }
 
     public function getCheckboxColumnHeading(): array
     {
         return [
-            'checkbox' => [
-                'width' => '10px',
-                'class' => 'text-start no-sort',
-                'title' => Form::input('checkbox', '', null, [
-                    'class' => 'table-check-all',
-                    'data-set' => '.dataTable .checkboxes',
-                ])->toHtml(),
-                'orderable' => false,
-                'searchable' => false,
-                'exportable' => false,
-                'printable' => false,
-            ],
+            CheckboxColumn::make(),
         ];
-    }
-
-    protected function getCheckbox(int|string $id): string
-    {
-        return view('core/table::partials.checkbox', compact('id'))->render();
     }
 
     public function getAjaxUrl(): string
@@ -313,7 +429,7 @@ abstract class TableAbstract extends DataTable
         return $this->ajaxUrl;
     }
 
-    public function setAjaxUrl(string $ajaxUrl): self
+    public function setAjaxUrl(string $ajaxUrl): static
     {
         $this->ajaxUrl = $ajaxUrl;
 
@@ -322,20 +438,11 @@ abstract class TableAbstract extends DataTable
 
     protected function getDom(): string|null
     {
-        $dom = null;
-
-        switch ($this->type) {
-            case self::TABLE_TYPE_ADVANCED:
-                $dom = "fBrt<'datatables__info_wrap'pli<'clearfix'>>";
-
-                break;
-            case self::TABLE_TYPE_SIMPLE:
-                $dom = "t<'datatables__info_wrap'<'clearfix'>>";
-
-                break;
+        if ($this->isSimpleTable()) {
+            $this->dom = $this->simpleDom();
         }
 
-        return $dom;
+        return $this->dom;
     }
 
     public function getBuilderParameters(): array
@@ -344,13 +451,14 @@ abstract class TableAbstract extends DataTable
             'stateSave' => true,
         ];
 
-        if ($this->type == self::TABLE_TYPE_SIMPLE) {
+        if ($this->isSimpleTable()) {
             return $params;
         }
 
         $buttons = array_merge($this->getButtons(), $this->getActionsButton());
 
-        $buttons = array_merge($buttons, $this->getDefaultButtons());
+        $buttons = array_merge($buttons, array_unique($this->getDefaultButtons(), SORT_REGULAR));
+
         if (! $buttons) {
             return $params;
         }
@@ -360,7 +468,12 @@ abstract class TableAbstract extends DataTable
 
     public function getButtons(): array
     {
-        $buttons = apply_filters(BASE_FILTER_TABLE_BUTTONS, $this->buttons(), get_class($this->getModel()));
+        $buttons = [
+            ...$this->getHeaderActions(),
+            ...$this->buttons(),
+        ];
+
+        $buttons = apply_filters(BASE_FILTER_TABLE_BUTTONS, $buttons, $this->getModel()::class);
 
         if (! $buttons) {
             return [];
@@ -369,7 +482,15 @@ abstract class TableAbstract extends DataTable
         $data = [];
 
         foreach ($buttons as $key => $button) {
-            $buttonClass = 'action-item' . (isset($button['class']) ? ' ' . $button['class'] : ' btn-info');
+            if ($button instanceof HeaderAction) {
+                if ($button->currentUserHasAnyPermissions()) {
+                    $data[] = $button->toArray();
+                }
+
+                continue;
+            }
+
+            $buttonClass = 'action-item' . (isset($button['class']) ? ' ' . $button['class'] : null);
 
             if (Arr::get($button, 'extend') == 'collection') {
                 $button['className'] = ($button['className'] ?? null) . $buttonClass;
@@ -411,7 +532,7 @@ abstract class TableAbstract extends DataTable
 
     public function getActions(): array
     {
-        if ($this->type == self::TABLE_TYPE_SIMPLE || ! $this->actions()) {
+        if ($this->isSimpleTable() || ! $this->actions()) {
             return [];
         }
 
@@ -434,9 +555,19 @@ abstract class TableAbstract extends DataTable
 
     public function getDefaultButtons(): array
     {
-        return [
-            'reload',
-        ];
+        $buttons = ['reload'];
+
+        if (setting('datatables_default_show_export_button')) {
+            $buttons[] = 'export';
+        }
+
+        $this->hasColumnVisibility = (bool) setting('datatables_default_show_column_visibility');
+
+        if ($this->hasColumnVisibility) {
+            $buttons[] = 'visibility';
+        }
+
+        return $buttons;
     }
 
     public function htmlInitComplete(): string|null
@@ -447,26 +578,19 @@ abstract class TableAbstract extends DataTable
     public function htmlInitCompleteFunction(): string|null
     {
         return '
-            if (jQuery().select2) {
-                $(document).find(".select-multiple").select2({
-                    width: "100%",
-                    allowClear: true,
-                    placeholder: $(this).data("placeholder")
-                });
-                $(document).find(".select-search-full").select2({
-                    width: "100%"
-                });
-                $(document).find(".select-full").select2({
-                    width: "100%",
-                    minimumResultsForSearch: -1
-                });
-            }
+            Botble.initResources();
+
+            document.dispatchEvent(new CustomEvent("core-table-init-completed", {
+                detail: {
+                    table: this
+                }
+            }));
         ';
     }
 
     public function htmlDrawCallback(): string|null
     {
-        if ($this->type == self::TABLE_TYPE_SIMPLE) {
+        if ($this->isSimpleTable()) {
             return null;
         }
 
@@ -475,36 +599,34 @@ abstract class TableAbstract extends DataTable
 
     public function htmlDrawCallbackFunction(): string|null
     {
-        return '
-            var pagination = $(this).closest(".dataTables_wrapper").find(".dataTables_paginate");
-            pagination.toggle(this.api().page.info().pages > 1);
+        return <<<JS
+            var tableWrapper = $(this).closest(".dataTables_wrapper");
+            var dtDataCount = this.api().data().count();
 
-            var data_count = this.api().data().count();
-
-            var length_select = $(this).closest(".dataTables_wrapper").find(".dataTables_length");
-            var length_info = $(this).closest(".dataTables_wrapper").find(".dataTables_info");
-            length_select.toggle(data_count >= 10);
-            length_info.toggle(data_count > 0);
-
-            if (jQuery().select2) {
-                $(document).find(".select-multiple").select2({
-                    width: "100%",
-                    allowClear: true,
-                    placeholder: $(this).data("placeholder")
-                });
-                $(document).find(".select-search-full").select2({
-                    width: "100%"
-                });
-                $(document).find(".select-full").select2({
-                    width: "100%",
-                    minimumResultsForSearch: -1
-                });
+            if (dtDataCount === 0) {
+                tableWrapper.find(".card-footer").prop('style', 'display: none !important;');
+            } else {
+                tableWrapper.find(".card-footer").prop('style', null);
             }
 
-            $("[data-bs-toggle=tooltip]").tooltip({
-                placement: "top"
-            });
-        ';
+            tableWrapper.find(".dataTables_paginate").toggle(this.api().page.info().pages > 1);
+
+            tableWrapper.find(".dataTables_length").toggle(dtDataCount >= 10);
+            tableWrapper.find(".dataTables_info").toggle(dtDataCount > 0);
+
+            setTimeout(function () {
+                var searchInputWrapper = $(".table-wrapper .table-search-input input");
+                if (! searchInputWrapper.val()) {
+                    searchInputWrapper.val(tableWrapper.find(".dataTables_filter input").val());
+                }
+
+                if (searchInputWrapper.val()) {
+                    searchInputWrapper.addClass('border-primary bg-info-subtle')
+                } else {
+                    searchInputWrapper.removeClass('border-primary bg-info-subtle')
+                }
+            }, 200);
+        JS . $this->htmlInitCompleteFunction();
     }
 
     public function renderTable(array $data = [], array $mergeData = []): View|Factory|Response
@@ -523,6 +645,11 @@ abstract class TableAbstract extends DataTable
                 'vendor/core/core/table/js/filter.js',
             ]);
 
+        if (setting('datatables_pagination_type') == 'dropdown') {
+            Assets::addScriptsDirectly(['vendor/core/core/base/libraries/datatables/extensions/Pagination/js/dataTables.pagination.min.js'])
+                ->addStylesDirectly(['vendor/core/core/base/libraries/datatables/extensions/Pagination/css/dataTables.pagination.min.css']);
+        }
+
         $data['id'] = Arr::get($data, 'id', $this->getOption('id'));
         $data['class'] = Arr::get($data, 'class', $this->getOption('class'));
 
@@ -530,41 +657,25 @@ abstract class TableAbstract extends DataTable
 
         $this->setOptions($data);
 
-        $data['actions'] = $this->hasActions ? $this->bulkActions() : [];
+        $data['actions'] = $this->getBulkActions();
 
         $data['table'] = $this;
 
         return parent::render($view, $data, $mergeData);
     }
 
-    public function bulkActions(): array
-    {
-        $actions = [];
-
-        if ($this->getBulkChanges()) {
-            $actions['bulk-change'] = view('core/table::bulk-changes', [
-                'bulk_changes' => $this->getBulkChanges(),
-                'class' => get_class($this),
-                'url' => $this->bulkChangeUrl,
-            ])->render();
+    protected function applyScopes(
+        EloquentBuilder|QueryBuilder|EloquentRelation|Collection|AnonymousResourceCollection $query
+    ): EloquentBuilder|QueryBuilder|EloquentRelation|Collection|AnonymousResourceCollection {
+        if (isset($this->modifyQueryUsingCallback)) {
+            call_user_func($this->modifyQueryUsingCallback, $query);
         }
 
-        return $actions;
-    }
-
-    public function getBulkChanges(): array
-    {
-        return [];
-    }
-
-    protected function applyScopes(
-        EloquentBuilder|QueryBuilder|EloquentRelation|Collection $query
-    ): EloquentBuilder|QueryBuilder|EloquentRelation|Collection {
-        $request = request();
+        $request = $this->request();
 
         $requestFilters = [];
 
-        if (($request->input('filter_table_id') == $this->getOption('id'))) {
+        if ($this->isFiltering()) {
             foreach ($this->getFilterColumns() as $key => $item) {
                 $operator = $request->input('filter_operators.' . $key);
 
@@ -596,63 +707,6 @@ abstract class TableAbstract extends DataTable
         return parent::applyScopes(apply_filters(BASE_FILTER_TABLE_QUERY, $query));
     }
 
-    public function getFilterColumns(): array
-    {
-        $columns = $this->getFilters();
-        $columnKeys = array_keys($columns);
-
-        return Arr::where((array) $this->request->input('filter_columns', []), function ($item) use ($columnKeys) {
-            return in_array($item, $columnKeys);
-        });
-    }
-
-    public function applyFilterCondition(EloquentBuilder|QueryBuilder|EloquentRelation $query, string $key, string $operator, string|null $value)
-    {
-        if (strpos($key, '.') !== -1) {
-            $key = Arr::last(explode('.', $key));
-        }
-
-        $column = $this->getModel()->getTable() . '.' . $key;
-
-        $key = preg_replace('/[^A-Za-z0-9_]/', '', str_replace(' ', '', $key));
-
-        switch ($key) {
-            case 'created_at':
-            case 'updated_at':
-                if (! $value) {
-                    break;
-                }
-
-                $validator = Validator::make([$key => $value], [$key => 'date']);
-
-                if (! $validator->fails()) {
-                    $value = BaseHelper::formatDate($value);
-                    $query = $query->whereDate($column, $operator, $value);
-                }
-
-                break;
-
-            default:
-                if (! $value) {
-                    break;
-                }
-
-                if ($operator === 'like') {
-                    $query = $query->where($column, $operator, '%' . $value . '%');
-
-                    break;
-                }
-
-                if ($operator !== '=') {
-                    $value = (float)$value;
-                }
-
-                $query = $query->where($column, $operator, $value);
-        }
-
-        return $query;
-    }
-
     public function getValueInput(string|null $title, string|null $value, string|null $type, array $data = []): array
     {
         $inputName = 'value';
@@ -660,6 +714,7 @@ abstract class TableAbstract extends DataTable
         if (empty($title)) {
             $inputName = 'filter_values[]';
         }
+
         $attributes = [
             'class' => 'form-control input-value filter-column-value',
             'placeholder' => trans('core/table::table.value'),
@@ -669,13 +724,14 @@ abstract class TableAbstract extends DataTable
         switch ($type) {
             case 'select':
             case 'customSelect':
-                $attributes['class'] = $attributes['class'] . ' select';
+                $attributes['class'] = str_replace('form-control ', '', $attributes['class']);
                 $attributes['placeholder'] = trans('core/table::table.select_option');
                 $html = Form::customSelect($inputName, $data, $value, $attributes)->toHtml();
 
                 break;
 
             case 'select-search':
+                $attributes['class'] = str_replace('form-control ', '', $attributes['class']);
                 $attributes['class'] = $attributes['class'] . ' select-search-full';
                 $attributes['placeholder'] = trans('core/table::table.select_option');
                 $html = Form::customSelect($inputName, $data, $value, $attributes)->toHtml();
@@ -683,8 +739,9 @@ abstract class TableAbstract extends DataTable
                 break;
 
             case 'select-ajax':
+                $attributes['class'] = str_replace('form-control ', '', $attributes['class']);
                 $attributes = [
-                    'class' => $attributes['class'] . ' select-search-ajax',
+                    'class' => $attributes['class'] . ' select-autocomplete',
                     'data-url' => Arr::get($data, 'url'),
                     'data-minimum-input' => Arr::get($data, 'minimum-input', 2),
                     'multiple' => Arr::get($data, 'multiple', false),
@@ -719,101 +776,14 @@ abstract class TableAbstract extends DataTable
         return compact('html', 'data');
     }
 
-    public function saveBulkChanges(array $ids, string $inputKey, string|null $inputValue): bool
-    {
-        if (! in_array($inputKey, array_keys($this->getBulkChanges()))) {
-            return false;
-        }
-
-        $request = request();
-
-        foreach ($ids as $id) {
-            $item = $this->getModel()->query()->findOrFail($id);
-
-            /**
-             * @var BaseModel $item
-             */
-            $item = $this->saveBulkChangeItem($item, $inputKey, $inputValue);
-
-            event(new UpdatedContentEvent($this->getModel(), $request, $item));
-        }
-
-        return true;
-    }
-
-    public function saveBulkChangeItem(Model $item, string $inputKey, string|null $inputValue)
-    {
-        $item->{Auth::check() ? 'forceFill' : 'fill'}([$inputKey => $this->prepareBulkChangeValue($inputKey, $inputValue)]);
-
-        $item->save();
-
-        return $item;
-    }
-
-    public function prepareBulkChangeValue(string $key, string|null $value): string
-    {
-        if (strpos($key, '.') !== -1) {
-            $key = Arr::last(explode('.', $key));
-        }
-
-        switch ($key) {
-            case 'created_at':
-            case 'updated_at':
-                $value = BaseHelper::formatDateTime($value);
-
-                break;
-        }
-
-        return (string)$value;
-    }
-
-    public function renderFilter(): string
-    {
-        $tableId = $this->getOption('id');
-        $class = get_class($this);
-        $columns = $this->getFilters();
-
-        $request = request();
-        $requestFilters = [
-            '-1' => [
-                'column' => '',
-                'operator' => '=',
-                'value' => '',
-            ],
-        ];
-
-        $filterColumns = $this->getFilterColumns();
-
-        if ($filterColumns) {
-            $requestFilters = [];
-            foreach ($filterColumns as $key => $item) {
-                $operator = $request->input('filter_operators.' . $key);
-
-                $value = $request->input('filter_values.' . $key);
-
-                if (is_array($operator) || is_array($value) || is_array($item)) {
-                    continue;
-                }
-
-                $requestFilters[] = [
-                    'column' => $item,
-                    'operator' => $operator,
-                    'value' => $value,
-                ];
-            }
-        }
-
-        return view($this->filterTemplate, compact('columns', 'class', 'tableId', 'requestFilters'))->render();
-    }
-
     public function getFilters(): array
     {
-        return $this->getBulkChanges();
+        return apply_filters('base_filter_table_filters', $this->getAllBulkChanges(), $this);
     }
 
     protected function addCreateButton(string $url, string|null $permission = null, array $buttons = []): array
     {
-        if (! $permission || Auth::user()->hasPermission($permission)) {
+        if (! $permission || $this->hasPermission($permission)) {
             $queryString = http_build_query(Request::query());
 
             if ($queryString) {
@@ -830,51 +800,44 @@ abstract class TableAbstract extends DataTable
         return $buttons;
     }
 
-    protected function addDeleteAction(string $url, string|null $permission = null, array $actions = []): array
+    protected function setupFormattedColumns(DataTableAbstract $table): void
     {
-        if (! $permission || Auth::user()->hasPermission($permission)) {
-            $actions['delete-many'] = view('core/table::partials.delete', [
-                'href' => $url,
-                'data_class' => get_called_class(),
-            ]);
-        }
+        foreach ($this->getColumnsFromBuilder() as $column) {
+            switch (true) {
+                case $column instanceof RowActionsColumn:
+                    $table->addColumn($column->name, function ($item) use ($column) {
+                        return $column
+                            ->setRowActions($this->getRowActions())
+                            ->renderCell($item, $this);
+                    });
 
-        return $actions;
+                    break;
+
+                case $column instanceof Column && $column instanceof FormattedColumn:
+                    $table->editColumn($column->name, function (BaseModelContract|array $item) use ($column) {
+                        return $column->renderCell($item, $this);
+                    });
+
+                    break;
+            }
+        }
     }
 
     public function toJson($data, array $escapeColumn = [], bool $mDataSupport = true)
     {
+        if ($data instanceof DataTableAbstract) {
+            $this->setupFormattedColumns($data);
+        }
+
+        $this->dispatchBeforeRendering();
+
         $data = apply_filters(BASE_FILTER_GET_LIST_DATA, $data, $this->getModel());
 
-        if (BaseModel::determineIfUsingUuidsForId()) {
-            $data = $data->editColumn('id', function ($item) {
-                if (! $item instanceof BaseModel && ! is_object($item)) {
-                    return $item;
-                }
-
-                return Str::limit($item->id, 5);
-            });
-        }
-
-        return $data
-            ->escapeColumns($escapeColumn)
-            ->make($mDataSupport);
-    }
-
-    protected function displayThumbnail(string|null $image, array $attributes = ['width' => 50]): HtmlString|string
-    {
-        if ($this->request()->input('action') == 'csv') {
-            return RvMedia::getImageUrl($image, null, false, RvMedia::getDefaultImage());
-        }
-
-        if ($this->request()->input('action') == 'excel') {
-            return RvMedia::getImageUrl($image, 'thumb', false, RvMedia::getDefaultImage());
-        }
-
-        return Html::image(
-            RvMedia::getImageUrl($image, 'thumb', false, RvMedia::getDefaultImage()),
-            trans('core/base::tables.image'),
-            $attributes
+        return tap(
+            $data
+                ->escapeColumns($escapeColumn)
+                ->make($mDataSupport),
+            fn ($response) => $this->dispatchAfterRendering($response)
         );
     }
 
@@ -885,14 +848,124 @@ abstract class TableAbstract extends DataTable
 
     protected function simpleDom(): string
     {
-        return "rt<'datatables__info_wrap'pli<'clearfix'>>";
+        return "rt<'card-footer d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2'<'d-flex justify-content-between align-items-center gap-3'l<'m-0 text-muted'i>><'d-flex justify-content-center'p>>";
     }
 
     protected function isEmpty(): bool
     {
         return ! $this->request()->wantsJson() &&
             ! $this->request()->ajax() &&
-            ! ($this->request()->input('filter_table_id') === $this->getOption('id')) &&
+            ! $this->isFiltering() &&
             ! (method_exists($this, 'query') && $this->query()->exists());
+    }
+
+    public function hasPermission(string $permission): bool
+    {
+        $user = Auth::guard()->user();
+
+        if (! $user instanceof User) {
+            return true;
+        }
+
+        return $user->hasPermission($permission);
+    }
+
+    public function hasAnyPermissions(array $permissions): bool
+    {
+        foreach ($permissions as $permission) {
+            if ($this->hasPermission($permission)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param \Closure|callable(\Illuminate\Contracts\Database\Eloquent\Builder $query): void $queryUsingCallback
+     */
+    public function queryUsing(Closure|callable $queryUsingCallback): static
+    {
+        $this->queryUsingCallback = $queryUsingCallback;
+
+        return $this;
+    }
+
+    /**
+     * @param \Closure|callable(\Illuminate\Contracts\Database\Eloquent\Builder $query): void $modifyQueryCallback
+     */
+    public function modifyQueryUsing(Closure|callable $modifyQueryCallback): static
+    {
+        $this->modifyQueryUsingCallback = $modifyQueryCallback;
+
+        return $this;
+    }
+
+    public function query()
+    {
+        $query = $this->getModel()->query();
+
+        if (isset($this->queryUsingCallback)) {
+            call_user_func($this->queryUsingCallback, $query);
+
+            $query = $this->applyScopes($query);
+        }
+
+        return $query;
+    }
+
+    protected function isSimpleTable(): bool
+    {
+        return $this->view === $this->simpleTableView() || $this->type === self::TABLE_TYPE_SIMPLE;
+    }
+
+    protected function simpleTableView(): string
+    {
+        return 'core/table::simple-table';
+    }
+
+    public function isExportingToExcel(): bool
+    {
+        return $this->request()->input('action') === 'excel';
+    }
+
+    public function isExportingToCSV(): bool
+    {
+        return $this->request()->input('action') === 'csv';
+    }
+
+    public static function getFilterPrefix(): string
+    {
+        return sprintf('base_table_%s', Str::of(static::class)->snake()->lower()->replace('\\', '')->toString());
+    }
+
+    public static function getGlobalClassName(): string
+    {
+        return TableAbstract::class;
+    }
+
+    public static function hasGlobalExtend(): bool
+    {
+        return true;
+    }
+
+    public static function globalExtendFilterName(): string
+    {
+        return TableAbstract::getFilterPrefix() . '_extended';
+    }
+
+    public static function hasGlobalRendering(): bool
+    {
+        return true;
+    }
+
+    public static function globalBeforeRenderingFilterName(): string
+    {
+        return TableAbstract::getFilterPrefix() . '_before_rendering';
+    }
+
+    public static function globalAfterRenderingFilterName(): string
+    {
+        return TableAbstract::getFilterPrefix() . '_after_rendering';
     }
 }

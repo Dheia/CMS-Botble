@@ -61,7 +61,6 @@ return [
             }
 
             $theme->asset()->usePath()->add('fontawesome', 'plugins/fontawesome5/css/fontawesome.min.css');
-            $theme->asset()->usePath()->add('ionicons', 'plugins/ionicons/css/ionicons.min.css');
             $theme->asset()->usePath()->add('style', 'css/style.css', [], [], $version);
 
             if (function_exists('shortcode')) {

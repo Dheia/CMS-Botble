@@ -2,22 +2,20 @@
 
 namespace Database\Seeders;
 
-use Botble\Base\Supports\BaseSeeder;
+use Botble\Member\Database\Seeders\MemberSeeder as BaseMemberSeeder;
 use Botble\Member\Models\Member;
-use Botble\Member\Models\MemberActivityLog;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
 
-class MemberSeeder extends BaseSeeder
+class MemberSeeder extends BaseMemberSeeder
 {
     public function run(): void
     {
+        parent::run();
+
         $files = $this->uploadFiles('members');
 
-        Member::query()->truncate();
-        MemberActivityLog::query()->truncate();
-
-        $faker = fake();
+        $faker = $this->fake();
+        $now = $this->now();
 
         Member::query()->create([
             'first_name' => 'John',
@@ -28,21 +26,18 @@ class MemberSeeder extends BaseSeeder
             'phone' => $faker->phoneNumber(),
             'avatar_id' => ! $files[0]['error'] ? $files[0]['data']->id : 0,
             'description' => $faker->realText(30),
-            'confirmed_at' => Carbon::now(),
+            'confirmed_at' => $now,
         ]);
 
-        for ($i = 0; $i < 9; $i++) {
-            Member::query()->create([
-                'first_name' => $faker->firstName(),
-                'last_name' => $faker->lastName(),
-                'email' => $faker->email(),
-                'password' => Hash::make('12345678'),
-                'dob' => $faker->dateTime(),
-                'phone' => $faker->phoneNumber(),
-                'avatar_id' => ! $files[$i + 1]['error'] ? $files[$i + 1]['data']->id : 0,
-                'description' => $faker->realText(30),
-                'confirmed_at' => Carbon::now(),
-            ]);
+        foreach (Member::query()->get() as $index => $member) {
+            if (! isset($files[$index + 1])) {
+                continue;
+            }
+
+            $file = $files[$index + 1];
+
+            $member->avatar_id = ! $file['error'] ? $file['data']->id : 0;
+            $member->save();
         }
     }
 }

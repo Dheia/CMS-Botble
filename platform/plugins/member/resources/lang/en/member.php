@@ -3,6 +3,7 @@
 return [
     'create' => 'New member',
     'menu_name' => 'Members',
+    'menu_description' => 'View and manage your members',
     'confirmation_subject' => 'Email verification',
     'confirmation_subject_title' => 'Verify your email',
     'not_confirmed' => 'The given email address has not been confirmed. <a href=":resend_link">Resend confirmation link.</a>',
@@ -32,4 +33,9 @@ return [
     'confirmed_at' => 'Confirmed at',
     'avatar' => 'Avatar',
     'dob' => 'Date of birth',
+    'theme_options' => [
+        'name' => 'Member',
+        'login_background_image' => 'Login background image',
+        'register_background_image' => 'Register background image',
+    ],
 ];

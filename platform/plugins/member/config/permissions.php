@@ -20,4 +20,9 @@ return [
         'flag' => 'member.destroy',
         'parent_flag' => 'member.index',
     ],
+    [
+        'name' => 'Member Settings',
+        'flag' => 'member.settings',
+        'parent_flag' => 'member.index',
+    ],
 ];

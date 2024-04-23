@@ -5,10 +5,14 @@ namespace Botble\Member\Providers;
 use Botble\Api\Facades\ApiHelper;
 use Botble\Base\Facades\DashboardMenu;
 use Botble\Base\Facades\EmailHandler;
+use Botble\Base\Facades\PanelSectionManager;
+use Botble\Base\Forms\FormAbstract;
+use Botble\Base\PanelSections\PanelSectionItem;
+use Botble\Base\Rules\OnOffRule;
+use Botble\Base\Supports\Language as BaseLanguage;
 use Botble\Base\Supports\ServiceProvider;
 use Botble\Base\Traits\LoadAndPublishDataTrait;
-use Botble\Blog\Models\Post;
-use Botble\Gallery\Facades\Gallery;
+use Botble\Captcha\Forms\CaptchaSettingForm;
 use Botble\Language\Facades\Language;
 use Botble\LanguageAdvanced\Supports\LanguageAdvancedManager;
 use Botble\Member\Http\Middleware\RedirectIfMember;
@@ -19,10 +23,12 @@ use Botble\Member\Repositories\Eloquent\MemberActivityLogRepository;
 use Botble\Member\Repositories\Eloquent\MemberRepository;
 use Botble\Member\Repositories\Interfaces\MemberActivityLogInterface;
 use Botble\Member\Repositories\Interfaces\MemberInterface;
-use Botble\Optimize\Facades\OptimizerHelper;
+use Botble\Setting\PanelSections\SettingOthersPanelSection;
+use Botble\Slug\Facades\SlugHelper;
 use Botble\SocialLogin\Facades\SocialService;
-use Illuminate\Routing\Events\RouteMatched;
+use Botble\Theme\Events\RenderingThemeOptionSettings;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -64,27 +70,70 @@ class MemberServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->setNamespace('plugins/member')
+        SlugHelper::setPrefix(Member::class, 'author');
+        SlugHelper::setColumnUsedForSlugGenerator(Member::class, 'last_name');
+
+        add_filter(IS_IN_ADMIN_FILTER, [$this, 'setInAdmin'], 24);
+
+        $this
+            ->setNamespace('plugins/member')
             ->loadHelpers()
-            ->loadAndPublishConfigurations(['general', 'permissions', 'assets', 'email'])
+            ->loadAndPublishConfigurations(['general', 'permissions', 'email'])
             ->loadAndPublishTranslations()
             ->loadAndPublishViews()
-            ->loadRoutes()
+            ->loadRoutes(['web', 'member'])
             ->loadMigrations()
             ->publishAssets();
 
-        $this->app['events']->listen(RouteMatched::class, function () {
+        DashboardMenu::default()->beforeRetrieving(function () {
             DashboardMenu::registerItem([
                 'id' => 'cms-core-member',
-                'priority' => 22,
+                'priority' => 50,
                 'parent_id' => null,
                 'name' => 'plugins/member::member.menu_name',
-                'icon' => 'fa fa-users',
-                'url' => route('member.index'),
+                'icon' => 'ti ti-users',
+                'url' => fn () => route('member.index'),
                 'permissions' => ['member.index'],
             ]);
+        });
 
-            add_filter(IS_IN_ADMIN_FILTER, [$this, 'setInAdmin'], 24);
+        DashboardMenu::for('member')->beforeRetrieving(function () {
+            DashboardMenu::make()
+                ->registerItem([
+                    'id' => 'cms-member-dashboard',
+                    'priority' => 1,
+                    'name' => 'Dashboard',
+                    'url' => fn () => route('public.member.dashboard'),
+                    'icon' => 'ti ti-home',
+                ])
+                ->registerItem([
+                    'id' => 'cms-member-posts',
+                    'priority' => 2,
+                    'name' => 'plugins/blog::member.posts',
+                    'url' => fn () => route('public.member.posts.index'),
+                    'icon' => 'ti ti-article',
+                ])
+                ->registerItem([
+                    'id' => 'cms-member-settings',
+                    'priority' => 4,
+                    'name' => 'plugins/member::dashboard.header_settings_link',
+                    'url' => fn () => route('public.member.settings'),
+                    'icon' => 'ti ti-settings',
+                ]);
+        });
+
+        DashboardMenu::default();
+
+        PanelSectionManager::default()->beforeRendering(function () {
+            PanelSectionManager::registerItem(
+                SettingOthersPanelSection::class,
+                fn () => PanelSectionItem::make('members')
+                    ->setTitle(trans('plugins/member::settings.title'))
+                    ->withIcon('ti ti-user-cog')
+                    ->withPriority(170)
+                    ->withDescription(trans('plugins/member::settings.description'))
+                    ->withRoute('member.settings')
+            );
         });
 
         if (class_exists('ApiHelper') && ApiHelper::enabled()) {
@@ -99,9 +148,11 @@ class MemberServiceProvider extends ServiceProvider
         $this->app->booted(function () {
             EmailHandler::addTemplateSettings(MEMBER_MODULE_SCREEN_NAME, config('plugins.member.email', []));
 
-            if (defined('SOCIAL_LOGIN_MODULE_SCREEN_NAME') && ! $this->app->runningInConsole() && Route::has(
-                'public.member.login'
-            )) {
+            if (
+                defined('SOCIAL_LOGIN_MODULE_SCREEN_NAME') &&
+                ! $this->app->runningInConsole() &&
+                Route::has('public.member.login')
+            ) {
                 SocialService::registerModule([
                     'guard' => 'member',
                     'model' => Member::class,
@@ -126,66 +177,97 @@ class MemberServiceProvider extends ServiceProvider
 
         $this->app->register(EventServiceProvider::class);
 
-        add_action(BASE_ACTION_INIT, function (): void {
-            if (defined('GALLERY_MODULE_SCREEN_NAME') && request()->segment(1) == 'account') {
-                Gallery::removeModule(Post::class);
-            }
-        }, 12, 2);
-
-        add_filter(BASE_FILTER_AFTER_SETTING_CONTENT, [$this, 'addSettings'], 49);
-
         if (is_plugin_active('language') && is_plugin_active('language-advanced')) {
             $this->loadRoutes(['language-advanced']);
 
-            add_filter(BASE_FILTER_BEFORE_RENDER_FORM, function ($form, $data) {
-                if (in_array('member', Route::current()->middleware()) &&
+            FormAbstract::beforeRendering(function (FormAbstract $form) {
+                if ($form instanceof CaptchaSettingForm) {
+                    $form
+                        ->addAfter('captcha_secret', 'member_enable_recaptcha_in_register_page', 'onOffCheckbox', [
+                            'label' => trans('plugins/member::settings.enable_recaptcha_in_register_page'),
+                            'value' => setting('member_enable_recaptcha_in_register_page', false),
+                        ])
+                        ->addAfter('open_fieldset_math_captcha_setting', 'member_enable_math_captcha_in_register_page', 'onOffCheckbox', [
+                            'label' => trans('plugins/member::settings.enable_math_captcha_in_register_page'),
+                            'value' => setting('member_enable_math_captcha_in_register_page', false),
+                        ]);
+                }
+
+                $adminLocale = Language::getCurrentAdminLocaleCode();
+
+                $isDefaultLocale = $adminLocale == Language::getDefaultLocaleCode();
+
+                $model = $form->getModel();
+
+                if (
+                    in_array('member', Route::current()->middleware()) &&
                     Auth::guard('member')->check() &&
-                    Language::getCurrentAdminLocaleCode() != Language::getDefaultLocaleCode() &&
-                    $data &&
-                    $data->id &&
-                    LanguageAdvancedManager::isSupported($data)
+                    ! $isDefaultLocale &&
+                    $model &&
+                    $model->getKey() &&
+                    LanguageAdvancedManager::isSupported($model)
                 ) {
-                    $refLang = null;
+                    $refLang = '?ref_lang=' . $adminLocale;
 
-                    if (Language::getCurrentAdminLocaleCode() != Language::getDefaultLocaleCode()) {
-                        $refLang = '?ref_lang=' . Language::getCurrentAdminLocaleCode();
-                    }
-
-                    $form->setFormOption(
-                        'url',
-                        route('public.member.language-advanced.save', $data->id) . $refLang
-                    );
+                    $form->setFormOption('url', route('public.member.language-advanced.save', $model->getKey()) . $refLang);
                 }
 
                 return $form;
-            }, 9999, 2);
+            }, 9999);
         }
 
-        add_filter('cms_settings_validation_rules', [$this, 'addSettingRules'], 12);
+        add_filter('captcha_settings_validation_rules', [$this, 'addMemberSettingRules'], 99);
+
+        $this->app['events']->listen(RenderingThemeOptionSettings::class, function () {
+            add_action(RENDERING_THEME_OPTIONS_PAGE, [$this, 'addThemeOptions'], 35);
+        });
     }
 
-    public function addSettingRules(array $rules): array
+    public function addMemberSettingRules(array $rules): array
     {
         return array_merge($rules, [
-            'verify_account_email' => 'nullable|in:0,1',
-            'member_enable_recaptcha_in_register_page' => 'nullable|in:0,1',
-            'member_enable_math_captcha_in_register_page' => 'nullable|in:0,1',
+            'member_enable_recaptcha_in_register_page' => $onOffRule = new OnOffRule(),
+            'member_enable_math_captcha_in_register_page' => $onOffRule,
         ]);
     }
 
     public function setInAdmin(bool $isInAdmin): bool
     {
-        $isInAdmin = in_array('member', Route::current()->middleware()) || $isInAdmin;
+        $segment = request()->segment(1);
 
-        if ($isInAdmin) {
-            OptimizerHelper::disable();
+        if ($segment && in_array($segment, BaseLanguage::getLocaleKeys()) && $segment !== App::getLocale()) {
+            $segment = request()->segment(2);
         }
 
-        return $isInAdmin;
+        return $segment === 'member' || $isInAdmin;
     }
 
-    public function addSettings(string|null $data = null): string
+    public function addThemeOptions(): void
     {
-        return $data . view('plugins/member::settings')->render();
+        theme_option()
+            ->setSection([
+                'title' => trans('plugins/member::member.theme_options.name'),
+                'id' => 'opt-text-subsection-member',
+                'subsection' => true,
+                'icon' => 'ti ti-user',
+                'fields' => [
+                    [
+                        'id' => 'login_background',
+                        'type' => 'mediaImage',
+                        'label' => trans('plugins/member::member.theme_options.login_background_image'),
+                        'attributes' => [
+                            'name' => 'login_background',
+                        ],
+                    ],
+                    [
+                        'id' => 'register_background',
+                        'type' => 'mediaImage',
+                        'label' => trans('plugins/member::member.theme_options.register_background_image'),
+                        'attributes' => [
+                            'name' => 'register_background',
+                        ],
+                    ],
+                ],
+            ]);
     }
 }

@@ -26,6 +26,6 @@ class RequestLog extends BaseModel
 
     public function prunable(): Builder|BaseQueryBuilder
     {
-        return static::where('created_at', '<=', Carbon::now()->subMonth());
+        return static::query()->where('created_at', '<=', Carbon::now()->subMonth());
     }
 }

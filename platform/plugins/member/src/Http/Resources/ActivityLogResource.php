@@ -13,7 +13,7 @@ class ActivityLogResource extends JsonResource
     public function toArray($request): array
     {
         return [
-            'id' => $this->id,
+            'id' => $this->getKey(),
             'ip_address' => $this->ip_address,
             'description' => $this->getDescription(),
         ];

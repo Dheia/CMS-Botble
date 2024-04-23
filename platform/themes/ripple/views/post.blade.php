@@ -9,25 +9,18 @@
 
 <article class="post post--single">
     <header class="post__header">
-        <h3 class="post__title">{{ $post->name }}</h3>
+        <h1 class="post__title">{{ $post->name }}</h1>
         <div class="post__meta">
-            @if (!$post->categories->isEmpty())
-                <span class="post-category"><i class="ion-cube"></i>
-                    <a href="{{ $post->firstCategory->url }}">{{ $post->firstCategory->name }}</a>
-                </span>
-            @endif
-            <span class="post__created-at"><i class="ion-clock"></i>{{ $post->created_at->translatedFormat('M d, Y') }}</span>
-            @if ($post->author->username)
-                <span class="post__author"><i class="ion-android-person"></i><span>{{ $post->author->name }}</span></span>
-            @endif
+            {!! Theme::partial('blog.post-meta', compact('post')) !!}
 
-            @if (!$post->tags->isEmpty())
+            @if ($post->tags->isNotEmpty())
                 @php
                     if (is_plugin_active('language-advanced')) {
                         $post->tags->loadMissing('translations');
                     }
                 @endphp
-                <span class="post__tags"><i class="ion-pricetags"></i>
+                <span class="post__tags">
+                    {!! BaseHelper::renderIcon('ti ti-tags') !!}
                     @foreach ($post->tags as $tag)
                         <a href="{{ $tag->url }}" class="me-0">{{ $tag->name }}</a>@if (!$loop->last), @endif
                     @endforeach
@@ -53,7 +46,7 @@
                             <h4 class="relate__title">@if ($loop->first) {{ __('Previous Post') }} @else {{ __('Next Post') }} @endif</h4>
                             <article class="post post--related">
                                 <div class="post__thumbnail"><a href="{{ $relatedItem->url }}" title="{{ $relatedItem->name }}" class="post__overlay"></a>
-                                    <img src="{{ RvMedia::getImageUrl($relatedItem->image, 'thumb', false, RvMedia::getDefaultImage()) }}" alt="{{ $relatedItem->name }}" loading="lazy">
+                                    {{ RvMedia::image($relatedItem->image, $relatedItem->name, 'thumb') }}
                                 </div>
                                 <header class="post__header">
                                     <p><a href="{{ $relatedItem->url }}" class="post__title"> {{ $relatedItem->name }}</a></p>
@@ -67,5 +60,5 @@
         </footer>
     @endif
     <br>
-    {!! apply_filters(BASE_FILTER_PUBLIC_COMMENT_AREA, theme_option('facebook_comment_enabled_in_post', 'yes') == 'yes' ? Theme::partial('comments') : null) !!}
+    {!! apply_filters(BASE_FILTER_PUBLIC_COMMENT_AREA, null, $post) !!}
 </article>

@@ -42,7 +42,7 @@ return [
 
     'sidebar_title' => 'Personal settings',
     'sidebar_information' => 'Account Information',
-    'sidebar_security' => 'Security',
+    'change_password' => 'Change password',
 
     'account_field_title' => 'Account Information',
     'profile-picture' => 'Profile picture',
@@ -63,27 +63,28 @@ return [
     'gender_female' => 'Female',
     'gender_other' => 'Other',
 
-    // Security
-    'security_title' => 'Security',
     'current_password' => 'Current password',
     'password_new' => 'New password',
     'password_new_confirmation' => 'Confirmation password',
     'password_update_btn' => 'Update password',
+    'current_password_not_valid' => 'Current password is not valid',
+    'password_update_success' => 'Update password successfully!',
 
     'activity_logs' => 'Activity Logs',
 
-    'oops' => 'Oops!',
+    'no_activity_title' => 'No Activities!',
     'no_activity_logs' => 'You have no activity logs yet',
     'actions' => [
         'create_post' => 'You have created post ":name"',
         'update_post' => 'You have updated post ":name"',
         'delete_post' => 'You have deleted post ":name"',
         'update_setting' => 'You have updated your settings',
-        'update_security' => 'You have updated your security settings',
+        'update_security' => 'You have updated your password successfully',
         'your_post_updated_by_admin' => 'Your post ":name" is updated by administrator',
         'changed_avatar' => 'You have changed your avatar',
     ],
     'load_more' => 'Load more',
     'loading_more' => 'Loading...',
     'back-to-login' => 'Back to login page',
+    'resend' => 'Resend',
 ];

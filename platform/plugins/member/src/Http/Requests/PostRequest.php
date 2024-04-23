@@ -9,8 +9,14 @@ class PostRequest extends BasePostRequest
 {
     public function rules(): array
     {
-        $imageRule = str_replace('required|', '', RvMedia::imageValidationRule());
+        $rules = parent::rules();
 
-        return parent::rules() + ['image_input' => $imageRule];
+        if ($this->hasFile('image_input')) {
+            $rules['image_input'] = RvMedia::imageValidationRule();
+
+            unset($rules['image']);
+        }
+
+        return $rules;
     }
 }

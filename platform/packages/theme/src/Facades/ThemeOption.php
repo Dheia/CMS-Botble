@@ -30,9 +30,14 @@ use Illuminate\Support\Facades\Facade;
  * @method static string|null renderField(array $field)
  * @method static bool hasOption(string $key)
  * @method static string|null getOption(string $key = '', array|string|null $default = '')
+ * @method static array getOptions()
  * @method static bool saveOptions()
  * @method static array getFields()
  * @method static bool hasField(string $id)
+ * @method static array prepareFromArray(array $options, string|null $locale = null, string|null $defaultLocale = null)
+ * @method static \Botble\Theme\ThemeOption|mixed when(\Closure|mixed|null $value = null, callable|null $callback = null, callable|null $default = null)
+ * @method static \Botble\Theme\ThemeOption|mixed unless(\Closure|mixed|null $value = null, callable|null $callback = null, callable|null $default = null)
+ * @method static \Botble\Theme\ThemeOption|\Illuminate\Support\HigherOrderTapProxy tap(callable|null $callback = null)
  *
  * @see \Botble\Theme\ThemeOption
  */

@@ -1,7 +1,8 @@
 $color-1st: var(--color-1st);
 $font-1st: var(--primary-font);
 
-*, body {
+*,
+body {
     font-family: $font-1st;
 }
 

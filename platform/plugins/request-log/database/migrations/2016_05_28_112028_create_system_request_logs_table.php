@@ -12,8 +12,8 @@ return new class () extends Migration {
             $table->id();
             $table->integer('status_code')->nullable();
             $table->string('url')->nullable();
-            $table->integer('count')->default(0);
-            $table->string('user_id', 255)->nullable();
+            $table->integer('count')->default(0)->unsigned();
+            $table->string('user_id')->nullable();
             $table->text('referrer')->nullable();
             $table->timestamps();
         });

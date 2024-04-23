@@ -29,6 +29,9 @@ use Illuminate\Support\Facades\Facade;
  * @method static string|null getCurrentLocaleCode()
  * @method static string|null getLocaleByLocaleCode(string $localeCode)
  * @method static void setCurrentAdminLocale(string|null $code)
+ * @method static void setCurrentLocale(string|null $locale)
+ * @method static void setCurrentLocaleCode(string|null $code)
+ * @method static array getCurrentAdminLanguage()
  * @method static string|null getCurrentAdminLocale()
  * @method static string|null getCurrentAdminLocaleCode()
  * @method static string|null getDefaultLocaleCode()
@@ -38,10 +41,10 @@ use Illuminate\Support\Facades\Facade;
  * @method static string transRoute(string $routeName)
  * @method static string|bool getRouteNameFromAPath(string $path)
  * @method static void setBaseUrl(string $url)
- * @method static bool saveLanguage(string $screen, \Illuminate\Http\Request $request, \Botble\Base\Models\BaseModel|false|null $data)
+ * @method static bool saveLanguage(string $screen, \Illuminate\Http\Request $request, \Illuminate\Database\Eloquent\Model|false|null $data)
  * @method static \Botble\Language\Models\Language|\Botble\Base\Models\BaseModel|\Illuminate\Database\Eloquent\Model|null getDefaultLanguage(array $select = ['*'])
  * @method static array supportedModels()
- * @method static bool deleteLanguage(string $screen, \Botble\Base\Models\BaseModel|false|null $data)
+ * @method static bool deleteLanguage(string $screen, \Illuminate\Database\Eloquent\Model|false|null $data)
  * @method static \Botble\Language\LanguageManager registerModule(array|string $model)
  * @method static string|null setLocale(string|null $locale = null)
  * @method static string|null getForcedLocale()
@@ -56,6 +59,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static string|null getRefLang()
  * @method static string|int|null getRefFrom()
  * @method static void initModelRelations()
+ * @method static array getTableHeading()
  *
  * @see \Botble\Language\LanguageManager
  */

@@ -1,7 +1,13 @@
 <section class="section pt-50 pb-50 bg-lightgray">
     <div class="container">
         <div class="row">
-            <div class="col-lg-9">
+            @php
+                $primarySidebarContent = $withSidebar ? dynamic_sidebar('primary_sidebar') : null;
+            @endphp
+            <div @class([
+                'col-lg-9' => $primarySidebarContent,
+                'col-12' => !$primarySidebarContent,
+            ])>
                 <div class="page-content">
                     <div class="post-group post-group--single">
                         <div class="post-group__header">
@@ -13,18 +19,30 @@
                                     <div class="col-md-6 col-sm-6 col-12">
                                         @foreach ($chunk as $post)
                                             @if ($loop->first)
-                                                <article class="post post__vertical post__vertical--single post__vertical--simple">
+                                                <article
+                                                    class="post post__vertical post__vertical--single post__vertical--simple"
+                                                >
                                                     <div class="post__thumbnail">
-                                                        <img src="{{ RvMedia::getImageUrl($post->image, 'medium', false, RvMedia::getDefaultImage()) }}" alt="{{ $post->name }}" loading="lazy">
-                                                        <a href="{{ $post->url }}" title="{{ $post->name }}" class="post__overlay"></a>
+                                                        {{ RvMedia::image($post->image, $post->name, 'medium') }}
+                                                        <a
+                                                            class="post__overlay"
+                                                            href="{{ $post->url }}"
+                                                            title="{{ $post->name }}"
+                                                        ></a>
                                                     </div>
                                                     <div class="post__content-wrap">
                                                         <header class="post__header">
-                                                            <h3 class="post__title"><a href="{{ $post->url }}" title="{{ $post->name }}">{{ $post->name }}</a></h3>
+                                                            <h3 class="post__title"><a
+                                                                    href="{{ $post->url }}"
+                                                                    title="{{ $post->name }}"
+                                                                >{{ $post->name }}</a></h3>
                                                             <div class="post__meta">
-                                                                <span class="created__month">{{ $post->created_at->translatedFormat('M') }}</span>
-                                                                <span class="created__date">{{ $post->created_at->translatedFormat('d') }}</span>
-                                                                <span class="created__year">{{ $post->created_at->translatedFormat('Y') }}</span>
+                                                                <span
+                                                                    class="created__month">{{ $post->created_at->translatedFormat('M') }}</span>
+                                                                <span
+                                                                    class="created__date">{{ $post->created_at->translatedFormat('d') }}</span>
+                                                                <span
+                                                                    class="created__year">{{ $post->created_at->translatedFormat('Y') }}</span>
                                                             </div>
                                                         </header>
                                                         <div class="post__content">
@@ -33,16 +51,26 @@
                                                     </div>
                                                 </article>
                                             @else
-                                                <article class="post post__horizontal post__horizontal--single mb-20 clearfix">
+                                                <article
+                                                    class="post post__horizontal post__horizontal--single mb-20 clearfix"
+                                                >
                                                     <div class="post__thumbnail">
-                                                        <img src="{{ RvMedia::getImageUrl($post->image, 'medium', false, RvMedia::getDefaultImage()) }}" alt="{{ $post->name }}" loading="lazy">
-                                                        <a href="{{ $post->url }}" title="{{ $post->name }}" class="post__overlay"></a>
+                                                        {{ RvMedia::image($post->image, $post->name, 'medium') }}
+                                                        <a
+                                                            class="post__overlay"
+                                                            href="{{ $post->url }}"
+                                                            title="{{ $post->name }}"
+                                                        ></a>
                                                     </div>
                                                     <div class="post__content-wrap">
                                                         <header class="post__header">
-                                                            <h3 class="post__title"><a href="{{ $post->url }}" title="{{ $post->name }}">{{ $post->name }}</a></h3>
+                                                            <h3 class="post__title"><a
+                                                                    href="{{ $post->url }}"
+                                                                    title="{{ $post->name }}"
+                                                                >{{ $post->name }}</a></h3>
                                                             <div class="post__meta">
-                                                                <span class="post__created-at">{{ $post->created_at->translatedFormat('M d, Y') }}</span>
+                                                                <span
+                                                                    class="post__created-at">{{ $post->created_at->translatedFormat('M d, Y') }}</span>
                                                             </div>
                                                         </header>
                                                     </div>
@@ -56,9 +84,14 @@
                     </div>
                 </div>
             </div>
-            <div class="col-lg-3">
-                {!! Theme::partial('sidebar') !!}
-            </div>
+
+            @if ($primarySidebarContent)
+                <div class="col-lg-3">
+                    <div class="page-sidebar">
+                        {!! $primarySidebarContent !!}
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 </section>

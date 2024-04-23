@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Throwable;
 
 class PluginService
 {
@@ -76,12 +77,12 @@ class PluginService
         if (! in_array($plugin, $activatedPlugins)) {
             $requiredPlugins = $this->getDependencies($plugin);
 
-            if ($requiredPlugins) {
+            if ($missingPlugins = array_diff($requiredPlugins, $activatedPlugins)) {
                 return [
                     'error' => true,
                     'message' => trans(
                         'packages/plugin-management::plugin.missing_required_plugins',
-                        ['plugins' => implode(',', $requiredPlugins)]
+                        ['plugins' => implode(',', $missingPlugins)]
                     ),
                 ];
             }
@@ -230,9 +231,15 @@ class PluginService
             }
 
             Schema::disableForeignKeyConstraints();
-            if (class_exists($content['namespace'] . 'Plugin')) {
-                call_user_func([$content['namespace'] . 'Plugin', 'remove']);
+
+            try {
+                if (class_exists($content['namespace'] . 'Plugin')) {
+                    call_user_func([$content['namespace'] . 'Plugin', 'remove']);
+                }
+            } catch (Throwable $exception) {
+                BaseHelper::logError($exception);
             }
+
             Schema::enableForeignKeyConstraints();
         }
 
@@ -330,7 +337,7 @@ class PluginService
 
         $plugins = array_intersect($plugins, $availablePlugins);
 
-        Setting::set('activated_plugins', json_encode($plugins))->save();
+        Setting::forceSet('activated_plugins', json_encode($plugins))->save();
 
         return $plugins;
     }
@@ -338,7 +345,10 @@ class PluginService
     public function clearCache(): void
     {
         Helper::clearCache();
-        ClearCacheService::make()->clearConfig();
+        $cacheService = ClearCacheService::make();
+
+        $cacheService->clearConfig();
+        $cacheService->clearRoutesCache();
     }
 
     public function runMigrations(string $plugin): void

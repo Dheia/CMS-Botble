@@ -2,14 +2,15 @@
 
 namespace Botble\Member\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use Botble\ACL\Traits\ResetsPasswords;
+use Botble\Base\Http\Controllers\BaseController;
+use Botble\Member\Forms\Fronts\Auth\ResetPasswordForm;
 use Botble\SeoHelper\Facades\SeoHelper;
 use Botble\Theme\Facades\Theme;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 
-class ResetPasswordController extends Controller
+class ResetPasswordController extends BaseController
 {
     use ResetsPasswords;
 
@@ -24,16 +25,15 @@ class ResetPasswordController extends Controller
     {
         SeoHelper::setTitle(__('Reset Password'));
 
-        $data = [
-            'token' => $token,
-            'email' => $request->input('email'),
-        ];
-
-        if (view()->exists(Theme::getThemeNamespace() . '::views.member.auth.passwords.reset')) {
-            return Theme::scope('member.auth.passwords.reset', $data)->render();
-        }
-
-        return view('plugins/member::auth.passwords.reset', $data);
+        return Theme::scope(
+            'member.auth.passwords.reset',
+            [
+                'token' => $token,
+                'email' => $request->input('email'),
+                'form' => ResetPasswordForm::create(),
+            ],
+            'plugins/member::themes.auth.passwords.reset'
+        )->render();
     }
 
     public function broker()

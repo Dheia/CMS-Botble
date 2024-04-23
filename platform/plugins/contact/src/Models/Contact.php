@@ -7,9 +7,9 @@ use Botble\Base\Models\BaseModel;
 use Botble\Base\Supports\Avatar;
 use Botble\Contact\Enums\ContactStatusEnum;
 use Botble\Media\Facades\RvMedia;
-use Exception;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Throwable;
 
 class Contact extends BaseModel
 {
@@ -40,14 +40,12 @@ class Contact extends BaseModel
 
     protected function avatarUrl(): Attribute
     {
-        return Attribute::make(
-            get: function () {
-                try {
-                    return (new Avatar())->create($this->name)->toBase64();
-                } catch (Exception) {
-                    return RvMedia::getDefaultImage();
-                }
-            },
-        );
+        return Attribute::get(function () {
+            try {
+                return Avatar::createBase64Image($this->name);
+            } catch (Throwable) {
+                return RvMedia::getDefaultImage();
+            }
+        });
     }
 }

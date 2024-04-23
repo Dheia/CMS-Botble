@@ -12,7 +12,7 @@
                         <div class="photo-item">
                             <div class="thumb">
                                 <a href="{{ RvMedia::getImageUrl(Arr::get($image, 'img')) }}">
-                                    <img src="{{ RvMedia::getImageUrl(Arr::get($image, 'img')) }}" alt="{{ BaseHelper::clean(Arr::get($image, 'description')) }}" loading="lazy">
+                                    {{ RvMedia::image(Arr::get($image, 'img'), Arr::get($image, 'description')) }}
                                 </a>
                             </div>
                         </div>
@@ -21,6 +21,6 @@
             @endforeach
         </div>
         <br>
-        {!! apply_filters(BASE_FILTER_PUBLIC_COMMENT_AREA, theme_option('facebook_comment_enabled_in_gallery', 'yes') == 'yes' ? Theme::partial('comments') : null) !!}
+        {!! apply_filters(BASE_FILTER_PUBLIC_COMMENT_AREA, null, $gallery) !!}
     </div>
 </article>

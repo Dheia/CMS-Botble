@@ -35,7 +35,7 @@ class ResetPasswordNotification extends Notification
         $emailHandler = EmailHandler::setModule(MEMBER_MODULE_SCREEN_NAME)
             ->setType('plugins')
             ->setTemplate('password-reminder')
-            ->setVariableValue('reset_link', route('public.member.password.reset', ['token' => $this->token]));
+            ->setVariableValue('reset_link', route('public.member.password.reset', ['token' => $this->token, 'email' => request()->input('email')]));
 
         return (new MailMessage())
             ->view(['html' => new HtmlString($emailHandler->getContent())])

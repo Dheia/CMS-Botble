@@ -2,12 +2,14 @@
 
 <article class="post post--single">
     <div class="post__content">
-        @if (isset($galleries) && !$galleries->isEmpty())
+        @if (isset($galleries) && $galleries->isNotEmpty())
             <div class="gallery-wrap">
                 @foreach ($galleries as $gallery)
                     <div class="gallery-item">
                         <div class="img-wrap">
-                            <a href="{{ $gallery->url }}"><img src="{{ RvMedia::getImageUrl($gallery->image, 'medium', false, RvMedia::getDefaultImage()) }}" alt="{{ $gallery->name }}" loading="lazy"></a>
+                            <a href="{{ $gallery->url }}">
+                                {{ RvMedia::image($gallery->image, $gallery->name, 'medium') }}
+                            </a>
                         </div>
                         <div class="gallery-detail">
                             <div class="gallery-title"><a href="{{ $gallery->url }}">{{ $gallery->name }}</a></div>

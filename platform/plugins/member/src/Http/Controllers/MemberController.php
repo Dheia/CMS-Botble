@@ -2,126 +2,108 @@
 
 namespace Botble\Member\Http\Controllers;
 
-use Botble\Base\Events\CreatedContentEvent;
-use Botble\Base\Events\DeletedContentEvent;
-use Botble\Base\Events\UpdatedContentEvent;
-use Botble\Base\Facades\PageTitle;
-use Botble\Base\Forms\FormBuilder;
+use Botble\Base\Http\Actions\DeleteResourceAction;
 use Botble\Base\Http\Controllers\BaseController;
-use Botble\Base\Http\Responses\BaseHttpResponse;
-use Botble\Base\Traits\HasDeleteManyItemsTrait;
-use Botble\Media\Repositories\Interfaces\MediaFileInterface;
+use Botble\Base\Supports\Breadcrumb;
+use Botble\Media\Models\MediaFile;
 use Botble\Member\Forms\MemberForm;
 use Botble\Member\Http\Requests\MemberCreateRequest;
 use Botble\Member\Http\Requests\MemberEditRequest;
 use Botble\Member\Models\Member;
-use Botble\Member\Repositories\Interfaces\MemberInterface;
 use Botble\Member\Tables\MemberTable;
 use Carbon\Carbon;
-use Exception;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
 class MemberController extends BaseController
 {
-    use HasDeleteManyItemsTrait;
-
-    public function __construct(protected MemberInterface $memberRepository)
+    protected function breadcrumb(): Breadcrumb
     {
+        return parent::breadcrumb()
+            ->add(trans('plugins/member::member.menu_name'), route('member.index'));
     }
 
     public function index(MemberTable $dataTable)
     {
-        PageTitle::setTitle(trans('plugins/member::member.menu_name'));
+        $this->pageTitle(trans('plugins/member::member.menu_name'));
 
         return $dataTable->renderTable();
     }
 
-    public function create(FormBuilder $formBuilder)
+    public function create()
     {
-        PageTitle::setTitle(trans('plugins/member::member.create'));
+        $this->pageTitle(trans('plugins/member::member.create'));
 
-        return $formBuilder
-            ->create(MemberForm::class)
+        return MemberForm::create()
             ->remove('is_change_password')
             ->renderForm();
     }
 
-    public function store(MemberCreateRequest $request, BaseHttpResponse $response)
+    public function store(MemberCreateRequest $request)
     {
-        $member = $this->memberRepository->getModel();
-        $member->fill($request->input());
-        $member->confirmed_at = Carbon::now();
-        $member->password = Hash::make($request->input('password'));
+        $form = MemberForm::create();
+        $form
+            ->saving(function (MemberForm $form) use ($request) {
+                $member = $form->getModel();
+                $member->fill($request->input());
+                $member->confirmed_at = Carbon::now();
+                $member->password = Hash::make($request->input('password'));
 
-        if ($request->input('avatar_image')) {
-            $image = app(MediaFileInterface::class)->getFirstBy(['url' => $request->input('avatar_image')]);
-            if ($image) {
-                $member->avatar_id = $image->id;
-            }
-        }
+                if (
+                    ($avatarInput = $request->input('avatar_image')) &&
+                    $image = MediaFile::query()->where('url', $avatarInput)->first()
+                ) {
+                    $member->avatar_id = $image->getKey();
+                }
 
-        $member = $this->memberRepository->createOrUpdate($member);
+                $member->save();
+            });
 
-        event(new CreatedContentEvent(MEMBER_MODULE_SCREEN_NAME, $request, $member));
-
-        return $response
-            ->setPreviousUrl(route('member.index'))
-            ->setNextUrl(route('member.edit', $member->id))
-            ->setMessage(trans('core/base::notices.create_success_message'));
+        return $this
+            ->httpResponse()
+            ->setPreviousRoute('member.index')
+            ->setNextRoute('member.edit', $form->getModel()->getKey())
+            ->withCreatedSuccessMessage();
     }
 
-    public function edit(Member $member, FormBuilder $formBuilder)
+    public function edit(Member $member)
     {
-        PageTitle::setTitle(trans('core/base::forms.edit_item', ['name' => $member->name]));
+        $this->pageTitle(trans('core/base::forms.edit_item', ['name' => $member->name]));
 
         $member->password = null;
 
-        return $formBuilder
-            ->create(MemberForm::class, ['model' => $member])
+        return MemberForm::createFromModel($member)
             ->renderForm();
     }
 
-    public function update(Member $member, MemberEditRequest $request, BaseHttpResponse $response)
+    public function update(Member $member, MemberEditRequest $request)
     {
-        $member->fill($request->except('password'));
+        MemberForm::createFromModel($member)
+            ->saving(function (MemberForm $form) use ($request) {
+                $member = $form->getModel();
+                $member->fill($request->except('password'));
 
-        if ($request->input('is_change_password') == 1) {
-            $member->password = Hash::make($request->input('password'));
-        }
+                if ($request->input('is_change_password') == 1) {
+                    $member->password = Hash::make($request->input('password'));
+                }
 
-        if ($request->input('avatar_image')) {
-            $image = app(MediaFileInterface::class)->getFirstBy(['url' => $request->input('avatar_image')]);
-            if ($image) {
-                $member->avatar_id = $image->id;
-            }
-        }
+                if (
+                    ($avatarInput = $request->input('avatar_image')) &&
+                    $image = MediaFile::query()->where('url', $avatarInput)->first()
+                ) {
+                    $member->avatar_id = $image->getKey();
+                }
 
-        $member = $this->memberRepository->createOrUpdate($member);
+                $member->save();
+            });
 
-        event(new UpdatedContentEvent(MEMBER_MODULE_SCREEN_NAME, $request, $member));
-
-        return $response
-            ->setPreviousUrl(route('member.index'))
-            ->setMessage(trans('core/base::notices.update_success_message'));
+        return $this
+            ->httpResponse()
+            ->setPreviousRoute('member.index')
+            ->withUpdatedSuccessMessage();
     }
 
-    public function destroy(Member $member, Request $request, BaseHttpResponse $response)
+    public function destroy(Member $member)
     {
-        try {
-            $this->memberRepository->delete($member);
-            event(new DeletedContentEvent(MEMBER_MODULE_SCREEN_NAME, $request, $member));
-
-            return $response->setMessage(trans('core/base::notices.delete_success_message'));
-        } catch (Exception $exception) {
-            return $response
-                ->setError()
-                ->setMessage($exception->getMessage());
-        }
-    }
-
-    public function deletes(Request $request, BaseHttpResponse $response)
-    {
-        return $this->executeDeleteItems($request, $response, new Member(), MEMBER_MODULE_SCREEN_NAME);
+        return DeleteResourceAction::make($member);
     }
 }

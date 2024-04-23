@@ -1,6 +1,8 @@
 <?php
 
-app()->booted(function () {
+use Botble\Theme\Events\RenderingThemeOptionSettings;
+
+app('events')->listen(RenderingThemeOptionSettings::class, function () {
     theme_option()
         ->setField([
             'id' => 'primary_font',
@@ -87,74 +89,6 @@ app()->booted(function () {
                     'data-counter' => 120,
                 ],
             ],
-        ])
-        ->setSection([
-            'title' => __('Social links'),
-            'desc' => __('Social links'),
-            'id' => 'opt-text-subsection-social-links',
-            'subsection' => true,
-            'icon' => 'fa fa-share-alt',
-        ])
-        ->setField([
-            'id' => 'social_links',
-            'section_id' => 'opt-text-subsection-social-links',
-            'type' => 'repeater',
-            'label' => __('Social links'),
-            'attributes' => [
-                'name' => 'social_links',
-                'value' => null,
-                'fields' => [
-                    [
-                        'type' => 'text',
-                        'label' => __('Name'),
-                        'attributes' => [
-                            'name' => 'social-name',
-                            'value' => null,
-                            'options' => [
-                                'class' => 'form-control',
-                            ],
-                        ],
-                    ],
-                    [
-                        'type' => 'themeIcon',
-                        'label' => __('Icon'),
-                        'attributes' => [
-                            'name' => 'social-icon',
-                            'value' => null,
-                            'options' => [
-                                'class' => 'form-control',
-                            ],
-                        ],
-                    ],
-                    [
-                        'type' => 'text',
-                        'label' => __('URL'),
-                        'attributes' => [
-                            'name' => 'social-url',
-                            'value' => null,
-                            'options' => [
-                                'class' => 'form-control',
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-        ])
-        ->setField([
-            'id' => 'copyright',
-            'section_id' => 'opt-text-subsection-general',
-            'type' => 'text',
-            'label' => __('Copyright'),
-            'attributes' => [
-                'name' => 'copyright',
-                'value' => null,
-                'options' => [
-                    'class' => 'form-control',
-                    'placeholder' => __('Change copyright'),
-                    'data-counter' => 255,
-                ],
-            ],
-            'helper' => __('Copyright on footer of site'),
         ])
         ->setField([
             'id' => 'facebook_comment_enabled_in_gallery',

@@ -2,22 +2,18 @@
 
 namespace Botble\Contact\Http\Controllers;
 
+use Botble\Base\Facades\BaseHelper;
 use Botble\Base\Facades\EmailHandler;
-use Botble\Base\Http\Responses\BaseHttpResponse;
+use Botble\Base\Http\Controllers\BaseController;
 use Botble\Contact\Events\SentContactEvent;
 use Botble\Contact\Http\Requests\ContactRequest;
-use Botble\Contact\Repositories\Interfaces\ContactInterface;
+use Botble\Contact\Models\Contact;
 use Exception;
-use Illuminate\Routing\Controller;
 use Illuminate\Support\Str;
 
-class PublicController extends Controller
+class PublicController extends BaseController
 {
-    public function __construct(protected ContactInterface $contactRepository)
-    {
-    }
-
-    public function postSendContact(ContactRequest $request, BaseHttpResponse $response)
+    public function postSendContact(ContactRequest $request)
     {
         $blacklistDomains = setting('blacklist_email_domains');
 
@@ -27,7 +23,8 @@ class PublicController extends Controller
             $blacklistDomains = collect(json_decode($blacklistDomains, true))->pluck('value')->all();
 
             if (in_array($emailDomain, $blacklistDomains)) {
-                return $response
+                return $this
+                    ->httpResponse()
                     ->setError()
                     ->setMessage(__('Your email is in blacklist. Please use another email address.'));
             }
@@ -41,7 +38,7 @@ class PublicController extends Controller
             $badWords = collect(json_decode($blacklistWords, true))
                 ->filter(function ($item) use ($content) {
                     $matches = [];
-                    $pattern = '/\b' . $item['value'] . '\b/iu';
+                    $pattern = '/\b' . preg_quote($item['value'], '/') . '\b/iu';
 
                     return preg_match($pattern, $content, $matches, PREG_UNMATCHED_AS_NULL);
                 })
@@ -49,16 +46,18 @@ class PublicController extends Controller
                 ->all();
 
             if (count($badWords)) {
-                return $response
+                return $this
+                    ->httpResponse()
                     ->setError()
                     ->setMessage(__('Your message contains blacklist words: ":words".', ['words' => implode(', ', $badWords)]));
             }
         }
 
         try {
-            $contact = $this->contactRepository->getModel();
-            $contact->fill($request->input());
-            $this->contactRepository->createOrUpdate($contact);
+            /**
+             * @var Contact $contact
+             */
+            $contact = Contact::query()->create($request->input());
 
             event(new SentContactEvent($contact));
 
@@ -79,11 +78,14 @@ class PublicController extends Controller
                 ])
                 ->sendUsingTemplate('notice', null, $args);
 
-            return $response->setMessage(__('Send message successfully!'));
+            return $this
+                ->httpResponse()
+                ->setMessage(__('Send message successfully!'));
         } catch (Exception $exception) {
-            info($exception->getMessage());
+            BaseHelper::logError($exception);
 
-            return $response
+            return $this
+                ->httpResponse()
                 ->setError()
                 ->setMessage(__("Can't send message on this time, please try again later!"));
         }

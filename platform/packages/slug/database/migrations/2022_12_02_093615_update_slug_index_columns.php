@@ -17,10 +17,11 @@ return new class () extends Migration {
         });
 
         try {
-            foreach (Slug::get() as $slug) {
-                if ($slug->reference_type && class_exists(
-                    $slug->reference_type
-                ) && (! $slug->reference || ! $slug->reference->id)) {
+            foreach (Slug::query()->get() as $slug) {
+                if (
+                    $slug->reference_type && class_exists($slug->reference_type) &&
+                    (! $slug->reference || ! $slug->reference->id)
+                ) {
                     $slug->delete();
                 }
             }

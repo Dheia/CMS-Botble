@@ -9,7 +9,7 @@ return new class () extends Migration {
     {
         if (! Schema::hasTable('gallery_meta_translations')) {
             Schema::create('gallery_meta_translations', function (Blueprint $table) {
-                $table->string('lang_code');
+                $table->string('lang_code', 20);
                 $table->foreignId('gallery_meta_id');
                 $table->text('images')->nullable();
 

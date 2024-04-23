@@ -6,6 +6,7 @@ use Botble\AuditLog\Events\AuditHandlerEvent;
 use Botble\AuditLog\Facades\AuditLog;
 use Botble\Base\Facades\Assets;
 use Botble\Base\Supports\ServiceProvider;
+use Botble\Dashboard\Events\RenderingDashboardWidgets;
 use Botble\Dashboard\Supports\DashboardWidgetInstance;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -26,7 +27,9 @@ class HookServiceProvider extends ServiceProvider
             add_action(BACKUP_ACTION_AFTER_RESTORE, [$this, 'handleRestore'], 45);
         }
 
-        add_filter(DASHBOARD_FILTER_ADMIN_LIST, [$this, 'registerDashboardWidgets'], 28, 2);
+        $this->app['events']->listen(RenderingDashboardWidgets::class, function () {
+            add_filter(DASHBOARD_FILTER_ADMIN_LIST, [$this, 'registerDashboardWidgets'], 28, 2);
+        });
     }
 
     public function handleLogout(Request $request, Model $data): void
@@ -40,7 +43,7 @@ class HookServiceProvider extends ServiceProvider
         ));
     }
 
-    public function handleUpdateProfile(string $screen, Request $request, Model $data)
+    public function handleUpdateProfile(string $screen, Request $request, Model $data): void
     {
         event(new AuditHandlerEvent(
             $screen,
@@ -51,7 +54,7 @@ class HookServiceProvider extends ServiceProvider
         ));
     }
 
-    public function handleUpdatePassword(string $screen, Request $request, Model $data)
+    public function handleUpdatePassword(string $screen, Request $request, Model $data): void
     {
         event(new AuditHandlerEvent(
             $screen,
@@ -62,19 +65,19 @@ class HookServiceProvider extends ServiceProvider
         ));
     }
 
-    public function handleBackup(string $screen)
+    public function handleBackup(string $screen): void
     {
         event(new AuditHandlerEvent($screen, 'created', 0, '', 'info'));
     }
 
-    public function handleRestore(string $screen)
+    public function handleRestore(string $screen): void
     {
         event(new AuditHandlerEvent($screen, 'restored', 0, '', 'info'));
     }
 
     public function registerDashboardWidgets(array $widgets, Collection $widgetSettings): array
     {
-        if (! Auth::user()->hasPermission('audit-log.index')) {
+        if (! Auth::guard()->user()->hasPermission('audit-log.index')) {
             return $widgets;
         }
 
@@ -85,9 +88,9 @@ class HookServiceProvider extends ServiceProvider
             ->setKey('widget_audit_logs')
             ->setTitle(trans('plugins/audit-log::history.widget_audit_logs'))
             ->setIcon('fas fa-history')
-            ->setColor('#44b6ae')
+            ->setColor('cyan')
             ->setRoute(route('audit-log.widget.activities'))
-            ->setBodyClass('scroll-table')
+            ->setBodyClass('')
             ->setColumn('col-md-6 col-sm-6')
             ->init($widgets, $widgetSettings);
     }

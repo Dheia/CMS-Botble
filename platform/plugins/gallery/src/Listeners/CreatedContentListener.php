@@ -3,6 +3,7 @@
 namespace Botble\Gallery\Listeners;
 
 use Botble\Base\Events\CreatedContentEvent;
+use Botble\Base\Facades\BaseHelper;
 use Botble\Gallery\Facades\Gallery;
 use Exception;
 
@@ -13,7 +14,7 @@ class CreatedContentListener
         try {
             Gallery::saveGallery($event->request, $event->data);
         } catch (Exception $exception) {
-            info($exception->getMessage());
+            BaseHelper::logError($exception);
         }
     }
 }

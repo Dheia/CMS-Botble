@@ -1,7 +1,7 @@
 @php
     SeoHelper::setTitle(__('404 - Not found'));
     Theme::fireEventGlobalAssets();
-    Theme::breadcrumb()->add(__('Home'), route('public.index'))->add(SeoHelper::getTitle());
+    Theme::breadcrumb()->add(SeoHelper::getTitle());
 @endphp
 
 {!! Theme::partial('header') !!}
@@ -47,10 +47,8 @@
             </ul>
             <br>
 
-            <strong>{!! BaseHelper::clean(__('Please try again in a few minutes, or alternatively return to the homepage by <a href=":link">clicking here</a>.', ['link' => route('public.single')])) !!}</strong>
+            <strong>{!! BaseHelper::clean(__('Please try again in a few minutes, or alternatively return to the homepage by <a href=":link">clicking here</a>.', ['link' => BaseHelper::getHomepageUrl()])) !!}</strong>
         </div>
     </div>
 </section>
 {!! Theme::partial('footer') !!}
-
-

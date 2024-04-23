@@ -17,6 +17,11 @@ class Helper
     public static function autoload(string $directory): void
     {
         $helpers = File::glob($directory . '/*.php');
+
+        if (empty($helpers) || ! is_array($helpers)) {
+            return;
+        }
+
         foreach ($helpers as $helper) {
             File::requireOnce($helper);
         }
@@ -41,7 +46,7 @@ class Helper
     public static function formatLog(array $input, string $line = '', string $function = '', string $class = ''): array
     {
         return array_merge($input, [
-            'user_id' => Auth::check() ? Auth::id() : 'System',
+            'user_id' => Auth::guard()->check() ? Auth::guard()->id() : 'System',
             'ip' => Request::ip(),
             'line' => $line,
             'function' => $function,
@@ -119,7 +124,11 @@ class Helper
 
     public static function countries(): array
     {
-        return config('core.base.general.countries', []);
+        $countries = config('core.base.general.countries', []);
+
+        $translatedCountries = array_change_key_case(trans('core/base::countries', []), CASE_UPPER);
+
+        return [...$countries, ...$translatedCountries];
     }
 
     public static function getIpFromThirdParty(): bool|string|null

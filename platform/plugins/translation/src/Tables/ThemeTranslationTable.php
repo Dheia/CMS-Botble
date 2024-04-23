@@ -2,37 +2,34 @@
 
 namespace Botble\Translation\Tables;
 
+use Botble\Base\Facades\Assets;
 use Botble\Base\Facades\Html;
 use Botble\Base\Supports\Language;
 use Botble\Table\Abstracts\TableAbstract;
-use Botble\Table\DataTables;
+use Botble\Table\Columns\Column;
 use Botble\Translation\Manager;
-use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Arr;
 
 class ThemeTranslationTable extends TableAbstract
 {
-    protected $view = 'core/table::simple-table';
+    protected string $locale = 'en';
 
-    protected $hasCheckbox = false;
+    public function setup(): void
+    {
+        parent::setup();
 
-    protected $hasOperations = false;
+        $this->setView($this->simpleTableView());
+        $this->pageLength = 100;
+        $this->hasOperations = false;
 
-    protected int $pageLength = 100;
-
-    public function __construct(
-        DataTables $table,
-        UrlGenerator $urlGenerator,
-        protected Manager $manager,
-        protected string $locale = 'en'
-    ) {
-        parent::__construct($table, $urlGenerator);
+        Assets::addScripts(['bootstrap-editable'])
+            ->addStyles(['bootstrap-editable']);
     }
 
     public function ajax(): JsonResponse
     {
-        $translations = collect($this->manager->getThemeTranslations($this->locale))
+        $translations = collect(app(Manager::class)->getThemeTranslations($this->locale))
             ->transform(fn ($value, $key) => compact('key', 'value'));
 
         $table = $this->table
@@ -57,13 +54,11 @@ class ThemeTranslationTable extends TableAbstract
     public function columns(): array
     {
         return [
-            'key' => [
-                'class' => 'text-start',
-            ],
-            $this->locale => [
-                'title' => Arr::get(Language::getAvailableLocales(), $this->locale . '.name', $this->locale),
-                'class' => 'text-start',
-            ],
+            Column::make('key')
+                ->alignStart(),
+            Column::make($this->locale)
+                ->title(Arr::get(Language::getAvailableLocales(), $this->locale . '.name', $this->locale))
+                ->alignStart(),
         ];
     }
 
@@ -81,6 +76,11 @@ class ThemeTranslationTable extends TableAbstract
 
     public function htmlDrawCallbackFunction(): string|null
     {
-        return parent::htmlDrawCallbackFunction() . '$(".editable").editable({mode: "inline"});';
+        return parent::htmlDrawCallbackFunction() . 'Botble.initEditable()';
+    }
+
+    public function isSimpleTable(): bool
+    {
+        return false;
     }
 }

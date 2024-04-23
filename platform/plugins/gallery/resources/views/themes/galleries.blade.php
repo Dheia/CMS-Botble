@@ -1,5 +1,8 @@
 <section class="section page-intro pt-100 pb-100 bg-cover">
-    <div style="opacity: 0.7" class="bg-overlay"></div>
+    <div
+        class="bg-overlay"
+        style="opacity: 0.7"
+    ></div>
     <div class="container">
         <h3 class="page-intro__title">{{ __('Galleries') }}</h3>
         {!! Theme::breadcrumb()->render() !!}
@@ -10,16 +13,22 @@
         <div class="page-content">
             <article class="post post--single">
                 <div class="post__content">
-                    @if (isset($galleries) && !$galleries->isEmpty())
+                    @if (isset($galleries) && $galleries->isNotEmpty())
                         <div class="gallery-wrap">
                             @foreach ($galleries as $gallery)
                                 <div class="gallery-item">
                                     <div class="img-wrap">
-                                        <a href="{{ $gallery->url }}"><img src="{{ RvMedia::getImageUrl($gallery->image, 'medium') }}" alt="{{ $gallery->name }}"></a>
+                                        <a href="{{ $gallery->url }}">
+                                            {{ RvMedia::image($gallery->image, $gallery->name, 'medium') }}
+                                        </a>
                                     </div>
                                     <div class="gallery-detail">
-                                        <div class="gallery-title"><a href="{{ $gallery->url }}">{{ $gallery->name }}</a></div>
-                                        <div class="gallery-author">{{ __('By') }} {{ $gallery->user->name }}</div>
+                                        <div class="gallery-title">
+                                            <a href="{{ $gallery->url }}">{{ $gallery->name }}</a>
+                                        </div>
+                                        @if (trim($gallery->user->name))
+                                            <div class="gallery-author">{{ __('By') }} {{ $gallery->user->name }}</div>
+                                        @endif
                                     </div>
                                 </div>
                             @endforeach

@@ -20,11 +20,11 @@ return new class () extends Migration {
         Schema::create('media_files', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->index();
-            $table->string('name', 255);
+            $table->string('name');
             $table->foreignId('folder_id')->default(0);
             $table->string('mime_type', 120);
             $table->integer('size');
-            $table->string('url', 255);
+            $table->string('url');
             $table->text('options')->nullable();
             $table->timestamps();
             $table->softDeletes();

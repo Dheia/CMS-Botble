@@ -2,156 +2,131 @@
 
 namespace Database\Seeders;
 
-use Botble\ACL\Models\User;
 use Botble\Base\Facades\Html;
 use Botble\Base\Supports\BaseSeeder;
-use Botble\Blog\Models\Category;
-use Botble\Blog\Models\Post;
-use Botble\Blog\Models\Tag;
+use Botble\Blog\Database\Traits\HasBlogSeeder;
 use Botble\Media\Facades\RvMedia;
-use Botble\Slug\Facades\SlugHelper;
-use Botble\Slug\Models\Slug;
-use Illuminate\Support\Str;
 
 class BlogSeeder extends BaseSeeder
 {
+    use HasBlogSeeder;
+
     public function run(): void
     {
         $this->uploadFiles('news');
 
-        Post::query()->truncate();
-        Category::query()->truncate();
-        Tag::query()->truncate();
-
-        $faker = fake();
-
         $categories = [
-            [
-                'name' => 'Design',
-                'is_default' => true,
-            ],
-            [
-                'name' => 'Lifestyle',
-            ],
-            [
-                'name' => 'Travel Tips',
-                'parent_id' => 2,
-            ],
-            [
-                'name' => 'Healthy',
-            ],
-            [
-                'name' => 'Travel Tips',
-                'parent_id' => 4,
-            ],
-            [
-                'name' => 'Hotel',
-            ],
-            [
-                'name' => 'Nature',
-                'parent_id' => 6,
-            ],
+            ['name' => 'Artificial Intelligence'],
+            ['name' => 'Cybersecurity'],
+            ['name' => 'Blockchain Technology'],
+            ['name' => '5G and Connectivity'],
+            ['name' => 'Augmented Reality (AR)'],
+            ['name' => 'Green Technology'],
+            ['name' => 'Quantum Computing'],
+            ['name' => 'Edge Computing'],
         ];
 
-        foreach ($categories as $index => $item) {
-            $item['description'] = $faker->text();
-            $item['author_id'] = 1;
-            $item['author_type'] = User::class;
-            $item['is_featured'] = ! isset($item['parent_id']) && $index != 0;
-
-            $category = Category::query()->create($item);
-
-            Slug::query()->create([
-                'reference_type' => Category::class,
-                'reference_id' => $category->id,
-                'key' => Str::slug($category->name),
-                'prefix' => SlugHelper::getPrefix(Category::class),
-            ]);
-        }
+        $this->createBlogCategories($categories);
 
         $tags = [
-            [
-                'name' => 'General',
-            ],
-            [
-                'name' => 'Design',
-            ],
-            [
-                'name' => 'Fashion',
-            ],
-            [
-                'name' => 'Branding',
-            ],
-            [
-                'name' => 'Modern',
-            ],
+            ['name' => 'AI'],
+            ['name' => 'Machine Learning'],
+            ['name' => 'Neural Networks'],
+            ['name' => 'Data Security'],
+            ['name' => 'Blockchain'],
+            ['name' => 'Cryptocurrency'],
+            ['name' => 'IoT'],
+            ['name' => 'AR Gaming'],
         ];
 
-        foreach ($tags as $item) {
-            $item['author_id'] = 1;
-            $item['author_type'] = User::class;
-            $tag = Tag::query()->create($item);
-
-            Slug::query()->create([
-                'reference_type' => Tag::class,
-                'reference_id' => $tag->id,
-                'key' => Str::slug($tag->name),
-                'prefix' => SlugHelper::getPrefix(Tag::class),
-            ]);
-        }
+        $this->createBlogTags($tags);
 
         $posts = [
             [
-                'name' => 'The Top 2020 Handbag Trends to Know',
+                'name' => 'Breakthrough in Quantum Computing: Computing Power Reaches Milestone',
+                'description' => 'Researchers achieve a significant milestone in quantum computing, unlocking unprecedented computing power that has the potential to revolutionize various industries.',
             ],
             [
-                'name' => 'Top Search Engine Optimization Strategies!',
+                'name' => '5G Rollout Accelerates: Next-Gen Connectivity Transforms Communication',
+                'description' => 'The global rollout of 5G technology gains momentum, promising faster and more reliable connectivity, paving the way for innovations in communication and IoT.',
             ],
             [
-                'name' => 'Which Company Would You Choose?',
+                'name' => 'Tech Giants Collaborate on Open-Source AI Framework',
+                'description' => 'Leading technology companies join forces to develop an open-source artificial intelligence framework, fostering collaboration and accelerating advancements in AI research.',
             ],
             [
-                'name' => 'Used Car Dealer Sales Tricks Exposed',
+                'name' => 'SpaceX Launches Mission to Establish First Human Colony on Mars',
+                'description' => 'Elon Musk\'s SpaceX embarks on a historic mission to establish the first human colony on Mars, marking a significant step toward interplanetary exploration.',
             ],
             [
-                'name' => '20 Ways To Sell Your Product Faster',
+                'name' => 'Cybersecurity Advances: New Protocols Bolster Digital Defense',
+                'description' => 'In response to evolving cyber threats, advancements in cybersecurity protocols enhance digital defense measures, protecting individuals and organizations from online attacks.',
             ],
             [
-                'name' => 'The Secrets Of Rich And Famous Writers',
+                'name' => 'Artificial Intelligence in Healthcare: Transformative Solutions for Patient Care',
+                'description' => 'AI technologies continue to revolutionize healthcare, offering transformative solutions for patient care, diagnosis, and personalized treatment plans.',
             ],
             [
-                'name' => 'Imagine Losing 20 Pounds In 14 Days!',
+                'name' => 'Robotic Innovations: Autonomous Systems Reshape Industries',
+                'description' => 'Autonomous robotic systems redefine industries as they are increasingly adopted for tasks ranging from manufacturing and logistics to healthcare and agriculture.',
             ],
             [
-                'name' => 'Are You Still Using That Slow, Old Typewriter?',
+                'name' => 'Virtual Reality Breakthrough: Immersive Experiences Redefine Entertainment',
+                'description' => 'Advancements in virtual reality technology lead to immersive experiences that redefine entertainment, gaming, and interactive storytelling.',
             ],
             [
-                'name' => 'A Skin Cream That’s Proven To Work',
+                'name' => 'Innovative Wearables Track Health Metrics and Enhance Well-Being',
+                'description' => 'Smart wearables with advanced health-tracking features gain popularity, empowering individuals to monitor and improve their well-being through personalized data insights.',
             ],
             [
-                'name' => '10 Reasons To Start Your Own, Profitable Website!',
+                'name' => 'Tech for Good: Startups Develop Solutions for Social and Environmental Issues',
+                'description' => 'Tech startups focus on developing innovative solutions to address social and environmental challenges, demonstrating the positive impact of technology on global issues.',
             ],
             [
-                'name' => 'Simple Ways To Reduce Your Unwanted Wrinkles!',
+                'name' => 'AI-Powered Personal Assistants Evolve: Enhancing Productivity and Convenience',
+                'description' => 'AI-powered personal assistants undergo significant advancements, becoming more intuitive and capable of enhancing productivity and convenience in users\' daily lives.',
             ],
             [
-                'name' => 'Apple iMac with Retina 5K display review',
+                'name' => 'Blockchain Innovation: Decentralized Finance (DeFi) Reshapes Finance Industry',
+                'description' => 'Blockchain technology drives the rise of decentralized finance (DeFi), reshaping traditional financial systems and offering new possibilities for secure and transparent transactions.',
             ],
             [
-                'name' => '10,000 Web Site Visitors In One Month:Guaranteed',
+                'name' => 'Quantum Internet: Secure Communication Enters a New Era',
+                'description' => 'The development of a quantum internet marks a new era in secure communication, leveraging quantum entanglement for virtually unhackable data transmission.',
             ],
             [
-                'name' => 'Unlock The Secrets Of Selling High Ticket Items',
+                'name' => 'Drone Technology Advances: Applications Expand Across Industries',
+                'description' => 'Drone technology continues to advance, expanding its applications across industries such as agriculture, construction, surveillance, and delivery services.',
             ],
             [
-                'name' => '4 Expert Tips On How To Choose The Right Men’s Wallet',
+                'name' => 'Biotechnology Breakthrough: CRISPR-Cas9 Enables Precision Gene Editing',
+                'description' => 'The CRISPR-Cas9 gene-editing technology reaches new heights, enabling precise and targeted modifications in the genetic code with profound implications for medicine and biotechnology.',
             ],
             [
-                'name' => 'Sexy Clutches: How to Buy & Wear a Designer Clutch Bag',
+                'name' => 'Augmented Reality in Education: Interactive Learning Experiences for Students',
+                'description' => 'Augmented reality transforms education, providing students with interactive and immersive learning experiences that enhance engagement and comprehension.',
+            ],
+            [
+                'name' => 'AI in Autonomous Vehicles: Advancements in Self-Driving Car Technology',
+                'description' => 'AI algorithms and sensors in autonomous vehicles continue to advance, bringing us closer to widespread adoption of self-driving cars with improved safety features.',
+            ],
+            [
+                'name' => 'Green Tech Innovations: Sustainable Solutions for a Greener Future',
+                'description' => 'Green technology innovations focus on sustainable solutions, ranging from renewable energy sources to eco-friendly manufacturing practices, contributing to a greener future.',
+            ],
+            [
+                'name' => 'Space Tourism Soars: Commercial Companies Make Strides in Space Travel',
+                'description' => 'Commercial space travel gains momentum as private companies make significant strides in offering space tourism experiences, opening up new frontiers for adventurous individuals.',
+            ],
+            [
+                'name' => 'Humanoid Robots in Everyday Life: AI Companions and Assistants',
+                'description' => 'Humanoid robots equipped with advanced artificial intelligence become more integrated into everyday life, serving as companions and assistants in various settings.',
             ],
         ];
 
-        foreach ($posts as $index => $item) {
+        $faker = $this->fake();
+
+        foreach ($posts as $index => &$item) {
             $item['content'] =
                 ($index % 3 == 0 ? Html::tag(
                     'p',
@@ -191,29 +166,10 @@ class BlogSeeder extends BaseSeeder
                     ['class' => 'text-center']
                 ) .
                 Html::tag('p', $faker->realText(1000));
-            $item['author_id'] = 1;
-            $item['author_type'] = User::class;
-            $item['views'] = $faker->numberBetween(100, 2500);
             $item['is_featured'] = $index < 6;
-            $item['image'] = 'news/' . ($index + 1) . '.jpg';
-            $item['description'] = $faker->text();
-            $item['content'] = str_replace(url(''), '', $item['content']);
-
-            $post = Post::query()->create($item);
-
-            $post->categories()->sync([
-                $faker->numberBetween(1, 4),
-                $faker->numberBetween(5, 7),
-            ]);
-
-            $post->tags()->sync([1, 2, 3, 4, 5]);
-
-            Slug::query()->create([
-                'reference_type' => Post::class,
-                'reference_id' => $post->id,
-                'key' => Str::slug($post->name),
-                'prefix' => SlugHelper::getPrefix(Post::class),
-            ]);
+            $item['image'] = $this->filePath('news/' . ($index + 1) . '.jpg');
         }
+
+        $this->createBlogPosts($posts);
     }
 }

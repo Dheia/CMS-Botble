@@ -1,6 +1,6 @@
 <?php
 
-use Botble\Base\Facades\BaseHelper;
+use Botble\Base\Facades\AdminHelper;
 use Botble\Base\Facades\DashboardMenu;
 use Botble\Base\Facades\Html;
 use Botble\Base\Facades\PageTitle;
@@ -10,13 +10,20 @@ use Botble\Base\Supports\Editor;
 use Botble\Base\Supports\PageTitle as PageTitleSupport;
 
 if (! function_exists('language_flag')) {
-    function language_flag(string $flag, string|null $name = null, int $width = 16): string
+    function language_flag(string|null $flag, string|null $name = null, int $width = 16): string
     {
-        return Html::image(
-            asset(BASE_LANGUAGE_FLAG_PATH . $flag . '.svg'),
-            $name,
-            ['title' => $name, 'width' => $width]
-        );
+        if (! $flag) {
+            return '';
+        }
+
+        $flag = apply_filters('cms_language_flag', $flag, $name);
+
+        return Html::image(asset(BASE_LANGUAGE_FLAG_PATH . $flag . '.svg'), sprintf('%s flag', $name), [
+            'title' => $name,
+            'class' => 'flag',
+            'style' => "height: {$width}px",
+            'loading' => 'lazy',
+        ]);
     }
 }
 
@@ -34,13 +41,7 @@ if (! function_exists('render_editor')) {
 if (! function_exists('is_in_admin')) {
     function is_in_admin(bool $force = false): bool
     {
-        $prefix = BaseHelper::getAdminPrefix();
-
-        $segments = array_slice(request()->segments(), 0, count(explode('/', $prefix)));
-
-        $isInAdmin = implode('/', $segments) === $prefix;
-
-        return $force ? $isInAdmin : apply_filters(IS_IN_ADMIN_FILTER, $isInAdmin);
+        return AdminHelper::isInAdmin($force);
     }
 }
 
@@ -72,7 +73,7 @@ if (! function_exists('get_cms_version')) {
 if (! function_exists('get_core_version')) {
     function get_core_version(): string
     {
-        return '6.8.0';
+        return '7.2.3';
     }
 }
 
@@ -90,20 +91,22 @@ if (! function_exists('get_minimum_php_version')) {
 if (! function_exists('platform_path')) {
     function platform_path(string|null $path = null): string
     {
-        return base_path('platform/' . $path);
+        $path = ltrim($path, DIRECTORY_SEPARATOR);
+
+        return base_path('platform' . ($path ? DIRECTORY_SEPARATOR . $path : ''));
     }
 }
 
 if (! function_exists('core_path')) {
     function core_path(string|null $path = null): string
     {
-        return platform_path('core/' . $path);
+        return platform_path('core' . ($path ? DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR) : ''));
     }
 }
 
 if (! function_exists('package_path')) {
     function package_path(string|null $path = null): string
     {
-        return platform_path('packages/' . $path);
+        return platform_path('packages' . ($path ? DIRECTORY_SEPARATOR . ltrim($path, DIRECTORY_SEPARATOR) : ''));
     }
 }

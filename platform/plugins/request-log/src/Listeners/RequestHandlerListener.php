@@ -2,6 +2,7 @@
 
 namespace Botble\RequestLog\Listeners;
 
+use Botble\Base\Facades\BaseHelper;
 use Botble\RequestLog\Events\RequestHandlerEvent;
 use Botble\RequestLog\Models\RequestLog;
 use Carbon\Carbon;
@@ -41,15 +42,15 @@ class RequestHandlerListener
                 $requestLog->referrer = array_filter(array_unique(array_merge((array)$requestLog->referrer, [$referrer])));
             }
 
-            if (Auth::check()) {
-                $requestLog->user_id = array_filter(array_unique(array_merge((array)$requestLog->user_id, [Auth::id()])));
+            if (Auth::guard()->check()) {
+                $requestLog->user_id = array_filter(array_unique(array_merge((array)$requestLog->user_id, [Auth::guard()->id()])));
             }
 
             $requestLog->count = $requestLog->exists ? $requestLog->count + 1 : 1;
 
             return $requestLog->save();
         } catch (Exception $exception) {
-            info($exception->getMessage());
+            BaseHelper::logError($exception);
 
             return false;
         }
