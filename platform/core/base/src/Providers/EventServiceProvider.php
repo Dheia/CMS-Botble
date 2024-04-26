@@ -97,9 +97,10 @@ class EventServiceProvider extends ServiceProvider
             $router->middlewareGroup('core', [CoreMiddleware::class]);
 
             $this->app->extend('core.middleware', function ($middleware) {
-                return array_merge($middleware, [
-                    EnsureLicenseHasBeenActivated::class,
-                ]);
+                // return array_merge($middleware, [
+                //     EnsureLicenseHasBeenActivated::class,
+                // ]);
+                return array_merge($middleware, []);
             });
 
             add_filter(BASE_FILTER_TOP_HEADER_LAYOUT, function ($options) {
