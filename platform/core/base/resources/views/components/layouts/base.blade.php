@@ -43,7 +43,7 @@
     <script>
         window.siteUrl = "{{ url('') }}";
         window.siteEditorLocale = "{{ apply_filters('cms_site_editor_locale', App::getLocale()) }}";
-        window.siteAuthorizedUrl = "{{ route('settings.license.verify') }}";
+        // window.siteAuthorizedUrl = "{{ route('settings.license.verify') }}";
         window.isAuthenticated = {{ Auth::check() ? 'true' : 'false' }};
     </script>
 
