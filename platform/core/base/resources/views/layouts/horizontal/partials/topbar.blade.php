@@ -1,5 +1,5 @@
 <header
-    class="navbar navbar-expand-md d-print-none"
+    class="navbar navbar-header navbar-expand-md d-print-none"
     data-bs-theme="dark"
 >
     <div class="{{ AdminAppearance::getContainerWidth() }}">
