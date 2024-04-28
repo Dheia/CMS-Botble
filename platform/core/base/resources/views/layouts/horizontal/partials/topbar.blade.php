@@ -1,5 +1,5 @@
 <header
-    class="navbar navbar-header navbar-expand-md d-none d-lg-flex d-print-none"
+    class="navbar navbar-expand-md d-print-none"
     data-bs-theme="dark"
 >
     <div class="{{ AdminAppearance::getContainerWidth() }}">
@@ -14,26 +14,30 @@
         >
             <span class="navbar-toggler-icon"></span>
         </button>
-
-        <div class="flex-row navbar-nav">
-            <div class="d-flex align-items-center me-3">
-                @include('core/base::global-search.navbar-input')
-            </div>
-        </div>
+        <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3">
+            @include('core/base::partials.logo')
+        </h1>
 
         <div class="flex-row navbar-nav order-md-last">
+            <div class="nav-item d-none d-md-flex me-3">
+                @include('core/base::global-search.navbar-input')
+            </div>
+
             @if (BaseHelper::getAdminPrefix() != '')
-                <div class="d-flex align-items-center me-3">
-                    <x-core::button
-                        tag="a"
-                        :href="url('/')"
-                        icon="ti ti-world"
-                        target="_blank"
-                    >
-                        {{ trans('core/base::layouts.view_website') }}
-                    </x-core::button>
+                <div class="nav-item d-none d-md-flex me-3">
+                    <div class="btn-list">
+                        <x-core::button
+                            tag="a"
+                            :href="url('/')"
+                            icon="ti ti-world"
+                            target="_blank"
+                        >
+                            {{ trans('core/base::layouts.view_website') }}
+                        </x-core::button>
+                    </div>
                 </div>
             @endif
+
             <div class="d-none d-md-flex me-2">
                 @include('core/base::layouts.partials.theme-toggle')
 
@@ -44,9 +48,5 @@
 
             @include('core/base::layouts.partials.user-menu')
         </div>
-        <div
-            class="collapse navbar-collapse"
-            id="navbar-menu"
-        ></div>
     </div>
 </header>
