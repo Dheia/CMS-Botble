@@ -1,7 +1,5 @@
-@include('core/base::layouts.' . AdminAppearance::getCurrentLayout() . '.partials.aside')
-
 <header
-    class="navbar navbar-expand-md d-none d-lg-flex d-print-none"
+    class="navbar navbar-header navbar-expand-md d-none d-lg-flex d-print-none"
     data-bs-theme="dark"
 >
     <div class="{{ AdminAppearance::getContainerWidth() }}">
@@ -52,3 +50,5 @@
         ></div>
     </div>
 </header>
+
+@include('core/base::layouts.' . AdminAppearance::getCurrentLayout() . '.partials.aside')
