@@ -159,7 +159,7 @@ return [
                 'use_cdn' => true,
                 'location' => 'footer',
                 'src' => [
-                    'local' => '/vendor/core/core/base/libraries/bootstrap3-editable/js/bootstrap-editable.min.js',
+                    'local' => '/vendor/core/core/base/libraries/bootstrap-editable/js/bootstrap-editable.min.js',
                     'cdn' => '//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.1/bootstrap3-editable/js/bootstrap-editable.min.js',
                 ],
             ],
@@ -427,7 +427,7 @@ return [
                 'use_cdn' => true,
                 'location' => 'footer',
                 'src' => [
-                    'local' => '/vendor/core/core/base/libraries/bootstrap3-editable/css/bootstrap-editable.css',
+                    'local' => '/vendor/core/core/base/libraries/bootstrap-editable/css/bootstrap-editable.css',
                     'cdn' => '//cdnjs.cloudflare.com/ajax/libs/x-editable/1.5.1/bootstrap3-editable/css/bootstrap-editable.css',
                 ],
             ],
