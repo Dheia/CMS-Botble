@@ -345,7 +345,7 @@ final class Core
         if (! $this->files->exists($filePath) || Carbon::createFromTimestamp(filectime($filePath))->diffInHours() > 1) {
             $response = $this->createRequest('download_update/main/' . $updateId, $data);
 
-            throw_if($response->unauthorized(), RequiresLicenseActivatedException::class);
+            // throw_if($response->unauthorized(), RequiresLicenseActivatedException::class);
 
             try {
                 $this->files->put($filePath, $response->body());
