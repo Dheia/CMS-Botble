@@ -59,6 +59,11 @@
    width: 30px;
 }
 
+.editable-buttons i {
+  min-width: 12px;
+  min-height: 12px;
+}
+
 .editableform-loading {
     background: url('../img/loading.gif') center center no-repeat;  
     height: 25px;
