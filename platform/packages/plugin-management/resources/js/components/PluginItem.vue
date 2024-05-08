@@ -75,7 +75,7 @@ export default defineComponent({
             </div>
 
             <div class="card-footer">
-                <div class="d-flex">
+                <div class="d-flex gap-2">
                     <button
                         type="button"
                         class="btn btn-primary"
