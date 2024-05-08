@@ -48,7 +48,7 @@ class AdsServiceProvider extends ServiceProvider
                 'priority' => 5,
                 'parent_id' => null,
                 'name' => 'plugins/ads::ads.name',
-                'icon' => 'fas fa-bullhorn',
+                'icon' => 'ti ti-speakerphone',
                 'url' => route('ads.index'),
                 'permissions' => ['ads.index'],
             ]);
