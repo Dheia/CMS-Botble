@@ -1,7 +1,7 @@
 @extends(BaseHelper::getAdminMasterLayoutTemplate())
 
 @section('content')
-    @include('core/setting::partials.license')
+    <!-- @include('core/setting::partials.license') -->
 
     {!! $form->renderForm() !!}
 @stop

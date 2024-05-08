@@ -60,5 +60,5 @@
     </div>
 </nav>
 <script type="text/javascript">
-    document.getElementsByTagName('body')[0].classList.add('show-admin-bar');
+    document.body.classList.add('show-admin-bar');
 </script>

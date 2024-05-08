@@ -1,11 +1,20 @@
 <x-core::layouts.base>
-    <div class="page">
-        @include('core/base::layouts.' . AdminAppearance::getCurrentLayout() . '.partials.navbar')
+    @php
+    $currentLayout = AdminAppearance::getCurrentLayout();
+    @endphp
+    <div class="page layout-{{$currentLayout}}">
+        @if($currentLayout === 'vertical')
+            @include('core/base::layouts.' . $currentLayout . '.partials.aside')
+        @elseif($currentLayout === 'horizontal')
+            @include('core/base::layouts.' . $currentLayout . '.partials.topbar')
+        @endif
 
-        <div @class([
+        <main @class([
                 'page-wrapper',
                 'rv-media-integrate-wrapper' => Route::currentRouteName() === 'media.index',
             ])>
+            @include('core/base::layouts.' . $currentLayout . '.partials.navbar')
+            
             @include('core/base::layouts.partials.page-header')
 
             <div class="page-body page-content">
@@ -19,14 +28,14 @@
             </div>
 
             @include('core/base::layouts.partials.footer')
-        </div>
+        </main>
 
     </div>
 
     <x-slot:header-layout>
-        @if (\Botble\Base\Supports\Core::make()->isSkippedLicenseReminder())
-            @include('core/base::system.license-invalid', ['hidden' => false])
-        @endif
+        <!--@if (\Botble\Base\Supports\Core::make()->isSkippedLicenseReminder())-->
+        <!--    @include('core/base::system.license-invalid', ['hidden' => false])-->
+        <!--@endif-->
     </x-slot:header-layout>
 
     <x-slot:footer>
