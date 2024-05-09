@@ -503,3 +503,60 @@ body.show-admin-bar {
     background: url(../images/icon-discord.svg) no-repeat center center;
     vertical-align: middle;
 }
+
+.gallery-wrap {
+
+    .gallery-item {
+        width: 32.8%;
+        margin-right: 0.8%;
+        float: left;
+        max-height: 250px;
+        overflow: hidden;
+        margin-bottom: 10px;
+        position: relative;
+        
+        .gallery-detail {
+            position: absolute;
+            bottom: -50px;
+            right: 0;
+            left: 0;
+            z-index: 2;
+            background: rgba(0, 0, 0, 0.8);
+            color: #ffffff;
+            padding: 4px 10px;
+            -webkit-transition: ease 0.25s;
+            -moz-transition: ease 0.25s;
+            -o-transition: ease 0.25s;
+            transition: ease 0.25s;
+        }
+        
+        &:nth-child(3n) {
+            margin-right: 0;
+        }
+        
+        &:hover .gallery-detail {
+            bottom: 0;
+        }
+        
+        .gallery-detail a {
+            color: #ffffff;
+        }
+        
+        .gallery-detail a:hover {
+            color: #32c5d2 !important;
+        }
+        
+        .gallery-detail .gallery-title {
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+        
+        .img-wrap {
+            overflow: hidden;
+        }
+        
+        .img-wrap img {
+            width: 100%;
+        }
+    }
+}
