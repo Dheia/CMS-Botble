@@ -349,7 +349,7 @@ class HookServiceProvider extends ServiceProvider
             }
         }
 
-        add_filter(THEME_FRONT_FOOTER, function (string|null $html): string|null {
+        add_filter(THEME_FRONT_HEADER, function (string|null $html): string|null {
             try {
                 if (! Auth::guard()->check() || ! AdminBar::isDisplay() || ! (int)setting('show_admin_bar', 1)) {
                     return $html;
