@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 trait HasCollectionSeeder
 {
-    protected function createCollectionTaxon(array $taxon, bool $truncate = true): void
+    protected function createCollectionTaxons(array $taxon, bool $truncate = true): void
     {
         if ($truncate) {
             Taxon::query()->truncate();

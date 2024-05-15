@@ -26,7 +26,7 @@ class CollectionSeeder extends BaseSeeder
             ['name' => 'Edge Computing'],
         ];
 
-        $this->createCollectionTaxon($taxon);
+        $this->createCollectionTaxons($taxon);
 
         $subjects = [
             [
