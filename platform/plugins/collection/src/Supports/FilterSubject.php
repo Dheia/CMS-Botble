@@ -27,8 +27,6 @@ class FilterSubject
             'status' => BaseStatusEnum::PUBLISHED,
             'taxon' => $request['taxon'] ?? null,
             'taxon_exclude' => $request['taxon_exclude'] ?? null,
-            'tags' => $request['tags'] ?? null,
-            'tags_exclude' => $request['tags_exclude'] ?? null,
             'featured' => $request['featured'] ?? null,
         ];
     }

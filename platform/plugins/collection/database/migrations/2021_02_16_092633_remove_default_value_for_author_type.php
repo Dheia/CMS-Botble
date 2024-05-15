@@ -18,16 +18,6 @@ return new class () extends Migration {
             $table->string('author_type')->change();
         });
 
-        if (! Schema::hasColumn('tags', 'author_type')) {
-            Schema::table('tags', function (Blueprint $table) {
-                $table->string('author_type');
-            });
-        }
-
-        Schema::table('tags', function (Blueprint $table) {
-            $table->string('author_type')->change();
-        });
-
         if (! Schema::hasColumn('subjects', 'author_type')) {
             Schema::table('subjects', function (Blueprint $table) {
                 $table->string('author_type');

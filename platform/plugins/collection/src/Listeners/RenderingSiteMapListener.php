@@ -4,7 +4,6 @@ namespace Botble\Collection\Listeners;
 
 use Botble\Collection\Models\Taxon;
 use Botble\Collection\Models\Subject;
-use Botble\Collection\Models\Tag;
 use Botble\Theme\Events\RenderingSiteMapEvent;
 use Botble\Theme\Facades\SiteMapManager;
 use Illuminate\Support\Arr;
@@ -25,19 +24,6 @@ class RenderingSiteMapListener
 
                     foreach ($taxon as $taxon) {
                         SiteMapManager::add($taxon->url, $taxon->updated_at, '0.8');
-                    }
-
-                    break;
-                case 'collection-tags':
-                    $tags = Tag::query()
-                        ->with('slugable')
-                        ->wherePublished()
-                        ->orderByDesc('created_at')
-                        ->select(['id', 'name', 'updated_at'])
-                        ->get();
-
-                    foreach ($tags as $tag) {
-                        SiteMapManager::add($tag->url, $tag->updated_at, '0.3', 'weekly');
                     }
 
                     break;
@@ -89,15 +75,6 @@ class RenderingSiteMapListener
 
         if ($taxonLastUpdated) {
             SiteMapManager::addSitemap(SiteMapManager::route('collection-taxon'), $taxonLastUpdated);
-        }
-
-        $tagLastUpdated = Tag::query()
-            ->wherePublished()
-            ->latest('updated_at')
-            ->value('updated_at');
-
-        if ($tagLastUpdated) {
-            SiteMapManager::addSitemap(SiteMapManager::route('collection-tags'), $tagLastUpdated);
         }
     }
 }

@@ -16,7 +16,6 @@ class SubjectRequest extends Request
             'name' => ['required', 'string', 'max:250'],
             'description' => ['nullable', 'string', 'max:400'],
             'content' => ['nullable', 'string', 'max:300000'],
-            'tag' => ['nullable', 'string', 'max:255'],
             'taxon' => ['sometimes', 'array'],
             'taxon.*' => ['sometimes', 'exists:taxon,id'],
             'status' => Rule::in(BaseStatusEnum::values()),

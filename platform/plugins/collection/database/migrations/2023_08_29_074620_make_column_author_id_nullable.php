@@ -11,10 +11,6 @@ return new class () extends Migration {
             $table->foreignId('author_id')->nullable()->change();
         });
 
-        Schema::table('tags', function (Blueprint $table) {
-            $table->foreignId('author_id')->nullable()->change();
-        });
-
         Schema::table('subjects', function (Blueprint $table) {
             $table->foreignId('author_id')->nullable()->change();
         });

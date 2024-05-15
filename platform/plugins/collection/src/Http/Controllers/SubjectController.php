@@ -11,7 +11,6 @@ use Botble\Collection\Forms\SubjectForm;
 use Botble\Collection\Http\Requests\SubjectRequest;
 use Botble\Collection\Models\Subject;
 use Botble\Collection\Services\StoreTaxonService;
-use Botble\Collection\Services\StoreTagService;
 use Botble\Collection\Tables\SubjectTable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -41,12 +40,11 @@ class SubjectController extends BaseController
 
     public function store(
         SubjectRequest $request,
-        StoreTagService $tagService,
         StoreTaxonService $taxonService
     ) {
         $subjectForm = SubjectForm::create();
 
-        $subjectForm->saving(function (SubjectForm $form) use ($request, $tagService, $taxonService) {
+        $subjectForm->saving(function (SubjectForm $form) use ($request, $taxonService) {
             $form
                 ->getModel()
                 ->fill([
@@ -59,8 +57,6 @@ class SubjectController extends BaseController
             $subject = $form->getModel();
 
             $form->fireModelEvents($subject);
-
-            $tagService->execute($request, $subject);
 
             $taxonService->execute($request, $subject);
         });
@@ -82,12 +78,11 @@ class SubjectController extends BaseController
     public function update(
         Subject $subject,
         SubjectRequest $request,
-        StoreTagService $tagService,
         StoreTaxonService $taxonService,
     ) {
         SubjectForm::createFromModel($subject)
             ->setRequest($request)
-            ->saving(function (SubjectForm $form) use ($taxonService, $tagService) {
+            ->saving(function (SubjectForm $form) use ($taxonService) {
                 $request = $form->getRequest();
 
                 $subject = $form->getModel();
@@ -95,8 +90,6 @@ class SubjectController extends BaseController
                 $subject->save();
 
                 $form->fireModelEvents($subject);
-
-                $tagService->execute($request, $subject);
 
                 $taxonService->execute($request, $subject);
             });

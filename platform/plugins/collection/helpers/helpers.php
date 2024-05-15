@@ -6,7 +6,6 @@ use Botble\Base\Models\BaseModel;
 use Botble\Base\Supports\SortItemsWithChildrenHelper;
 use Botble\Collection\Repositories\Interfaces\TaxonInterface;
 use Botble\Collection\Repositories\Interfaces\SubjectInterface;
-use Botble\Collection\Repositories\Interfaces\TagInterface;
 use Botble\Collection\Supports\SubjectFormat;
 use Botble\Page\Models\Page;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -38,13 +37,6 @@ if (! function_exists('get_subjects_by_taxon')) {
     function get_subjects_by_taxon(int|string $taxonId, int $paginate = 12, int $limit = 0): Collection|LengthAwarePaginator
     {
         return app(SubjectInterface::class)->getByTaxon($taxonId, $paginate, $limit);
-    }
-}
-
-if (! function_exists('get_subjects_by_tag')) {
-    function get_subjects_by_tag(string $slug, int $paginate = 12): Collection|LengthAwarePaginator
-    {
-        return app(SubjectInterface::class)->getByTag($slug, $paginate);
     }
 }
 
@@ -83,23 +75,6 @@ if (! function_exists('get_all_taxon')) {
     function get_all_taxon(array $condition = [], array $with = []): Collection|LengthAwarePaginator
     {
         return app(TaxonInterface::class)->getAllTaxon($condition, $with);
-    }
-}
-
-if (! function_exists('get_all_tags')) {
-    function get_all_tags(bool $active = true): Collection|LengthAwarePaginator
-    {
-        return app(TagInterface::class)->getAllTags($active);
-    }
-}
-
-if (! function_exists('get_popular_tags')) {
-    function get_popular_tags(
-        int $limit = 10,
-        array $with = ['slugable'],
-        array $withCount = ['subjects']
-    ): Collection|LengthAwarePaginator {
-        return app(TagInterface::class)->getPopularTags($limit, $with, $withCount);
     }
 }
 

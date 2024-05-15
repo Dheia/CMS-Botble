@@ -9,13 +9,11 @@ use Botble\Base\Forms\FieldOptions\NameFieldOption;
 use Botble\Base\Forms\FieldOptions\RadioFieldOption;
 use Botble\Base\Forms\FieldOptions\SelectFieldOption;
 use Botble\Base\Forms\FieldOptions\StatusFieldOption;
-use Botble\Base\Forms\FieldOptions\TagFieldOption;
 use Botble\Base\Forms\Fields\EditorField;
 use Botble\Base\Forms\Fields\MediaImageField;
 use Botble\Base\Forms\Fields\OnOffField;
 use Botble\Base\Forms\Fields\RadioField;
 use Botble\Base\Forms\Fields\SelectField;
-use Botble\Base\Forms\Fields\TagField;
 use Botble\Base\Forms\Fields\TextareaField;
 use Botble\Base\Forms\Fields\TextField;
 use Botble\Base\Forms\Fields\TreeCategoryField;
@@ -23,7 +21,6 @@ use Botble\Base\Forms\FormAbstract;
 use Botble\Collection\Http\Requests\SubjectRequest;
 use Botble\Collection\Models\Category;
 use Botble\Collection\Models\Subject;
-use Botble\Collection\Models\Tag;
 
 class SubjectForm extends FormAbstract
 {
@@ -81,26 +78,6 @@ class SubjectForm extends FormAbstract
                     ->toArray()
             )
             ->add('image', MediaImageField::class)
-            ->add(
-                'tag',
-                TagField::class,
-                TagFieldOption::make()
-                    ->label(trans('plugins/collection::subjects.form.tags'))
-                    ->when($this->getModel()->id, function (TagFieldOption $fieldOption) {
-                        return $fieldOption
-                            ->selected(
-                                $this->getModel()
-                                ->tags()
-                                ->select('name')
-                                ->get()
-                                ->map(fn (Tag $item) => $item->name)
-                                ->implode(',')
-                            );
-                    })
-                    ->placeholder(trans('plugins/collection::base.write_some_tags'))
-                    ->ajaxUrl(route('tags.all'))
-                    ->toArray()
-            )
             ->setBreakFieldPoint('status');
     }
 }

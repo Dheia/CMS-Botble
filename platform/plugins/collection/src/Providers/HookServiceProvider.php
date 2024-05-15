@@ -10,7 +10,6 @@ use Botble\Base\Forms\Fields\SelectField;
 use Botble\Base\Supports\ServiceProvider;
 use Botble\Collection\Models\Taxon;
 use Botble\Collection\Models\Subject;
-use Botble\Collection\Models\Tag;
 use Botble\Collection\Services\CollectionService;
 use Botble\Dashboard\Events\RenderingDashboardWidgets;
 use Botble\Dashboard\Supports\DashboardWidgetInstance;
@@ -37,7 +36,6 @@ class HookServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Menu::addMenuOptionModel(Taxon::class);
-        Menu::addMenuOptionModel(Tag::class);
 
         $this->app['events']->listen(RenderingMenuOptions::class, function () {
             add_action(MENU_ACTION_SIDEBAR_OPTIONS, [$this, 'registerMenuOptions'], 2);
@@ -200,18 +198,6 @@ class HookServiceProvider extends ServiceProvider
                             ],
                         ],
                     ],
-                    [
-                        'id' => 'number_of_subjects_in_a_tag',
-                        'type' => 'number',
-                        'label' => trans('plugins/collection::base.number_subjects_per_page_in_tag'),
-                        'attributes' => [
-                            'name' => 'number_of_subjects_in_a_tag',
-                            'value' => 12,
-                            'options' => [
-                                'class' => 'form-control',
-                            ],
-                        ],
-                    ],
                 ],
             ]);
     }
@@ -220,10 +206,6 @@ class HookServiceProvider extends ServiceProvider
     {
         if (Auth::guard()->user()->hasPermission('taxon.index')) {
             Menu::registerMenuOptions(Taxon::class, trans('plugins/collection::taxon.menu'));
-        }
-
-        if (Auth::guard()->user()->hasPermission('tags.index')) {
-            Menu::registerMenuOptions(Tag::class, trans('plugins/collection::tags.menu'));
         }
     }
 

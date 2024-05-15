@@ -29,23 +29,11 @@ return new class () extends Migration {
                 $table->primary(['lang_code', 'taxon_id'], 'taxon_translations_primary');
             });
         }
-
-        if (! Schema::hasTable('tags_translations')) {
-            Schema::create('tags_translations', function (Blueprint $table) {
-                $table->string('lang_code', 20);
-                $table->foreignId('tags_id');
-                $table->string('name')->nullable();
-                $table->string('description', 400)->nullable();
-
-                $table->primary(['lang_code', 'tags_id'], 'tags_translations_primary');
-            });
-        }
     }
 
     public function down(): void
     {
         Schema::dropIfExists('subjects_translations');
         Schema::dropIfExists('taxon_translations');
-        Schema::dropIfExists('tags_translations');
     }
 };

@@ -6,7 +6,6 @@ use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Base\Supports\Helper;
 use Botble\Collection\Models\Taxon;
 use Botble\Collection\Models\Subject;
-use Botble\Collection\Models\Tag;
 use Botble\Collection\Repositories\Interfaces\SubjectInterface;
 use Botble\Media\Facades\RvMedia;
 use Botble\SeoHelper\Facades\SeoHelper;
@@ -42,7 +41,7 @@ class CollectionService
                  */
                 $subject = Subject::query()
                     ->where($condition)
-                    ->with(['taxon', 'tags', 'slugable', 'taxon.slugable', 'tags.slugable'])
+                    ->with(['taxon', 'slugable', 'taxon.slugable'])
                     ->firstOrFail();
 
                 Helper::handleViewCount($subject, 'viewed_subject');
@@ -148,46 +147,6 @@ class CollectionService
                     'default_view' => 'plugins/collection::themes.taxon',
                     'data' => compact('taxon', 'subjects'),
                     'slug' => $taxon->slug,
-                ];
-            case Tag::class:
-                $tag = Tag::query()
-                    ->where($condition)
-                    ->with(['slugable'])
-                    ->firstOrFail();
-
-                SeoHelper::setTitle($tag->name)
-                    ->setDescription($tag->description);
-
-                $meta = new SeoOpenGraph();
-                $meta->setDescription($tag->description);
-                $meta->setUrl($tag->url);
-                $meta->setTitle($tag->name);
-                $meta->setType('article');
-
-                SeoHelper::setSeoOpenGraph($meta);
-
-                SeoHelper::meta()->setUrl($tag->url);
-
-                if (function_exists('admin_bar')) {
-                    AdminBar::registerLink(
-                        trans('plugins/collection::tags.edit_this_tag'),
-                        route('tags.edit', $tag->getKey()),
-                        null,
-                        'tags.edit'
-                    );
-                }
-
-                $subjects = get_subjects_by_tag($tag->getKey(), (int)theme_option('number_of_subjects_in_a_tag', 12));
-
-                Theme::breadcrumb()->add($tag->name, $tag->url);
-
-                do_action(BASE_ACTION_PUBLIC_RENDER_SINGLE, TAG_MODULE_SCREEN_NAME, $tag);
-
-                return [
-                    'view' => 'tag',
-                    'default_view' => 'plugins/collection::themes.tag',
-                    'data' => compact('tag', 'subjects'),
-                    'slug' => $tag->slug,
                 ];
         }
 

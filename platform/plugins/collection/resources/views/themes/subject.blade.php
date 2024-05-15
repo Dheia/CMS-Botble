@@ -11,14 +11,6 @@
             </span>
         @endif
         <span>{{ $subject->created_at->format('M d, Y') }}</span>
-
-        @if ($subject->tags->isNotEmpty())
-            <span>
-                @foreach ($subject->tags as $tag)
-                    <a href="{{ $tag->url }}">{{ $tag->name }}</a>
-                @endforeach
-            </span>
-        @endif
     </div>
 </header>
 <div class='ck-content'>

@@ -28,17 +28,6 @@ Route::group(['namespace' => 'Botble\Collection\Http\Controllers'], function () 
                     'permission' => 'taxon.index',
                 ]);
             });
-
-            Route::group(['prefix' => 'tags', 'as' => 'tags.'], function () {
-                Route::resource('', 'TagController')
-                    ->parameters(['' => 'tag']);
-
-                Route::get('all', [
-                    'as' => 'all',
-                    'uses' => 'TagController@getAllTags',
-                    'permission' => 'tags.index',
-                ]);
-            });
         });
 
         Route::group(['prefix' => 'settings/collection', 'as' => 'collection.settings', 'permission' => 'collection.settings'], function () {

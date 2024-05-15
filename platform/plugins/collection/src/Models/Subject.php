@@ -43,7 +43,6 @@ class Subject extends BaseModel
     {
         static::deleted(function (Subject $subject) {
             $subject->taxon()->detach();
-            $subject->tags()->detach();
         });
     }
 
@@ -52,11 +51,6 @@ class Subject extends BaseModel
         'name' => SafeContent::class,
         'description' => SafeContent::class,
     ];
-
-    public function tags(): BelongsToMany
-    {
-        return $this->belongsToMany(Tag::class, 'subject_tags');
-    }
 
     public function taxon(): BelongsToMany
     {

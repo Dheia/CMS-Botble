@@ -48,26 +48,6 @@ return [
     ],
 
     [
-        'name' => 'Tags',
-        'flag' => 'tags.index',
-        'parent_flag' => 'plugins.collection',
-    ],
-    [
-        'name' => 'Create',
-        'flag' => 'tags.create',
-        'parent_flag' => 'tags.index',
-    ],
-    [
-        'name' => 'Edit',
-        'flag' => 'tags.edit',
-        'parent_flag' => 'tags.index',
-    ],
-    [
-        'name' => 'Delete',
-        'flag' => 'tags.destroy',
-        'parent_flag' => 'tags.index',
-    ],
-    [
         'name' => 'Collection Settings',
         'flag' => 'collection.settings',
         'parent_flag' => 'plugins.collection',

@@ -5,7 +5,6 @@ namespace Botble\Collection\Database\Traits;
 use Botble\ACL\Models\User;
 use Botble\Collection\Models\Taxon;
 use Botble\Collection\Models\Subject;
-use Botble\Collection\Models\Tag;
 use Botble\Slug\Facades\SlugHelper;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -40,36 +39,16 @@ trait HasCollectionSeeder
         }
     }
 
-    protected function createCollectionTags(array $tags, bool $truncate = true): void
-    {
-        if ($truncate) {
-            Tag::query()->truncate();
-        }
-
-        foreach ($tags as $item) {
-            /**
-             * @var Tag $tag
-             */
-            $tag = Tag::query()->create(Arr::except($item, ['metadata']));
-
-            SlugHelper::createSlug($tag);
-
-            $this->createMetadata($tag, $item);
-        }
-    }
-
     protected function createCollectionSubjects(array $subjects, bool $truncate = true): void
     {
         if ($truncate) {
             Subject::query()->truncate();
             DB::table('subject_taxon')->truncate();
-            DB::table('subject_tags')->truncate();
         }
 
         $faker = $this->fake();
 
         $taxonIds = Taxon::query()->pluck('id');
-        $tagIds = Tag::query()->pluck('id');
         $userIds = User::query()->pluck('id');
 
         foreach ($subjects as $item) {
@@ -88,12 +67,6 @@ trait HasCollectionSeeder
             $subject->taxon()->sync(array_unique([
                 $taxonIds->random(),
                 $taxonIds->random(),
-            ]));
-
-            $subject->tags()->sync(array_unique([
-                $tagIds->random(),
-                $tagIds->random(),
-                $tagIds->random(),
             ]));
 
             SlugHelper::createSlug($subject);

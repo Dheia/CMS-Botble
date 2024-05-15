@@ -8,8 +8,6 @@ return [
         'description' => 'Description',
         'description_placeholder' => 'Short description for subject (Maximum :c characters)',
         'taxon' => 'Taxon',
-        'tags' => 'Tags',
-        'tags_placeholder' => 'Tags',
         'content' => 'Content',
         'is_featured' => 'Is featured?',
         'note' => 'Note content',

@@ -23,8 +23,6 @@ interface SubjectInterface extends RepositoryInterface
 
     public function getDataSiteMap(): Collection|LengthAwarePaginator;
 
-    public function getByTag(int|string $tag, int $paginate = 12): Collection|LengthAwarePaginator;
-
     public function getRecentSubjects(int $limit = 5, int|string $taxonId = 0): Collection;
 
     public function getSearch(string|null $keyword, int $limit = 10, int $paginate = 10): Collection|LengthAwarePaginator;

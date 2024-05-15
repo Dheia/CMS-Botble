@@ -23,16 +23,6 @@ return new class () extends Migration {
             $table->timestamps();
         });
 
-        Schema::create('tags', function (Blueprint $table) {
-            $table->id();
-            $table->string('name', 120);
-            $table->foreignId('author_id');
-            $table->string('author_type')->default(addslashes(User::class));
-            $table->string('description', 400)->nullable();
-            $table->string('status', 60)->default('published');
-            $table->timestamps();
-        });
-
         Schema::create('subjects', function (Blueprint $table) {
             $table->id();
             $table->string('name');
@@ -48,11 +38,6 @@ return new class () extends Migration {
             $table->timestamps();
         });
 
-        Schema::create('subject_tags', function (Blueprint $table) {
-            $table->foreignId('tag_id')->index();
-            $table->foreignId('subject_id')->index();
-        });
-
         Schema::create('subject_taxon', function (Blueprint $table) {
             $table->foreignId('taxon_id')->index();
             $table->foreignId('subject_id')->index();
@@ -62,10 +47,8 @@ return new class () extends Migration {
     public function down(): void
     {
         Schema::disableForeignKeyConstraints();
-        Schema::dropIfExists('subject_tags');
         Schema::dropIfExists('subject_taxon');
         Schema::dropIfExists('subjects');
         Schema::dropIfExists('taxon');
-        Schema::dropIfExists('tags');
     }
 };
