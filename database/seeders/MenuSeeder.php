@@ -21,7 +21,7 @@ class MenuSeeder extends BaseSeeder
     public function run(): void
     {
         $categories = [];
-        $taxon = [];
+        $taxons = [];
 
         foreach (Category::query()->limit(5)->get() as $category) {
             $categories[] = [
@@ -32,7 +32,7 @@ class MenuSeeder extends BaseSeeder
         }
 
         foreach (Taxon::query()->limit(5)->get() as $taxon) {
-            $taxon[] = [
+            $taxons[] = [
                 'title' => $taxon->name,
                 'reference_id' => $taxon->id,
                 'reference_type' => Taxon::class,
@@ -86,7 +86,7 @@ class MenuSeeder extends BaseSeeder
             [
                 'name' => 'Featured Taxon',
                 'slug' => 'featured-taxon',
-                'items' => $taxon,
+                'items' => $taxons,
             ],
 
             [
