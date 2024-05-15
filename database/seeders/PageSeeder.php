@@ -32,6 +32,10 @@ class PageSeeder extends BaseSeeder
                 'content' => '---',
             ],
             [
+                'name' => 'Collection',
+                'content' => '---',
+            ],
+            [
                 'name' => 'Contact',
                 'content' => Html::tag(
                     'p',

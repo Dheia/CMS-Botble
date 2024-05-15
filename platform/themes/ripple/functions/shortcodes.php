@@ -7,6 +7,7 @@ use Botble\Base\Forms\Fields\SelectField;
 use Botble\Base\Forms\Fields\TextField;
 use Botble\Base\Models\BaseQueryBuilder;
 use Botble\Blog\Models\Category;
+use Botble\Collection\Models\Category as SubjectCategory;
 use Botble\Shortcode\Compilers\Shortcode as ShortcodeCompiler;
 use Botble\Shortcode\Facades\Shortcode;
 use Botble\Shortcode\Forms\ShortcodeForm;
@@ -165,6 +166,168 @@ app('events')->listen(RouteMatched::class, function () {
                     SelectField::class,
                     SelectFieldOption::make()
                         ->label(__('Category'))
+                        ->choices(['' => __('All')] + $categories)
+                        ->selected(Arr::get($attributes, 'category_id'))
+                        ->searchable()
+                        ->toArray()
+                )
+                ->add(
+                    'with_sidebar',
+                    SelectField::class,
+                    SelectFieldOption::make()
+                        ->label(__('With primary sidebar?'))
+                        ->choices(['yes' => __('Yes'), 'no' => __('No')])
+                        ->defaultValue('yes')
+                        ->toArray()
+                );
+        });
+    }
+
+    if (is_plugin_active('collection')) {
+        Shortcode::setPreviewImage('collection-subjects', Theme::asset()->url('images/ui-blocks/collection-subjects.png'));
+
+        Shortcode::register(
+            'featured-subjects',
+            __('Featured subjects'),
+            __('Featured subjects'),
+            function (ShortcodeCompiler $shortcode) {
+                $subjects = get_featured_subjects((int)$shortcode->limit ?: 5, [
+                    'author',
+                ]);
+
+                return Theme::partial('shortcodes.featured-subjects', compact('subjects'));
+            }
+        );
+
+        Shortcode::setAdminConfig('featured-subjects', function (array $attributes) {
+            return ShortcodeForm::createFromArray($attributes)
+                ->add('limit', NumberField::class, TextFieldOption::make()->label(__('Limit'))->toArray());
+        });
+
+        Shortcode::setPreviewImage('featured-subjects', Theme::asset()->url('images/ui-blocks/featured-subjects.png'));
+
+        Shortcode::register(
+            'recent-subjects',
+            __('Recent subjects'),
+            __('Recent subjects'),
+            function (ShortcodeCompiler $shortcode) {
+                $subjects = get_latest_subjects(7, [], ['slugable']);
+
+                $withSidebar = ($shortcode->with_sidebar ?: 'yes') === 'yes';
+
+                return Theme::partial('shortcodes.recent-subjects', [
+                    'title' => $shortcode->title,
+                    'withSidebar' => $withSidebar,
+                    'subjects' => $subjects,
+                ]);
+            }
+        );
+
+        Shortcode::setPreviewImage('recent-subjects', Theme::asset()->url('images/ui-blocks/recent-subjects.png'));
+
+        Shortcode::setAdminConfig('recent-subjects', function (array $attributes) {
+            return ShortcodeForm::createFromArray($attributes)
+                ->add('title', TextField::class, TextFieldOption::make()->label(__('Title'))->toArray())
+                ->add(
+                    'with_sidebar',
+                    SelectField::class,
+                    SelectFieldOption::make()
+                        ->label(__('With top sidebar?'))
+                        ->choices(['yes' => __('Yes'), 'no' => __('No')])
+                        ->defaultValue('yes')
+                        ->toArray()
+                );
+        });
+
+        Shortcode::register(
+            'featured-categories-subjects',
+            __('Featured categories subjects'),
+            __('Featured categories subjects'),
+            function (ShortcodeCompiler $shortcode) {
+                $with = [
+                    'slugable',
+                    'subjects' => function (BelongsToMany|BaseQueryBuilder $query) {
+                        $query
+                            ->wherePublished()
+                            ->orderByDesc('created_at');
+                    },
+                    'subjects.slugable',
+                ];
+
+                if (is_plugin_active('language-advanced')) {
+                    $with[] = 'subjects.translations';
+                }
+
+                $subjects = collect();
+
+                if ($categoryId = $shortcode->category_id) {
+                    $with['subjects'] = function (BelongsToMany|BaseQueryBuilder $query) {
+                        $query
+                            ->wherePublished()
+                            ->orderByDesc('created_at')
+                            ->take(6);
+                    };
+
+                    $category = SubjectCategory::query()
+                        ->with($with)
+                        ->wherePublished()
+                        ->where('id', $categoryId)
+                        ->select([
+                            'id',
+                            'name',
+                            'description',
+                            'icon',
+                        ])
+                        ->first();
+
+                    if ($category) {
+                        $subjects = $category->subjects;
+                    } else {
+                        $subjects = collect();
+                    }
+                } else {
+                    $categories = get_featured_categories(2, $with);
+
+                    foreach ($categories as $category) {
+                        $subjects = $subjects->merge($category->subjects->take(3));
+                    }
+
+                    $subjects = $subjects->sortByDesc('created_at');
+                }
+
+                $withSidebar = ($shortcode->with_sidebar ?: 'yes') === 'yes';
+
+                return Theme::partial(
+                    'shortcodes.featured-categories-subjects',
+                    [
+                        'title' => $shortcode->title,
+                        'withSidebar' => $withSidebar,
+                        'subjects' => $subjects,
+                    ]
+                );
+            }
+        );
+
+        Shortcode::setPreviewImage(
+            'featured-categories-subjects',
+            Theme::asset()->url('images/ui-blocks/featured-categories-subjects.png')
+        );
+
+        Shortcode::setAdminConfig('featured-categories-subjects', function (array $attributes) {
+            $categories = SubjectCategory::query()
+                ->wherePublished()
+                ->select('name', 'id')
+                ->get()
+                ->mapWithKeys(fn ($item) => [$item->id => $item->name])
+                ->all();
+
+            return ShortcodeForm::createFromArray($attributes)
+                ->add('title', TextField::class, TextFieldOption::make()->label(__('Title'))->toArray())
+                ->add(
+                    'category_id',
+                    SelectField::class,
+                    SelectFieldOption::make()
+                        ->label(__('Subject Category'))
                         ->choices(['' => __('All')] + $categories)
                         ->selected(Arr::get($attributes, 'category_id'))
                         ->searchable()

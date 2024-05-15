@@ -21,11 +21,13 @@ class DatabaseSeeder extends BaseSeeder
         $this->call(PageSeeder::class);
 
         $this->when(is_plugin_active('blog'), fn () => $this->call(BlogSeeder::class));
+        $this->when(is_plugin_active('collection'), fn () => $this->call(CollectionSeeder::class));
         $this->when(is_plugin_active('gallery'), fn () => $this->call(GallerySeeder::class));
         $this->when(is_plugin_active('member'), fn () => $this->call(MemberSeeder::class));
         $this->when(is_plugin_active('contact'), fn () => $this->call(ContactSeeder::class));
         $this->when(is_plugin_active('block'), fn () => $this->call(StaticBlockSeeder::class));
         $this->when(is_plugin_active('blog'), fn () => $this->call(MenuSeeder::class));
+        $this->when(is_plugin_active('collection'), fn () => $this->call(MenuSeeder::class));
 
         $this->call([
             WidgetSeeder::class,

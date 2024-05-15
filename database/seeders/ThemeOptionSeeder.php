@@ -30,6 +30,7 @@ class ThemeOptionSeeder extends BaseSeeder
             'cookie_consent_learn_more_text' => 'Cookie Policy',
             'homepage_id' => Page::query()->value('id'),
             'blog_page_id' => Page::query()->skip(1)->value('id'),
+            'collection_page_id' => Page::query()->skip(2)->value('id'),
             'primary_color' => '#AF0F26',
             'primary_font' => 'Roboto',
             'social_links' => [

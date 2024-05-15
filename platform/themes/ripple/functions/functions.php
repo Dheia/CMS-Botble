@@ -6,8 +6,10 @@ use Botble\Base\Forms\Fields\MediaImageField;
 use Botble\Base\Forms\FormAbstract;
 use Botble\Base\Rules\MediaImageRule;
 use Botble\Blog\Models\Post;
+use Botble\Collection\Models\Subject;
 use Botble\Media\Facades\RvMedia;
 use Botble\Member\Forms\PostForm as MemberPostForm;
+use Botble\Member\Forms\SubjectForm as MemberSubjectForm;
 use Botble\Page\Models\Page;
 use Botble\Theme\Supports\ThemeSupport;
 use Botble\Widget\Events\RenderingWidgetSettings;
@@ -45,7 +47,7 @@ app('events')->listen(RouteMatched::class, function () {
     FormAbstract::extend(function (FormAbstract $form): void {
         $model = $form->getModel();
 
-        if (! $model instanceof Post && ! $model instanceof Page) {
+        if (! $model instanceof Post && ! $model instanceof Subject && ! $model instanceof Page) {
             return;
         }
 
@@ -59,7 +61,7 @@ app('events')->listen(RouteMatched::class, function () {
     }, 124);
 
     FormAbstract::afterSaving(function (FormAbstract $form): void {
-        if (! $form instanceof MemberPostForm) {
+        if (! $form instanceof MemberPostForm && ! $form instanceof MemberSubjectForm) {
             return;
         }
 

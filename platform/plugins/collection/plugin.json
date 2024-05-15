@@ -1,0 +1,10 @@
+{
+    "id": "botble/collection",
+    "name": "Collection",
+    "namespace": "Botble\\Collection\\",
+    "provider": "Botble\\Collection\\Providers\\CollectionServiceProvider",
+    "author": "Botble Technologies",
+    "url": "https://botble.com",
+    "version": "2.0.0",
+    "description": "Manage subjects, categories, tags"
+}

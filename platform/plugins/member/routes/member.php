@@ -118,6 +118,22 @@ if (defined('THEME_MODULE_SCREEN_NAME')) {
                     ]);
                 });
             }
+
+            if (is_plugin_active('collection')) {
+                Route::group([
+                    'prefix' => 'account/subjects',
+                    'as' => 'subjects.',
+                ], function () {
+                    Route::resource('', 'SubjectController')->parameters(['' => 'subject']);
+                });
+
+                Route::group(['prefix' => 'ajax/members'], function () {
+                    Route::get('tags/all', [
+                        'as' => 'tags.all',
+                        'uses' => 'SubjectController@getAllTags',
+                    ]);
+                });
+            }
         });
     });
 }

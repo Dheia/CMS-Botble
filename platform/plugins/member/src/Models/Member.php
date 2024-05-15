@@ -96,6 +96,11 @@ class Member extends BaseModel implements
         return $this->morphMany('Botble\Blog\Models\Post', 'author');
     }
 
+    public function subjects(): MorphMany
+    {
+        return $this->morphMany('Botble\Collection\Models\Subject', 'author');
+    }
+
     protected function firstName(): Attribute
     {
         return Attribute::get(fn ($value) => ucfirst((string)$value));

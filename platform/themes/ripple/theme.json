@@ -8,6 +8,7 @@
     "url": "https://botble.com",
     "required_plugins": [
         "blog",
+        "collection",
         "contact",
         "gallery",
         "language",

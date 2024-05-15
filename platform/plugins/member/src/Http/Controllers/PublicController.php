@@ -7,6 +7,7 @@ use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Base\Facades\Assets;
 use Botble\Base\Http\Controllers\BaseController;
 use Botble\Blog\Models\Post;
+use Botble\Collection\Models\Subject;
 use Botble\Media\Chunks\Exceptions\UploadMissingFileException;
 use Botble\Media\Chunks\Handler\DropZoneUploadHandler;
 use Botble\Media\Chunks\Receiver\FileReceiver;
@@ -83,7 +84,16 @@ class PublicController extends BaseController
             ->orderByDesc('created_at')
             ->paginate(12);
 
-        return Theme::scope('author', compact('author', 'posts'), 'plugins/member::themes.author')->render();
+        $subjects = Subject::query()
+            ->where([
+                'status' => BaseStatusEnum::PUBLISHED,
+                'author_id' => $author->id,
+                'author_type' => Member::class,
+            ])
+            ->orderByDesc('created_at')
+            ->paginate(12);
+
+        return Theme::scope('author', compact('author', 'posts', 'subjects'), 'plugins/member::themes.author')->render();
     }
 
     public function getDashboard()

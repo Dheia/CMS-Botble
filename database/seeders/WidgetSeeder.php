@@ -15,7 +15,7 @@ class WidgetSeeder extends BaseSeeder
         $data = [
             [
                 'widget_id' => 'RecentPostsWidget',
-                'sidebar_id' => 'footer_sidebar',
+                'sidebar_id' => 'top_sidebar',
                 'position' => 0,
                 'data' => [
                     'id' => 'RecentPostsWidget',
@@ -25,7 +25,7 @@ class WidgetSeeder extends BaseSeeder
             ],
             [
                 'widget_id' => 'RecentPostsWidget',
-                'sidebar_id' => 'top_sidebar',
+                'sidebar_id' => 'footer_sidebar',
                 'position' => 0,
                 'data' => [
                     'id' => 'RecentPostsWidget',

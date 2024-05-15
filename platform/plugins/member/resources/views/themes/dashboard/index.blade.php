@@ -28,5 +28,30 @@
         </x-core::stat-widget>
     @endif
 
+    @if (is_plugin_active('collection'))
+        <x-core::stat-widget class="mb-3 row-cols-1 row-cols-sm-2 row-cols-md-3">
+            <x-core::stat-widget.item
+                :label="trans('plugins/collection::member.published_subjects')"
+                :value="$user->subjects()->where('status', Botble\Base\Enums\BaseStatusEnum::PUBLISHED)->count()"
+                icon="ti ti-circle-check"
+                color="primary"
+            />
+
+            <x-core::stat-widget.item
+                :label="trans('plugins/collection::member.pending_subjects')"
+                :value="$user->subjects()->where('status', Botble\Base\Enums\BaseStatusEnum::PENDING)->count()"
+                icon="ti ti-clock-hour-8"
+                color="success"
+            />
+
+            <x-core::stat-widget.item
+                :label="trans('plugins/collection::member.draft_subjects')"
+                :value="$user->subjects()->where('status', Botble\Base\Enums\BaseStatusEnum::DRAFT)->count()"
+                icon="ti ti-notes"
+                color="danger"
+            />
+        </x-core::stat-widget>
+    @endif
+
     <activity-log-component></activity-log-component>
 @stop

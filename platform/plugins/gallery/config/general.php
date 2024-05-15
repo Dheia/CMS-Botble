@@ -6,5 +6,6 @@ return [
         'Botble\Gallery\Models\Gallery',
         'Botble\Page\Models\Page',
         'Botble\Blog\Models\Post',
+        'Botble\Collection\Models\Subject',
     ],
 ];
