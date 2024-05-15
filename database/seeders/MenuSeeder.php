@@ -16,7 +16,7 @@ class MenuSeeder extends BaseSeeder
     use HasMenuSeeder;
     use HasPageSeeder;
     use HasBlogSeeder;
-    use HasCollectionSeeder
+    use HasCollectionSeeder;
 
     public function run(): void
     {
