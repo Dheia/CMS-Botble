@@ -1,4 +1,4 @@
-@php Theme::set('section-name', $category->name) @endphp
+@php Theme::set('section-name', $taxon->name) @endphp
 
 @if ($subjects->isNotEmpty())
     @foreach ($subjects->loadMissing('author') as $subject)

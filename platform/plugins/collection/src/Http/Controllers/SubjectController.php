@@ -10,7 +10,7 @@ use Botble\Base\Supports\Breadcrumb;
 use Botble\Collection\Forms\SubjectForm;
 use Botble\Collection\Http\Requests\SubjectRequest;
 use Botble\Collection\Models\Subject;
-use Botble\Collection\Services\StoreCategoryService;
+use Botble\Collection\Services\StoreTaxonService;
 use Botble\Collection\Services\StoreTagService;
 use Botble\Collection\Tables\SubjectTable;
 use Illuminate\Http\Request;
@@ -42,11 +42,11 @@ class SubjectController extends BaseController
     public function store(
         SubjectRequest $request,
         StoreTagService $tagService,
-        StoreCategoryService $categoryService
+        StoreTaxonService $taxonService
     ) {
         $subjectForm = SubjectForm::create();
 
-        $subjectForm->saving(function (SubjectForm $form) use ($request, $tagService, $categoryService) {
+        $subjectForm->saving(function (SubjectForm $form) use ($request, $tagService, $taxonService) {
             $form
                 ->getModel()
                 ->fill([
@@ -62,7 +62,7 @@ class SubjectController extends BaseController
 
             $tagService->execute($request, $subject);
 
-            $categoryService->execute($request, $subject);
+            $taxonService->execute($request, $subject);
         });
 
         return $this
@@ -83,11 +83,11 @@ class SubjectController extends BaseController
         Subject $subject,
         SubjectRequest $request,
         StoreTagService $tagService,
-        StoreCategoryService $categoryService,
+        StoreTaxonService $taxonService,
     ) {
         SubjectForm::createFromModel($subject)
             ->setRequest($request)
-            ->saving(function (SubjectForm $form) use ($categoryService, $tagService) {
+            ->saving(function (SubjectForm $form) use ($taxonService, $tagService) {
                 $request = $form->getRequest();
 
                 $subject = $form->getModel();
@@ -98,7 +98,7 @@ class SubjectController extends BaseController
 
                 $tagService->execute($request, $subject);
 
-                $categoryService->execute($request, $subject);
+                $taxonService->execute($request, $subject);
             });
 
         return $this

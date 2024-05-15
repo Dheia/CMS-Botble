@@ -20,7 +20,7 @@ class SubjectResource extends JsonResource
             'description' => $this->description,
             'content' => $this->content,
             'image' => $this->image ? RvMedia::url($this->image) : null,
-            'categories' => CategoryResource::collection($this->categories),
+            'taxon' => TaxonResource::collection($this->taxon),
             'tags' => TagResource::collection($this->tags),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

@@ -5,7 +5,7 @@ namespace Botble\Collection\Services\Abstracts;
 use Botble\Collection\Models\Subject;
 use Illuminate\Http\Request;
 
-abstract class StoreCategoryServiceAbstract
+abstract class StoreTaxonServiceAbstract
 {
     public function __construct()
     {

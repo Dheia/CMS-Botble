@@ -3,7 +3,7 @@
 namespace Botble\Collection\Database\Traits;
 
 use Botble\ACL\Models\User;
-use Botble\Collection\Models\Category;
+use Botble\Collection\Models\Taxon;
 use Botble\Collection\Models\Subject;
 use Botble\Collection\Models\Tag;
 use Botble\Slug\Facades\SlugHelper;
@@ -12,31 +12,31 @@ use Illuminate\Support\Facades\DB;
 
 trait HasCollectionSeeder
 {
-    protected function createCollectionCategories(array $categories, bool $truncate = true): void
+    protected function createCollectionTaxon(array $taxon, bool $truncate = true): void
     {
         if ($truncate) {
-            Category::query()->truncate();
+            Taxon::query()->truncate();
         }
 
         $faker = $this->fake();
 
-        foreach ($categories as $index => $item) {
+        foreach ($taxon as $index => $item) {
             $item['description'] ??= $faker->text();
             $item['is_featured'] ??= ! isset($item['parent_id']) && $index != 0;
             $item['author_id'] ??= 1;
             $item['parent_id'] ??= 0;
 
-            $category = $this->createCollectionCategory(Arr::except($item, 'children'));
+            $taxon = $this->createCollectionTaxon(Arr::except($item, 'children'));
 
             if (Arr::has($item, 'children')) {
                 foreach (Arr::get($item, 'children', []) as $child) {
-                    $child['parent_id'] = $category->getKey();
+                    $child['parent_id'] = $taxon->getKey();
 
-                    $this->createCollectionCategory($child);
+                    $this->createCollectionTaxon($child);
                 }
             }
 
-            $this->createMetadata($category, $item);
+            $this->createMetadata($taxon, $item);
         }
     }
 
@@ -62,13 +62,13 @@ trait HasCollectionSeeder
     {
         if ($truncate) {
             Subject::query()->truncate();
-            DB::table('subject_categories')->truncate();
+            DB::table('subject_taxon')->truncate();
             DB::table('subject_tags')->truncate();
         }
 
         $faker = $this->fake();
 
-        $categoryIds = Category::query()->pluck('id');
+        $taxonIds = Taxon::query()->pluck('id');
         $tagIds = Tag::query()->pluck('id');
         $userIds = User::query()->pluck('id');
 
@@ -85,9 +85,9 @@ trait HasCollectionSeeder
              */
             $subject = Subject::query()->create(Arr::except($item, ['metadata']));
 
-            $subject->categories()->sync(array_unique([
-                $categoryIds->random(),
-                $categoryIds->random(),
+            $subject->taxon()->sync(array_unique([
+                $taxonIds->random(),
+                $taxonIds->random(),
             ]));
 
             $subject->tags()->sync(array_unique([
@@ -102,22 +102,22 @@ trait HasCollectionSeeder
         }
     }
 
-    protected function getCategoryId(string $name): int|string
+    protected function getTaxonId(string $name): int|string
     {
-        return Category::query()->where('name', $name)->value('id');
+        return Taxon::query()->where('name', $name)->value('id');
     }
 
-    protected function createCollectionCategory(array $item): Category
+    protected function createCollectionTaxon(array $item): Taxon
     {
         /**
-         * @var Category $category
+         * @var Taxon $taxon
          */
-        $category = Category::query()->create(Arr::except($item, ['metadata']));
+        $taxon = Taxon::query()->create(Arr::except($item, ['metadata']));
 
-        SlugHelper::createSlug($category);
+        SlugHelper::createSlug($taxon);
 
-        $this->createMetadata($category, $item);
+        $this->createMetadata($taxon, $item);
 
-        return $category;
+        return $taxon;
     }
 }

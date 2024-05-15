@@ -24,7 +24,7 @@ class PublicController extends BaseController
         SeoHelper::setTitle($title)
             ->setDescription($title);
 
-        $subjects = $subjectRepository->getSearch($query, 0, (int)theme_option('number_of_subjects_in_a_category', 12));
+        $subjects = $subjectRepository->getSearch($query, 0, (int)theme_option('number_of_subjects_in_a_taxon', 12));
 
         Theme::breadcrumb()->add($title, route('public.search'));
 

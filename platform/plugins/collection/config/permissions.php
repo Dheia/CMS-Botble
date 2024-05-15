@@ -27,24 +27,24 @@ return [
     ],
 
     [
-        'name' => 'Categories',
-        'flag' => 'categories.index',
+        'name' => 'Taxon',
+        'flag' => 'taxon.index',
         'parent_flag' => 'plugins.collection',
     ],
     [
         'name' => 'Create',
-        'flag' => 'categories.create',
-        'parent_flag' => 'categories.index',
+        'flag' => 'taxon.create',
+        'parent_flag' => 'taxon.index',
     ],
     [
         'name' => 'Edit',
-        'flag' => 'categories.edit',
-        'parent_flag' => 'categories.index',
+        'flag' => 'taxon.edit',
+        'parent_flag' => 'taxon.index',
     ],
     [
         'name' => 'Delete',
-        'flag' => 'categories.destroy',
-        'parent_flag' => 'categories.index',
+        'flag' => 'taxon.destroy',
+        'parent_flag' => 'taxon.index',
     ],
 
     [

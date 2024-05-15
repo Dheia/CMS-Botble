@@ -6,7 +6,7 @@ use Botble\Base\Supports\BaseSeeder;
 use Botble\Blog\Database\Traits\HasBlogSeeder;
 use Botble\Blog\Models\Category;
 use Botble\Collection\Database\Traits\HasCollectionSeeder;
-use Botble\Collection\Models\Category as SubjectCategory;
+use Botble\Collection\Models\Taxon as Taxon;
 use Botble\Menu\Database\Traits\HasMenuSeeder;
 use Botble\Page\Database\Traits\HasPageSeeder;
 use Botble\Page\Models\Page;
@@ -21,7 +21,7 @@ class MenuSeeder extends BaseSeeder
     public function run(): void
     {
         $categories = [];
-        $subjectCategories = [];
+        $taxon = [];
 
         foreach (Category::query()->limit(5)->get() as $category) {
             $categories[] = [
@@ -31,11 +31,11 @@ class MenuSeeder extends BaseSeeder
             ];
         }
 
-        foreach (SubjectCategory::query()->limit(5)->get() as $subjectCategory) {
-            $subjectCategories[] = [
-                'title' => $subjectCategory->name,
-                'reference_id' => $subjectCategory->id,
-                'reference_type' => SubjectCategory::class,
+        foreach (Taxon::query()->limit(5)->get() as $taxon) {
+            $taxon[] = [
+                'title' => $taxon->name,
+                'reference_id' => $taxon->id,
+                'reference_type' => Taxon::class,
             ];
         }
 
@@ -81,6 +81,12 @@ class MenuSeeder extends BaseSeeder
                 'name' => 'Featured Categories',
                 'slug' => 'featured-categories',
                 'items' => $categories,
+            ],
+
+            [
+                'name' => 'Featured Taxon',
+                'slug' => 'featured-taxon',
+                'items' => $taxon,
             ],
 
             [

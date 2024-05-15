@@ -8,7 +8,7 @@ use Botble\Base\Facades\Html;
 use Botble\Base\Forms\FieldOptions\SelectFieldOption;
 use Botble\Base\Forms\Fields\SelectField;
 use Botble\Base\Supports\ServiceProvider;
-use Botble\Collection\Models\Category;
+use Botble\Collection\Models\Taxon;
 use Botble\Collection\Models\Subject;
 use Botble\Collection\Models\Tag;
 use Botble\Collection\Services\CollectionService;
@@ -36,7 +36,7 @@ class HookServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
-        Menu::addMenuOptionModel(Category::class);
+        Menu::addMenuOptionModel(Taxon::class);
         Menu::addMenuOptionModel(Tag::class);
 
         $this->app['events']->listen(RenderingMenuOptions::class, function () {
@@ -77,7 +77,7 @@ class HookServiceProvider extends ServiceProvider
                 ->setAdminConfig(
                     $shortcodeName,
                     function (array $attributes) {
-                        $categories = Category::query()
+                        $taxon = Taxon::query()
                             ->wherePublished()
                             ->pluck('name', 'id')
                             ->all();
@@ -90,17 +90,17 @@ class HookServiceProvider extends ServiceProvider
                                 ],
                             ])
                             ->add(
-                                'category_ids[]',
+                                'taxon_ids[]',
                                 SelectField::class,
                                 SelectFieldOption::make()
-                                    ->label(__('Select categories'))
-                                    ->choices($categories)
-                                    ->when(Arr::get($attributes, 'category_ids'), function (SelectFieldOption $option, $categoriesIds) {
-                                        $option->selected(explode(',', $categoriesIds));
+                                    ->label(__('Select taxon'))
+                                    ->choices($taxon)
+                                    ->when(Arr::get($attributes, 'taxon_ids'), function (SelectFieldOption $option, $taxonIds) {
+                                        $option->selected(explode(',', $taxonIds));
                                     })
                                     ->multiple()
                                     ->searchable()
-                                    ->helperText(__('Leave categories empty if you want to show subjects from all categories.'))
+                                    ->helperText(__('Leave taxon empty if you want to show subjects from all taxon.'))
                                     ->toArray()
                             );
                     }
@@ -189,11 +189,11 @@ class HookServiceProvider extends ServiceProvider
                         ],
                     ],
                     [
-                        'id' => 'number_of_subjects_in_a_category',
+                        'id' => 'number_of_subjects_in_a_taxon',
                         'type' => 'number',
-                        'label' => trans('plugins/collection::base.number_subjects_per_page_in_category'),
+                        'label' => trans('plugins/collection::base.number_subjects_per_page_in_taxon'),
                         'attributes' => [
-                            'name' => 'number_of_subjects_in_a_category',
+                            'name' => 'number_of_subjects_in_a_taxon',
                             'value' => 12,
                             'options' => [
                                 'class' => 'form-control',
@@ -218,8 +218,8 @@ class HookServiceProvider extends ServiceProvider
 
     public function registerMenuOptions(): void
     {
-        if (Auth::guard()->user()->hasPermission('categories.index')) {
-            Menu::registerMenuOptions(Category::class, trans('plugins/collection::categories.menu'));
+        if (Auth::guard()->user()->hasPermission('taxon.index')) {
+            Menu::registerMenuOptions(Taxon::class, trans('plugins/collection::taxon.menu'));
         }
 
         if (Auth::guard()->user()->hasPermission('tags.index')) {
@@ -254,15 +254,15 @@ class HookServiceProvider extends ServiceProvider
 
     public function renderCollectionSubjects(Shortcode $shortcode): array|string
     {
-        $categoryIds = ShortcodeFacade::fields()->getIds('category_ids', $shortcode);
+        $taxonIds = ShortcodeFacade::fields()->getIds('taxon_ids', $shortcode);
 
         $subjects = Subject::query()
             ->wherePublished()
             ->orderByDesc('created_at')
             ->with('slugable')
-            ->when(! empty($categoryIds), function ($query) use ($categoryIds) {
-                $query->whereHas('categories', function ($query) use ($categoryIds) {
-                    $query->whereIn('categories.id', $categoryIds);
+            ->when(! empty($taxonIds), function ($query) use ($taxonIds) {
+                $query->whereHas('taxon', function ($query) use ($taxonIds) {
+                    $query->whereIn('taxon.id', $taxonIds);
                 });
             })
             ->paginate((int)$shortcode->paginate ?: 12);
@@ -287,7 +287,7 @@ class HookServiceProvider extends ServiceProvider
             }
 
             return view($view, [
-                'subjects' => get_all_subjects(true, (int)theme_option('number_of_subjects_in_a_category', 12)),
+                'subjects' => get_all_subjects(true, (int)theme_option('number_of_subjects_in_a_taxon', 12)),
             ])->render();
         }
 

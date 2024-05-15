@@ -6,7 +6,7 @@ use Botble\ACL\Models\User;
 use Botble\Base\Facades\Html;
 use Botble\Base\Models\BaseQueryBuilder;
 use Botble\Collection\Exports\SubjectExport;
-use Botble\Collection\Models\Category;
+use Botble\Collection\Models\Taxon;
 use Botble\Collection\Models\Subject;
 use Botble\Table\Abstracts\TableAbstract;
 use Botble\Table\Actions\DeleteAction;
@@ -48,22 +48,22 @@ class SubjectTable extends TableAbstract
                 IdColumn::make(),
                 ImageColumn::make(),
                 NameColumn::make()->route('subjects.edit'),
-                FormattedColumn::make('categories_name')
-                    ->title(trans('plugins/collection::subjects.categories'))
+                FormattedColumn::make('taxon_name')
+                    ->title(trans('plugins/collection::subjects.taxon'))
                     ->width(150)
                     ->orderable(false)
                     ->searchable(false)
                     ->getValueUsing(function (FormattedColumn $column) {
-                        $categories = $column
+                        $taxon = $column
                             ->getItem()
-                            ->categories
+                            ->taxon
                             ->sortBy('name')
-                            ->map(function (Category $category) {
-                                return Html::link(route('categories.edit', $category->getKey()), $category->name, ['target' => '_blank']);
+                            ->map(function (Taxon $taxon) {
+                                return Html::link(route('taxon.edit', $taxon->getKey()), $taxon->name, ['target' => '_blank']);
                             })
                             ->all();
 
-                        return implode(', ', $categories);
+                        return implode(', ', $taxon);
                     })
                     ->withEmptyState(),
                 FormattedColumn::make('author_id')
@@ -98,16 +98,16 @@ class SubjectTable extends TableAbstract
                 StatusBulkChange::make(),
                 CreatedAtBulkChange::make(),
                 SelectBulkChange::make()
-                    ->name('category')
-                    ->title(trans('plugins/collection::subjects.category'))
+                    ->name('taxon')
+                    ->title(trans('plugins/collection::subjects.taxon'))
                     ->searchable()
-                    ->choices(fn () => Category::query()->pluck('name', 'id')->all()),
+                    ->choices(fn () => Taxon::query()->pluck('name', 'id')->all()),
             ])
             ->queryUsing(function (Builder $query) {
                 return $query
                     ->with([
-                        'categories' => function (BelongsToMany $query) {
-                            $query->select(['categories.id', 'categories.name']);
+                        'taxon' => function (BelongsToMany $query) {
+                            $query->select(['taxon.id', 'taxon.name']);
                         },
                         'author',
                     ])
@@ -133,7 +133,7 @@ class SubjectTable extends TableAbstract
 
                                 return $query
                                     ->where('name', 'LIKE', $keyword)
-                                    ->orWhereHas('categories', function ($subQuery) use ($keyword) {
+                                    ->orWhereHas('taxon', function ($subQuery) use ($keyword) {
                                         return $subQuery
                                             ->where('name', 'LIKE', $keyword);
                                     })
@@ -156,22 +156,22 @@ class SubjectTable extends TableAbstract
                     string $operator,
                     string|null $value
                 ) {
-                    if (! $value || $key !== 'category') {
+                    if (! $value || $key !== 'taxon') {
                         return false;
                     }
 
                     return $query->whereHas(
-                        'categories',
-                        fn (BaseQueryBuilder $query) => $query->where('categories.id', $value)
+                        'taxon',
+                        fn (BaseQueryBuilder $query) => $query->where('taxon.id', $value)
                     );
                 }
             )
             ->onSavingBulkChangeItem(function (Subject $item, string $inputKey, string|null $inputValue) {
-                if ($inputKey !== 'category') {
+                if ($inputKey !== 'taxon') {
                     return null;
                 }
 
-                $item->categories()->sync([$inputValue]);
+                $item->taxon()->sync([$inputValue]);
 
                 return $item;
             });

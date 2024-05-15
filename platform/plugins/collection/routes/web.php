@@ -18,14 +18,14 @@ Route::group(['namespace' => 'Botble\Collection\Http\Controllers'], function () 
                 ]);
             });
 
-            Route::group(['prefix' => 'categories', 'as' => 'categories.'], function () {
-                Route::resource('', 'CategoryController')
-                    ->parameters(['' => 'category']);
+            Route::group(['prefix' => 'taxon', 'as' => 'taxon.'], function () {
+                Route::resource('', 'TaxonController')
+                    ->parameters(['' => 'taxon']);
 
                 Route::put('update-tree', [
                     'as' => 'update-tree',
-                    'uses' => 'CategoryController@updateTree',
-                    'permission' => 'categories.index',
+                    'uses' => 'TaxonController@updateTree',
+                    'permission' => 'taxon.index',
                 ]);
             });
 

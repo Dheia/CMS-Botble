@@ -2,7 +2,7 @@
 
 namespace Botble\Collection\Supports;
 
-class FilterCategory
+class FilterTaxon
 {
     public static function setFilters(array $request): array
     {

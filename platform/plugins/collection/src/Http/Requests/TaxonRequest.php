@@ -7,7 +7,7 @@ use Botble\Base\Rules\OnOffRule;
 use Botble\Support\Http\Requests\Request;
 use Illuminate\Validation\Rule;
 
-class CategoryRequest extends Request
+class TaxonRequest extends Request
 {
     public function rules(): array
     {

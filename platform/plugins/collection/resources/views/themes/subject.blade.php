@@ -5,9 +5,9 @@
 <header>
     <h3>{{ $subject->name }}</h3>
     <div>
-        @if ($subject->categories->isNotEmpty())
+        @if ($subject->taxon->isNotEmpty())
             <span>
-                <a href="{{ $subject->categories->first()->url }}">{{ $subject->categories->first()->name }}</a>
+                <a href="{{ $subject->taxon->first()->url }}">{{ $subject->taxon->first()->name }}</a>
             </span>
         @endif
         <span>{{ $subject->created_at->format('M d, Y') }}</span>

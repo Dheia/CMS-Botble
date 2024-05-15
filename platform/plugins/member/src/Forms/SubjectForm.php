@@ -23,7 +23,7 @@ class SubjectForm extends BaseSubjectForm
             ->setFormOption('template', 'plugins/member::forms.base')
             ->hasFiles()
             ->setValidatorClass(SubjectRequest::class)
-            ->setBreakFieldPoint('categories[]')
+            ->setBreakFieldPoint('taxon[]')
             ->addCustomField('customImage', CustomImageField::class)
             ->remove('status')
             ->remove('is_featured')

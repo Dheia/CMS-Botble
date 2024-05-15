@@ -8,13 +8,13 @@ use Botble\Base\Facades\PanelSectionManager;
 use Botble\Base\PanelSections\PanelSectionItem;
 use Botble\Base\Supports\ServiceProvider;
 use Botble\Base\Traits\LoadAndPublishDataTrait;
-use Botble\Collection\Models\Category;
+use Botble\Collection\Models\Taxon;
 use Botble\Collection\Models\Subject;
 use Botble\Collection\Models\Tag;
-use Botble\Collection\Repositories\Eloquent\CategoryRepository;
+use Botble\Collection\Repositories\Eloquent\TaxonRepository;
 use Botble\Collection\Repositories\Eloquent\SubjectRepository;
 use Botble\Collection\Repositories\Eloquent\TagRepository;
-use Botble\Collection\Repositories\Interfaces\CategoryInterface;
+use Botble\Collection\Repositories\Interfaces\TaxonInterface;
 use Botble\Collection\Repositories\Interfaces\SubjectInterface;
 use Botble\Collection\Repositories\Interfaces\TagInterface;
 use Botble\Language\Facades\Language;
@@ -39,8 +39,8 @@ class CollectionServiceProvider extends ServiceProvider
             return new SubjectRepository(new Subject());
         });
 
-        $this->app->bind(CategoryInterface::class, function () {
-            return new CategoryRepository(new Category());
+        $this->app->bind(TaxonInterface::class, function () {
+            return new TaxonRepository(new Taxon());
         });
 
         $this->app->bind(TagInterface::class, function () {
@@ -51,12 +51,12 @@ class CollectionServiceProvider extends ServiceProvider
     public function boot(): void
     {
         SlugHelper::registerModule(Subject::class, 'Collection Subjects');
-        SlugHelper::registerModule(Category::class, 'Collection Categories');
+        SlugHelper::registerModule(Taxon::class, 'Collection Taxon');
         SlugHelper::registerModule(Tag::class, 'Collection Tags');
 
         SlugHelper::setPrefix(Tag::class, 'tag', true);
         SlugHelper::setPrefix(Subject::class, null, true);
-        SlugHelper::setPrefix(Category::class, null, true);
+        SlugHelper::setPrefix(Taxon::class, null, true);
 
         $this
             ->setNamespace('plugins/collection')
@@ -76,7 +76,7 @@ class CollectionServiceProvider extends ServiceProvider
 
         $this->app['events']->listen(ThemeRoutingBeforeEvent::class, function () {
             SiteMapManager::registerKey([
-                'collection-categories',
+                'collection-taxon',
                 'collection-tags',
                 'collection-subjects-((?:19|20|21|22)\d{2})-(0?[1-9]|1[012])',
             ]);
@@ -98,11 +98,11 @@ class CollectionServiceProvider extends ServiceProvider
                     'route' => 'subjects.index',
                 ])
                 ->registerItem([
-                    'id' => 'cms-plugins-collection-categories',
+                    'id' => 'cms-plugins-collection-taxon',
                     'priority' => 2,
                     'parent_id' => 'cms-plugins-collection',
-                    'name' => 'plugins/collection::categories.menu_name',
-                    'route' => 'categories.index',
+                    'name' => 'plugins/collection::taxon.menu_name',
+                    'route' => 'taxon.index',
                 ])
                 ->registerItem([
                     'id' => 'cms-plugins-collection-tags',
@@ -136,7 +136,7 @@ class CollectionServiceProvider extends ServiceProvider
                     'content',
                 ]);
 
-                LanguageAdvancedManager::registerModule(Category::class, [
+                LanguageAdvancedManager::registerModule(Taxon::class, [
                     'name',
                     'description',
                 ]);
@@ -146,12 +146,12 @@ class CollectionServiceProvider extends ServiceProvider
                     'description',
                 ]);
             } else {
-                Language::registerModule([Subject::class, Category::class, Tag::class]);
+                Language::registerModule([Subject::class, Taxon::class, Tag::class]);
             }
         }
 
         $this->app->booted(function () {
-            SeoHelper::registerModule([Subject::class, Category::class, Tag::class]);
+            SeoHelper::registerModule([Subject::class, Taxon::class, Tag::class]);
 
             $configKey = 'packages.revision.general.supported';
             config()->set($configKey, array_merge(config($configKey, []), [Subject::class]));
@@ -162,7 +162,7 @@ class CollectionServiceProvider extends ServiceProvider
         if (function_exists('shortcode')) {
             view()->composer([
                 'plugins/collection::themes.subject',
-                'plugins/collection::themes.category',
+                'plugins/collection::themes.taxon',
                 'plugins/collection::themes.tag',
             ], function (View $view) {
                 $view->withShortcodes();

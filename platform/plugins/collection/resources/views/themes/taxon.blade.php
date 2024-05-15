@@ -1,5 +1,5 @@
 <div>
-    <h3>{{ $category->name }}</h3>
+    <h3>{{ $taxon->name }}</h3>
     {!! Theme::breadcrumb()->render() !!}
 </div>
 <div>
@@ -17,7 +17,7 @@
                         <h3><a href="{{ $subject->url }}">{{ $subject->name }}</a></h3>
                         <div>
                             <span>{{ $subject->created_at->format('M d, Y') }}</span><span>{{ $subject->author->name }}</span>
-                            - <a href="{{ $category->url }}">{{ $category->name }}</a>
+                            - <a href="{{ $taxon->url }}">{{ $taxon->name }}</a>
                         </div>
                     </header>
                     <div>

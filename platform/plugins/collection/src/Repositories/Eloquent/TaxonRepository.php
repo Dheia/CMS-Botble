@@ -4,13 +4,13 @@ namespace Botble\Collection\Repositories\Eloquent;
 
 use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Base\Models\BaseModel;
-use Botble\Collection\Models\Category;
-use Botble\Collection\Repositories\Interfaces\CategoryInterface;
+use Botble\Collection\Models\Taxon;
+use Botble\Collection\Repositories\Interfaces\TaxonInterface;
 use Botble\Support\Repositories\Eloquent\RepositoriesAbstract;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-class CategoryRepository extends RepositoriesAbstract implements CategoryInterface
+class TaxonRepository extends RepositoriesAbstract implements TaxonInterface
 {
     public function getDataSiteMap(): Collection
     {
@@ -23,7 +23,7 @@ class CategoryRepository extends RepositoriesAbstract implements CategoryInterfa
         return $this->applyBeforeExecuteQuery($data)->get();
     }
 
-    public function getFeaturedCategories(int|null $limit, array $with = []): Collection
+    public function getFeaturedTaxon(int|null $limit, array $with = []): Collection
     {
         $data = $this->model
             ->with(array_merge(['slugable'], $with))
@@ -44,7 +44,7 @@ class CategoryRepository extends RepositoriesAbstract implements CategoryInterfa
         return $this->applyBeforeExecuteQuery($data)->get();
     }
 
-    public function getAllCategories(array $condition = [], array $with = []): Collection
+    public function getAllTaxon(array $condition = [], array $with = []): Collection
     {
         $data = $this->model->with('slugable');
         if (! empty($condition)) {
@@ -63,7 +63,7 @@ class CategoryRepository extends RepositoriesAbstract implements CategoryInterfa
         return $this->applyBeforeExecuteQuery($data)->get();
     }
 
-    public function getCategoryById(int|string|null $id): ?Category
+    public function getTaxonById(int|string|null $id): ?Taxon
     {
         $data = $this->model->with('slugable')->where([
             'id' => $id,
@@ -73,7 +73,7 @@ class CategoryRepository extends RepositoriesAbstract implements CategoryInterfa
         return $this->applyBeforeExecuteQuery($data, true)->first();
     }
 
-    public function getCategories(array $select, array $orderBy, array $conditions = ['status' => BaseStatusEnum::PUBLISHED]): Collection
+    public function getTaxon(array $select, array $orderBy, array $conditions = ['status' => BaseStatusEnum::PUBLISHED]): Collection
     {
         $data = $this->model
             ->with('slugable')
@@ -116,7 +116,7 @@ class CategoryRepository extends RepositoriesAbstract implements CategoryInterfa
         return array_unique($result);
     }
 
-    public function getAllCategoriesWithChildren(array $condition = [], array $with = [], array $select = ['*']): Collection
+    public function getAllTaxonWithChildren(array $condition = [], array $with = [], array $select = ['*']): Collection
     {
         $data = $this->model
             ->where($condition)
@@ -137,7 +137,7 @@ class CategoryRepository extends RepositoriesAbstract implements CategoryInterfa
         return $this->applyBeforeExecuteQuery($data)->paginate((int)$filters['per_page']);
     }
 
-    public function getPopularCategories(int $limit, array $with = ['slugable'], array $withCount = ['subjects']): Collection
+    public function getPopularTaxon(int $limit, array $with = ['slugable'], array $withCount = ['subjects']): Collection
     {
         $data = $this->model
             ->with($with)

@@ -6,18 +6,18 @@ use Botble\Base\Forms\FieldOptions\NameFieldOption;
 use Botble\Base\Forms\FieldOptions\NumberFieldOption;
 use Botble\Base\Forms\Fields\NumberField;
 use Botble\Base\Forms\Fields\TextField;
-use Botble\Collection\Models\Category;
+use Botble\Collection\Models\Taxon;
 use Botble\Widget\AbstractWidget;
 use Botble\Widget\Forms\WidgetForm;
 use Illuminate\Support\Collection;
 
-class Categories extends AbstractWidget
+class Taxon extends AbstractWidget
 {
     public function __construct()
     {
         parent::__construct([
-            'name' => __('Collection Categories'),
-            'description' => __('Widget display collection categories'),
+            'name' => __('Collection Taxon'),
+            'description' => __('Widget display collection taxon'),
             'number_display' => 10,
         ]);
     }
@@ -28,14 +28,14 @@ class Categories extends AbstractWidget
             return [];
         }
 
-        $categories = Category::query()
+        $taxon = Taxon::query()
             ->wherePublished()
             ->with('slugable')
             ->take((int)$this->getConfig('number_display') ?: 10)
             ->get();
 
         return [
-            'categories' => $categories,
+            'taxon' => $taxon,
         ];
     }
 
@@ -51,7 +51,7 @@ class Categories extends AbstractWidget
                 'number_display',
                 NumberField::class,
                 NumberFieldOption::make()
-                    ->label(__('Number categories to display'))
+                    ->label(__('Number taxon to display'))
                     ->toArray()
             );
     }

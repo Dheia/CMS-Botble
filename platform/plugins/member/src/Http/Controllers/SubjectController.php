@@ -7,7 +7,7 @@ use Botble\Base\Facades\EmailHandler;
 use Botble\Base\Http\Controllers\BaseController;
 use Botble\Collection\Models\Subject;
 use Botble\Collection\Models\Tag;
-use Botble\Collection\Services\StoreCategoryService;
+use Botble\Collection\Services\StoreTaxonService;
 use Botble\Collection\Services\StoreTagService;
 use Botble\Media\Facades\RvMedia;
 use Botble\Member\Forms\SubjectForm;
@@ -33,13 +33,13 @@ class SubjectController extends BaseController
         return SubjectForm::create()->renderForm();
     }
 
-    public function store(SubjectRequest $request, StoreTagService $tagService, StoreCategoryService $categoryService)
+    public function store(SubjectRequest $request, StoreTagService $tagService, StoreTaxonService $taxonService)
     {
         $this->processRequestData($request);
 
         $subjectForm = SubjectForm::create();
         $subjectForm
-            ->saving(function (SubjectForm $form) use ($categoryService, $tagService, $request) {
+            ->saving(function (SubjectForm $form) use ($taxonService, $tagService, $request) {
                 $subject = $form->getModel();
                 $subject
                     ->fill([...$request->except('status'),
@@ -57,7 +57,7 @@ class SubjectController extends BaseController
 
                 $tagService->execute($request, $subject);
 
-                $categoryService->execute($request, $subject);
+                $taxonService->execute($request, $subject);
 
                 EmailHandler::setModule(MEMBER_MODULE_SCREEN_NAME)
                     ->setVariableValues([
@@ -93,7 +93,7 @@ class SubjectController extends BaseController
         return SubjectForm::createFromModel($subject)->renderForm();
     }
 
-    public function update(Subject $subject, SubjectRequest $request, StoreTagService $tagService, StoreCategoryService $categoryService)
+    public function update(Subject $subject, SubjectRequest $request, StoreTagService $tagService, StoreTaxonService $taxonService)
     {
         /**
          * @var Subject $subject
@@ -111,7 +111,7 @@ class SubjectController extends BaseController
         $subjectForm = SubjectForm::createFromModel($subject);
 
         $subjectForm
-            ->saving(function (SubjectForm $form) use ($categoryService, $tagService, $request) {
+            ->saving(function (SubjectForm $form) use ($taxonService, $tagService, $request) {
                 $subject = $form->getModel();
 
                 $subject
@@ -126,7 +126,7 @@ class SubjectController extends BaseController
 
                 $tagService->execute($request, $subject);
 
-                $categoryService->execute($request, $subject);
+                $taxonService->execute($request, $subject);
             });
 
         return $this

@@ -13,16 +13,16 @@ use Botble\Base\Forms\Fields\SelectField;
 use Botble\Base\Forms\Fields\TextareaField;
 use Botble\Base\Forms\Fields\TextField;
 use Botble\Base\Forms\FormAbstract;
-use Botble\Collection\Http\Requests\CategoryRequest;
-use Botble\Collection\Models\Category;
+use Botble\Collection\Http\Requests\TaxonRequest;
+use Botble\Collection\Models\Taxon;
 
-class CategoryForm extends FormAbstract
+class TaxonForm extends FormAbstract
 {
     public function setup(): void
     {
         $this
-            ->model(Category::class)
-            ->setValidatorClass(CategoryRequest::class)
+            ->model(Taxon::class)
+            ->setValidatorClass(TaxonRequest::class)
             ->add('name', TextField::class, NameFieldOption::make()->required()->toArray())
             ->add('description', TextareaField::class, DescriptionFieldOption::make()->toArray())
             ->add('is_default', OnOffField::class, IsDefaultFieldOption::make()->toArray())

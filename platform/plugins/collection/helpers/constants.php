@@ -1,19 +1,19 @@
 <?php
 
-if (! defined('POST_MODULE_SCREEN_NAME')) {
-    define('POST_MODULE_SCREEN_NAME', 'subject');
+if (! defined('SUBJECT_MODULE_SCREEN_NAME')) {
+    define('SUBJECT_MODULE_SCREEN_NAME', 'subject');
 }
 
-if (! defined('CATEGORY_MODULE_SCREEN_NAME')) {
-    define('CATEGORY_MODULE_SCREEN_NAME', 'category');
+if (! defined('TAXON_MODULE_SCREEN_NAME')) {
+    define('TAXON_MODULE_SCREEN_NAME', 'taxon');
 }
 
 if (! defined('TAG_MODULE_SCREEN_NAME')) {
     define('TAG_MODULE_SCREEN_NAME', 'tag');
 }
 
-if (! defined('MEMBER_POST_MODULE_SCREEN_NAME')) {
-    define('MEMBER_POST_MODULE_SCREEN_NAME', 'member-subject');
+if (! defined('MEMBER_SUBJECT_MODULE_SCREEN_NAME')) {
+    define('MEMBER_SUBJECT_MODULE_SCREEN_NAME', 'member-subject');
 }
 
 // Change data search result

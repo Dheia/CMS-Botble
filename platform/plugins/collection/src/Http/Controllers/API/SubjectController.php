@@ -28,7 +28,7 @@ class SubjectController extends BaseController
     {
         $data = $this->subjectRepository
             ->advancedGet([
-                'with' => ['tags', 'categories', 'author', 'slugable'],
+                'with' => ['tags', 'taxon', 'author', 'slugable'],
                 'condition' => ['status' => BaseStatusEnum::PUBLISHED],
                 'paginate' => [
                     'per_page' => $request->integer('per_page', 10),
@@ -87,8 +87,8 @@ class SubjectController extends BaseController
      * @queryParam include              Limit result set to specific IDs.
      * @queryParam order                Order sort attribute ascending or descending. Default: desc .One of: asc, desc
      * @queryParam order_by             Sort collection by object attribute. Default: updated_at. One of: author, created_at, updated_at, id,  slug, title
-     * @queryParam categories           Limit result set to all items that have the specified term assigned in the categories taxonomy.
-     * @queryParam categories_exclude   Limit result set to all items except those that have the specified term assigned in the categories taxonomy.
+     * @queryParam taxon           Limit result set to all items that have the specified term assigned in the taxon taxonomy.
+     * @queryParam taxon_exclude   Limit result set to all items except those that have the specified term assigned in the taxon taxonomy.
      * @queryParam tags                 Limit result set to all items that have the specified term assigned in the tags taxonomy.
      * @queryParam tags_exclude         Limit result set to all items except those that have the specified term assigned in the tags taxonomy.
      * @queryParam featured             Limit result set to items that are sticky.

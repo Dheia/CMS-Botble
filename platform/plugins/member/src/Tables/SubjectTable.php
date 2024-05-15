@@ -3,7 +3,7 @@
 namespace Botble\Member\Tables;
 
 use Botble\Base\Models\BaseQueryBuilder;
-use Botble\Collection\Models\Category;
+use Botble\Collection\Models\Taxon;
 use Botble\Collection\Models\Subject;
 use Botble\Member\Models\Member;
 use Botble\Member\Tables\Traits\ForMember;
@@ -38,13 +38,13 @@ class SubjectTable extends TableAbstract
                 CreatedAtColumn::make(),
                 ImageColumn::make(),
                 NameColumn::make()->route('public.member.subjects.edit'),
-                FormattedColumn::make('categories_name')
-                    ->title(trans('plugins/collection::subjects.categories'))
+                FormattedColumn::make('taxon_name')
+                    ->title(trans('plugins/collection::subjects.taxon'))
                     ->width(150)
                     ->orderable(false)
                     ->searchable(false)
                     ->getValueUsing(function (FormattedColumn $column) {
-                        return implode(', ', $column->getItem()->categories->pluck('name')->all());
+                        return implode(', ', $column->getItem()->taxon->pluck('name')->all());
                     }),
                 CreatedAtColumn::make(),
                 StatusColumn::make(),
@@ -67,7 +67,7 @@ class SubjectTable extends TableAbstract
             ])
             ->queryUsing(function (EloquentBuilder $query) {
                 return $query
-                    ->with(['categories'])
+                    ->with(['taxon'])
                     ->select([
                         'id',
                         'name',
@@ -88,13 +88,13 @@ class SubjectTable extends TableAbstract
                     string $operator,
                     string|null $value
                 ) {
-                    if (! $value || $key !== 'category') {
+                    if (! $value || $key !== 'taxon') {
                         return false;
                     }
 
                     return $query->whereHas(
-                        'categories',
-                        fn (BaseQueryBuilder $query) => $query->where('categories.id', $value)
+                        'taxon',
+                        fn (BaseQueryBuilder $query) => $query->where('taxon.id', $value)
                     );
                 }
             );
@@ -107,10 +107,10 @@ class SubjectTable extends TableAbstract
             StatusBulkChange::make(),
             CreatedAtBulkChange::make(),
             SelectBulkChange::make()
-                ->name('category')
-                ->title(trans('plugins/collection::subjects.category'))
+                ->name('taxon')
+                ->title(trans('plugins/collection::subjects.taxon'))
                 ->searchable()
-                ->choices(fn () => Category::query()->pluck('name', 'id')->all()),
+                ->choices(fn () => Taxon::query()->pluck('name', 'id')->all()),
         ];
     }
 }

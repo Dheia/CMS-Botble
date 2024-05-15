@@ -19,14 +19,14 @@ return new class () extends Migration {
             });
         }
 
-        if (! Schema::hasTable('categories_translations')) {
-            Schema::create('categories_translations', function (Blueprint $table) {
+        if (! Schema::hasTable('taxon_translations')) {
+            Schema::create('taxon_translations', function (Blueprint $table) {
                 $table->string('lang_code', 20);
-                $table->foreignId('categories_id');
+                $table->foreignId('taxon_id');
                 $table->string('name')->nullable();
                 $table->string('description', 400)->nullable();
 
-                $table->primary(['lang_code', 'categories_id'], 'categories_translations_primary');
+                $table->primary(['lang_code', 'taxon_id'], 'taxon_translations_primary');
             });
         }
 
@@ -45,7 +45,7 @@ return new class () extends Migration {
     public function down(): void
     {
         Schema::dropIfExists('subjects_translations');
-        Schema::dropIfExists('categories_translations');
+        Schema::dropIfExists('taxon_translations');
         Schema::dropIfExists('tags_translations');
     }
 };

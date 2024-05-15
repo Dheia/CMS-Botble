@@ -56,6 +56,16 @@ class WidgetSeeder extends BaseSeeder
             [
                 'widget_id' => 'CustomMenuWidget',
                 'sidebar_id' => 'primary_sidebar',
+                'position' => 1,
+                'data' => [
+                    'id' => 'CustomMenuWidget',
+                    'name' => 'Taxon',
+                    'menu_id' => 'featured-taxon',
+                ],
+            ],
+            [
+                'widget_id' => 'CustomMenuWidget',
+                'sidebar_id' => 'primary_sidebar',
                 'position' => 2,
                 'data' => [
                     'id' => 'CustomMenuWidget',

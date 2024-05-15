@@ -52,14 +52,14 @@ class SubjectRepository extends RepositoriesAbstract implements SubjectInterface
             ->limit($limit)
             ->with('slugable')
             ->orderByDesc('created_at')
-            ->whereHas('categories', function (Builder $query) use ($id) {
-                $query->whereIn('categories.id', $this->getRelatedCategoryIds($id));
+            ->whereHas('taxon', function (Builder $query) use ($id) {
+                $query->whereIn('taxon.id', $this->getRelatedTaxonIds($id));
             });
 
         return $this->applyBeforeExecuteQuery($data)->get();
     }
 
-    public function getRelatedCategoryIds(Subject|int|string $model): array
+    public function getRelatedTaxonIds(Subject|int|string $model): array
     {
         $model = $model instanceof Subject ? $model : $this->findById($model);
 
@@ -68,21 +68,21 @@ class SubjectRepository extends RepositoriesAbstract implements SubjectInterface
         }
 
         try {
-            return $model->categories()->allRelatedIds()->toArray();
+            return $model->taxon()->allRelatedIds()->toArray();
         } catch (Exception) {
             return [];
         }
     }
 
-    public function getByCategory(
-        array|int|string $categoryId,
+    public function getByTaxon(
+        array|int|string $taxonId,
         int $paginate = 12,
         int $limit = 0
     ): Collection|LengthAwarePaginator {
         $data = $this->model
             ->wherePublished()
-            ->whereHas('categories', function (Builder $query) use ($categoryId) {
-                $query->whereIn('categories.id', array_filter((array)$categoryId));
+            ->whereHas('taxon', function (Builder $query) use ($taxonId) {
+                $query->whereIn('taxon.id', array_filter((array)$taxonId));
             })
             ->select('*')
             ->distinct()
@@ -120,7 +120,7 @@ class SubjectRepository extends RepositoriesAbstract implements SubjectInterface
     public function getByTag(int|string $tag, int $paginate = 12): Collection|LengthAwarePaginator
     {
         $data = $this->model
-            ->with(['slugable', 'categories', 'categories.slugable', 'author'])
+            ->with(['slugable', 'taxon', 'taxon.slugable', 'author'])
             ->wherePublished()
             ->whereHas('tags', function (Builder $query) use ($tag) {
                 $query->where('tags.id', $tag);
@@ -130,14 +130,14 @@ class SubjectRepository extends RepositoriesAbstract implements SubjectInterface
         return $this->applyBeforeExecuteQuery($data)->paginate($paginate);
     }
 
-    public function getRecentSubjects(int $limit = 5, int|string $categoryId = 0): Collection
+    public function getRecentSubjects(int $limit = 5, int|string $taxonId = 0): Collection
     {
         $data = $this->model->wherePublished();
 
-        if ($categoryId != 0) {
+        if ($taxonId != 0) {
             $data = $data
-                ->whereHas('categories', function (Builder $query) use ($categoryId) {
-                    $query->where('categories.id', $categoryId);
+                ->whereHas('taxon', function (Builder $query) use ($taxonId) {
+                    $query->where('taxon.id', $taxonId);
                 });
         }
 
@@ -207,18 +207,18 @@ class SubjectRepository extends RepositoriesAbstract implements SubjectInterface
     {
         $data = $this->originalModel;
 
-        if ($filters['categories'] !== null) {
-            $categories = array_filter((array)$filters['categories']);
+        if ($filters['taxon'] !== null) {
+            $taxon = array_filter((array)$filters['taxon']);
 
-            $data = $data->whereHas('categories', function (Builder $query) use ($categories) {
-                $query->whereIn('categories.id', $categories);
+            $data = $data->whereHas('taxon', function (Builder $query) use ($taxon) {
+                $query->whereIn('taxon.id', $taxon);
             });
         }
 
-        if ($filters['categories_exclude'] !== null) {
+        if ($filters['taxon_exclude'] !== null) {
             $data = $data
-                ->whereHas('categories', function (Builder $query) use ($filters) {
-                    $query->whereNotIn('categories.id', array_filter((array)$filters['categories_exclude']));
+                ->whereHas('taxon', function (Builder $query) use ($filters) {
+                    $query->whereNotIn('taxon.id', array_filter((array)$filters['taxon_exclude']));
                 });
         }
 

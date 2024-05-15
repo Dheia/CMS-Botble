@@ -8,13 +8,13 @@ use Illuminate\Support\Facades\Schema;
 return new class () extends Migration {
     public function up(): void
     {
-        if (! Schema::hasColumn('categories', 'author_type')) {
-            Schema::table('categories', function (Blueprint $table) {
+        if (! Schema::hasColumn('taxon', 'author_type')) {
+            Schema::table('taxon', function (Blueprint $table) {
                 $table->string('author_type');
             });
         }
 
-        Schema::table('categories', function (Blueprint $table) {
+        Schema::table('taxon', function (Blueprint $table) {
             $table->string('author_type')->change();
         });
 
@@ -41,7 +41,7 @@ return new class () extends Migration {
 
     public function down(): void
     {
-        Schema::table('categories', function (Blueprint $table) {
+        Schema::table('taxon', function (Blueprint $table) {
             $table->string('author_type')->default(addslashes(User::class))->change();
         });
 

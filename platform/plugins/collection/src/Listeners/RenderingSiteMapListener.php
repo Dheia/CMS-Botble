@@ -2,7 +2,7 @@
 
 namespace Botble\Collection\Listeners;
 
-use Botble\Collection\Models\Category;
+use Botble\Collection\Models\Taxon;
 use Botble\Collection\Models\Subject;
 use Botble\Collection\Models\Tag;
 use Botble\Theme\Events\RenderingSiteMapEvent;
@@ -15,16 +15,16 @@ class RenderingSiteMapListener
     {
         if ($key = $event->key) {
             switch ($key) {
-                case 'collection-categories':
-                    $categories = Category::query()
+                case 'collection-taxon':
+                    $taxon = Taxon::query()
                         ->with('slugable')
                         ->wherePublished()
                         ->select(['id', 'name', 'updated_at'])
                         ->orderByDesc('created_at')
                         ->get();
 
-                    foreach ($categories as $category) {
-                        SiteMapManager::add($category->url, $category->updated_at, '0.8');
+                    foreach ($taxon as $taxon) {
+                        SiteMapManager::add($taxon->url, $taxon->updated_at, '0.8');
                     }
 
                     break;
@@ -82,13 +82,13 @@ class RenderingSiteMapListener
             }
         }
 
-        $categoryLastUpdated = Category::query()
+        $taxonLastUpdated = Taxon::query()
             ->wherePublished()
             ->latest('updated_at')
             ->value('updated_at');
 
-        if ($categoryLastUpdated) {
-            SiteMapManager::addSitemap(SiteMapManager::route('collection-categories'), $categoryLastUpdated);
+        if ($taxonLastUpdated) {
+            SiteMapManager::addSitemap(SiteMapManager::route('collection-taxon'), $taxonLastUpdated);
         }
 
         $tagLastUpdated = Tag::query()

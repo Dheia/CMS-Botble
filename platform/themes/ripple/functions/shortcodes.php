@@ -7,7 +7,7 @@ use Botble\Base\Forms\Fields\SelectField;
 use Botble\Base\Forms\Fields\TextField;
 use Botble\Base\Models\BaseQueryBuilder;
 use Botble\Blog\Models\Category;
-use Botble\Collection\Models\Category as SubjectCategory;
+use Botble\Collection\Models\Taxon;
 use Botble\Shortcode\Compilers\Shortcode as ShortcodeCompiler;
 use Botble\Shortcode\Facades\Shortcode;
 use Botble\Shortcode\Forms\ShortcodeForm;
@@ -240,9 +240,9 @@ app('events')->listen(RouteMatched::class, function () {
         });
 
         Shortcode::register(
-            'featured-categories-subjects',
-            __('Featured categories subjects'),
-            __('Featured categories subjects'),
+            'featured-taxon-subjects',
+            __('Featured taxon subjects'),
+            __('Featured taxon subjects'),
             function (ShortcodeCompiler $shortcode) {
                 $with = [
                     'slugable',
@@ -260,7 +260,7 @@ app('events')->listen(RouteMatched::class, function () {
 
                 $subjects = collect();
 
-                if ($categoryId = $shortcode->category_id) {
+                if ($taxonId = $shortcode->taxon_id) {
                     $with['subjects'] = function (BelongsToMany|BaseQueryBuilder $query) {
                         $query
                             ->wherePublished()
@@ -268,10 +268,10 @@ app('events')->listen(RouteMatched::class, function () {
                             ->take(6);
                     };
 
-                    $category = SubjectCategory::query()
+                    $taxon = Taxon::query()
                         ->with($with)
                         ->wherePublished()
-                        ->where('id', $categoryId)
+                        ->where('id', $taxonId)
                         ->select([
                             'id',
                             'name',
@@ -280,16 +280,16 @@ app('events')->listen(RouteMatched::class, function () {
                         ])
                         ->first();
 
-                    if ($category) {
-                        $subjects = $category->subjects;
+                    if ($taxon) {
+                        $subjects = $taxon->subjects;
                     } else {
                         $subjects = collect();
                     }
                 } else {
-                    $categories = get_featured_categories(2, $with);
+                    $taxons = get_featured_taxon(2, $with);
 
-                    foreach ($categories as $category) {
-                        $subjects = $subjects->merge($category->subjects->take(3));
+                    foreach ($taxons as $taxon) {
+                        $subjects = $subjects->merge($taxon->subjects->take(3));
                     }
 
                     $subjects = $subjects->sortByDesc('created_at');
@@ -298,7 +298,7 @@ app('events')->listen(RouteMatched::class, function () {
                 $withSidebar = ($shortcode->with_sidebar ?: 'yes') === 'yes';
 
                 return Theme::partial(
-                    'shortcodes.featured-categories-subjects',
+                    'shortcodes.featured-taxon-subjects',
                     [
                         'title' => $shortcode->title,
                         'withSidebar' => $withSidebar,
@@ -309,12 +309,12 @@ app('events')->listen(RouteMatched::class, function () {
         );
 
         Shortcode::setPreviewImage(
-            'featured-categories-subjects',
-            Theme::asset()->url('images/ui-blocks/featured-categories-subjects.png')
+            'featured-taxon-subjects',
+            Theme::asset()->url('images/ui-blocks/featured-taxon-subjects.png')
         );
 
-        Shortcode::setAdminConfig('featured-categories-subjects', function (array $attributes) {
-            $categories = SubjectCategory::query()
+        Shortcode::setAdminConfig('featured-taxon-subjects', function (array $attributes) {
+            $taxon = Taxon::query()
                 ->wherePublished()
                 ->select('name', 'id')
                 ->get()
@@ -324,12 +324,12 @@ app('events')->listen(RouteMatched::class, function () {
             return ShortcodeForm::createFromArray($attributes)
                 ->add('title', TextField::class, TextFieldOption::make()->label(__('Title'))->toArray())
                 ->add(
-                    'category_id',
+                    'taxon_id',
                     SelectField::class,
                     SelectFieldOption::make()
-                        ->label(__('Subject Category'))
-                        ->choices(['' => __('All')] + $categories)
-                        ->selected(Arr::get($attributes, 'category_id'))
+                        ->label(__('Subject Taxon'))
+                        ->choices(['' => __('All')] + $taxon)
+                        ->selected(Arr::get($attributes, 'taxon_id'))
                         ->searchable()
                         ->toArray()
                 )

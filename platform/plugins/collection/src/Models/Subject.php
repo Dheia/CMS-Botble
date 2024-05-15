@@ -42,7 +42,7 @@ class Subject extends BaseModel
     protected static function booted(): void
     {
         static::deleted(function (Subject $subject) {
-            $subject->categories()->detach();
+            $subject->taxon()->detach();
             $subject->tags()->detach();
         });
     }
@@ -58,9 +58,9 @@ class Subject extends BaseModel
         return $this->belongsToMany(Tag::class, 'subject_tags');
     }
 
-    public function categories(): BelongsToMany
+    public function taxon(): BelongsToMany
     {
-        return $this->belongsToMany(Category::class, 'subject_categories');
+        return $this->belongsToMany(Taxon::class, 'subject_taxon');
     }
 
     public function author(): MorphTo
@@ -68,12 +68,12 @@ class Subject extends BaseModel
         return $this->morphTo()->withDefault();
     }
 
-    protected function firstCategory(): Attribute
+    protected function firstTaxon(): Attribute
     {
-        return Attribute::get(function (): ?Category {
-            $this->loadMissing('categories');
+        return Attribute::get(function (): ?Taxon {
+            $this->loadMissing('taxon');
 
-            return $this->categories->first();
+            return $this->taxon->first();
         });
     }
 

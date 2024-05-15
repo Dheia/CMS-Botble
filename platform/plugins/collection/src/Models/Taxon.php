@@ -15,11 +15,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use Illuminate\Support\HtmlString;
 
-class Category extends BaseModel implements HasTreeCategoryContract
+class Taxon extends BaseModel implements HasTreeCategoryContract
 {
     use HasTreeCategory;
 
-    protected $table = 'categories';
+    protected $table = 'taxon';
 
     protected $fillable = [
         'name',
@@ -44,26 +44,26 @@ class Category extends BaseModel implements HasTreeCategoryContract
 
     protected static function booted(): void
     {
-        static::deleted(function (Category $category) {
-            $category->children()->each(fn (Category $child) => $child->delete());
+        static::deleted(function (Taxon $taxon) {
+            $taxon->children()->each(fn (Taxon $child) => $child->delete());
 
-            $category->subjects()->detach();
+            $taxon->subjects()->detach();
         });
     }
 
     public function subjects(): BelongsToMany
     {
-        return $this->belongsToMany(Subject::class, 'subject_categories')->with('slugable');
+        return $this->belongsToMany(Subject::class, 'subject_taxon')->with('slugable');
     }
 
     public function parent(): BelongsTo
     {
-        return $this->belongsTo(Category::class, 'parent_id')->withDefault();
+        return $this->belongsTo(Taxon::class, 'parent_id')->withDefault();
     }
 
     public function children(): HasMany
     {
-        return $this->hasMany(Category::class, 'parent_id');
+        return $this->hasMany(Taxon::class, 'parent_id');
     }
 
     public function activeChildren(): HasMany
@@ -95,7 +95,7 @@ class Category extends BaseModel implements HasTreeCategoryContract
         return Attribute::get(function (): HtmlString {
             return Html::tag('span', sprintf('(%s)', $this->subjects_count), [
                 'data-bs-toggle' => 'tooltip',
-                'data-bs-original-title' => trans('plugins/collection::categories.total_subjects', ['total' => $this->subjects_count]),
+                'data-bs-original-title' => trans('plugins/collection::taxon.total_subjects', ['total' => $this->subjects_count]),
             ]);
         });
     }

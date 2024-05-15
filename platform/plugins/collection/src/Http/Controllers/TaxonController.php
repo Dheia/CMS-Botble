@@ -11,36 +11,36 @@ use Botble\Base\Http\Requests\UpdateTreeCategoryRequest;
 use Botble\Base\Http\Responses\BaseHttpResponse;
 use Botble\Base\Supports\Breadcrumb;
 use Botble\Base\Supports\RepositoryHelper;
-use Botble\Collection\Forms\CategoryForm;
-use Botble\Collection\Http\Requests\CategoryRequest;
-use Botble\Collection\Models\Category;
+use Botble\Collection\Forms\TaxonForm;
+use Botble\Collection\Http\Requests\TaxonRequest;
+use Botble\Collection\Models\Taxon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class CategoryController extends BaseController
+class TaxonController extends BaseController
 {
     protected function breadcrumb(): Breadcrumb
     {
         return parent::breadcrumb()
             ->add(trans('plugins/collection::base.menu_name'))
-            ->add(trans('plugins/collection::categories.menu'), route('categories.index'));
+            ->add(trans('plugins/collection::taxon.menu'), route('taxon.index'));
     }
 
     public function index(Request $request)
     {
-        $this->pageTitle(trans('plugins/collection::categories.menu'));
+        $this->pageTitle(trans('plugins/collection::taxon.menu'));
 
-        $categories = Category::query()
+        $taxon = Taxon::query()
             ->orderByDesc('is_default')
             ->orderBy('order')
             ->orderBy('created_at')
             ->with('slugable')
             ->withCount('subjects');
 
-        $categories = RepositoryHelper::applyBeforeExecuteQuery($categories, new Category())->get();
+        $taxon = RepositoryHelper::applyBeforeExecuteQuery($taxon, new Taxon())->get();
 
         if ($request->ajax()) {
-            $data = view('core/base::forms.partials.tree-categories', $this->getOptions(compact('categories')))
+            $data = view('core/base::forms.partials.tree-taxon', $this->getOptions(compact('taxon')))
                 ->render();
 
             return $this
@@ -51,15 +51,15 @@ class CategoryController extends BaseController
         Assets::addStylesDirectly('vendor/core/core/base/css/tree-category.css')
             ->addScriptsDirectly('vendor/core/core/base/js/tree-category.js');
 
-        $form = CategoryForm::create(['template' => 'core/base::forms.form-tree-category']);
-        $form = $this->setFormOptions($form, null, compact('categories'));
+        $form = TaxonForm::create(['template' => 'core/base::forms.form-tree-category']);
+        $form = $this->setFormOptions($form, null, compact('taxon'));
 
         return $form->renderForm();
     }
 
     public function create(Request $request)
     {
-        $this->pageTitle(trans('plugins/collection::categories.create'));
+        $this->pageTitle(trans('plugins/collection::taxon.create'));
 
         if ($request->ajax()) {
             return $this
@@ -67,18 +67,18 @@ class CategoryController extends BaseController
                 ->setData($this->getForm());
         }
 
-        return CategoryForm::create()->renderForm();
+        return TaxonForm::create()->renderForm();
     }
 
-    public function store(CategoryRequest $request)
+    public function store(TaxonRequest $request)
     {
         if ($request->input('is_default')) {
-            Category::query()->where('id', '>', 0)->update(['is_default' => 0]);
+            Taxon::query()->where('id', '>', 0)->update(['is_default' => 0]);
         }
 
-        $form = CategoryForm::create();
+        $form = TaxonForm::create();
         $form
-            ->saving(function (CategoryForm $form) use ($request) {
+            ->saving(function (TaxonForm $form) use ($request) {
                 $form
                     ->getModel()
                     ->fill([...$request->validated(),
@@ -90,47 +90,47 @@ class CategoryController extends BaseController
 
         $response = $this->httpResponse();
 
-        $category = $form->getModel();
+        $taxon = $form->getModel();
 
         if ($request->ajax()) {
             if ($response->isSaving()) {
                 $form = $this->getForm();
             } else {
-                $form = $this->getForm($category);
+                $form = $this->getForm($taxon);
             }
 
             $response->setData([
-                'model' => $category,
+                'model' => $taxon,
                 'form' => $form,
             ]);
         }
 
         return $response
-            ->setPreviousRoute('categories.index')
-            ->setNextRoute('categories.edit', $category->getKey())
+            ->setPreviousRoute('taxon.index')
+            ->setNextRoute('taxon.edit', $taxon->getKey())
             ->withCreatedSuccessMessage();
     }
 
-    public function edit(Category $category, Request $request)
+    public function edit(Taxon $taxon, Request $request)
     {
         if ($request->ajax()) {
             return $this
                 ->httpResponse()
-                ->setData($this->getForm($category));
+                ->setData($this->getForm($taxon));
         }
 
-        $this->pageTitle(trans('core/base::forms.edit_item', ['name' => $category->name]));
+        $this->pageTitle(trans('core/base::forms.edit_item', ['name' => $taxon->name]));
 
-        return CategoryForm::createFromModel($category)->renderForm();
+        return TaxonForm::createFromModel($taxon)->renderForm();
     }
 
-    public function update(Category $category, CategoryRequest $request)
+    public function update(Taxon $taxon, TaxonRequest $request)
     {
         if ($request->input('is_default')) {
-            Category::query()->where('id', '!=', $category->getKey())->update(['is_default' => 0]);
+            Taxon::query()->where('id', '!=', $taxon->getKey())->update(['is_default' => 0]);
         }
 
-        CategoryForm::createFromModel($category)->save();
+        TaxonForm::createFromModel($taxon)->save();
 
         $response = $this->httpResponse();
 
@@ -138,35 +138,35 @@ class CategoryController extends BaseController
             if ($response->isSaving()) {
                 $form = $this->getForm();
             } else {
-                $form = $this->getForm($category);
+                $form = $this->getForm($taxon);
             }
 
             $response->setData([
-                'model' => $category,
+                'model' => $taxon,
                 'form' => $form,
             ]);
         }
 
         return $response
-            ->setPreviousRoute('categories.index')
+            ->setPreviousRoute('taxon.index')
             ->withUpdatedSuccessMessage();
     }
 
-    public function destroy(Category $category)
+    public function destroy(Taxon $taxon)
     {
-        return DeleteResourceAction::make($category);
+        return DeleteResourceAction::make($taxon);
     }
 
     public function updateTree(UpdateTreeCategoryRequest $request): BaseHttpResponse
     {
-        Category::updateTree($request->validated('data'));
+        Taxon::updateTree($request->validated('data'));
 
         return $this
             ->httpResponse()
             ->withUpdatedSuccessMessage();
     }
 
-    protected function getForm(Category|null $model = null): string
+    protected function getForm(Taxon|null $model = null): string
     {
         $options = ['template' => 'core/base::forms.form-no-wrap'];
 
@@ -174,20 +174,20 @@ class CategoryController extends BaseController
             $options['model'] = $model;
         }
 
-        $form = CategoryForm::create($options);
+        $form = TaxonForm::create($options);
 
         $form = $this->setFormOptions($form, $model);
 
         return $form->renderForm();
     }
 
-    protected function setFormOptions(FormAbstract $form, ?Category $model = null, array $options = []): FormAbstract
+    protected function setFormOptions(FormAbstract $form, ?Taxon $model = null, array $options = []): FormAbstract
     {
         if (! $model) {
-            $form->setUrl(route('categories.create'));
+            $form->setUrl(route('taxon.create'));
         }
 
-        if (! Auth::guard()->user()->hasPermission('categories.create') && ! $model) {
+        if (! Auth::guard()->user()->hasPermission('taxon.create') && ! $model) {
             $class = $form->getFormOption('class');
             $form->setFormOption('class', $class . ' d-none');
         }
@@ -200,13 +200,13 @@ class CategoryController extends BaseController
     protected function getOptions(array $options = []): array
     {
         return array_merge([
-            'canCreate' => Auth::guard()->user()->hasPermission('categories.create'),
-            'canEdit' => Auth::guard()->user()->hasPermission('categories.edit'),
-            'canDelete' => Auth::guard()->user()->hasPermission('categories.destroy'),
-            'createRoute' => 'categories.create',
-            'editRoute' => 'categories.edit',
-            'deleteRoute' => 'categories.destroy',
-            'updateTreeRoute' => 'categories.update-tree',
+            'canCreate' => Auth::guard()->user()->hasPermission('taxon.create'),
+            'canEdit' => Auth::guard()->user()->hasPermission('taxon.edit'),
+            'canDelete' => Auth::guard()->user()->hasPermission('taxon.destroy'),
+            'createRoute' => 'taxon.create',
+            'editRoute' => 'taxon.edit',
+            'deleteRoute' => 'taxon.destroy',
+            'updateTreeRoute' => 'taxon.update-tree',
         ], $options);
     }
 }

@@ -18,9 +18,9 @@
                         <h3><a href="{{ $subject->url }}">{{ $subject->name }}</a></h3>
                         <div>
                             {{ $subject->created_at->format('M d, Y') }} - <span>{{ $subject->author->name }}</span>>
-                            @if ($subject->categories->first())
+                            @if ($subject->taxon->first())
                                 <a
-                                    href="{{ $subject->categories->first()->url }}">{{ $subject->categories->first()->name }}</a>
+                                    href="{{ $subject->taxon->first()->url }}">{{ $subject->taxon->first()->name }}</a>
                             @endif
                         </div>
                     </header>

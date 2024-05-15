@@ -4,7 +4,7 @@ namespace Botble\Collection\Services;
 
 use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Base\Supports\Helper;
-use Botble\Collection\Models\Category;
+use Botble\Collection\Models\Taxon;
 use Botble\Collection\Models\Subject;
 use Botble\Collection\Models\Tag;
 use Botble\Collection\Repositories\Interfaces\SubjectInterface;
@@ -42,7 +42,7 @@ class CollectionService
                  */
                 $subject = Subject::query()
                     ->where($condition)
-                    ->with(['categories', 'tags', 'slugable', 'categories.slugable', 'tags.slugable'])
+                    ->with(['taxon', 'tags', 'slugable', 'taxon.slugable', 'tags.slugable'])
                     ->firstOrFail();
 
                 Helper::handleViewCount($subject, 'viewed_subject');
@@ -76,20 +76,20 @@ class CollectionService
                     shortcode()->getCompiler()->setEditLink(route('subjects.edit', $subject->id), 'subjects.edit');
                 }
 
-                $category = $subject->categories->sortByDesc('id')->first();
-                if ($category) {
-                    if ($category->parents->isNotEmpty()) {
-                        foreach ($category->parents as $parentCategory) {
-                            Theme::breadcrumb()->add($parentCategory->name, $parentCategory->url);
+                $taxon = $subject->taxon->sortByDesc('id')->first();
+                if ($taxon) {
+                    if ($taxon->parents->isNotEmpty()) {
+                        foreach ($taxon->parents as $parentTaxon) {
+                            Theme::breadcrumb()->add($parentTaxon->name, $parentTaxon->url);
                         }
                     }
 
-                    Theme::breadcrumb()->add($category->name, $category->url);
+                    Theme::breadcrumb()->add($taxon->name, $taxon->url);
                 }
 
                 Theme::breadcrumb()->add($subject->name, $subject->url);
 
-                do_action(BASE_ACTION_PUBLIC_RENDER_SINGLE, POST_MODULE_SCREEN_NAME, $subject);
+                do_action(BASE_ACTION_PUBLIC_RENDER_SINGLE, SUBJECT_MODULE_SCREEN_NAME, $subject);
 
                 return [
                     'view' => 'subject',
@@ -97,57 +97,57 @@ class CollectionService
                     'data' => compact('subject'),
                     'slug' => $subject->slug,
                 ];
-            case Category::class:
-                $category = Category::query()
+            case Taxon::class:
+                $taxon = Taxon::query()
                     ->where($condition)
                     ->with(['slugable'])
                     ->firstOrFail();
 
-                SeoHelper::setTitle($category->name)
-                    ->setDescription($category->description);
+                SeoHelper::setTitle($taxon->name)
+                    ->setDescription($taxon->description);
 
                 $meta = new SeoOpenGraph();
-                if ($category->image) {
-                    $meta->setImage(RvMedia::getImageUrl($category->image));
+                if ($taxon->image) {
+                    $meta->setImage(RvMedia::getImageUrl($taxon->image));
                 }
-                $meta->setDescription($category->description);
-                $meta->setUrl($category->url);
-                $meta->setTitle($category->name);
+                $meta->setDescription($taxon->description);
+                $meta->setUrl($taxon->url);
+                $meta->setTitle($taxon->name);
                 $meta->setType('article');
 
                 SeoHelper::setSeoOpenGraph($meta);
 
-                SeoHelper::meta()->setUrl($category->url);
+                SeoHelper::meta()->setUrl($taxon->url);
 
                 if (function_exists('admin_bar')) {
                     AdminBar::registerLink(
-                        trans('plugins/collection::categories.edit_this_category'),
-                        route('categories.edit', $category->getKey()),
+                        trans('plugins/collection::taxon.edit_this_taxon'),
+                        route('taxon.edit', $taxon->getKey()),
                         null,
-                        'categories.edit'
+                        'taxon.edit'
                     );
                 }
 
-                $allRelatedCategoryIds = array_merge([$category->getKey()], $category->activeChildren->pluck('id')->all());
+                $allRelatedTaxonIds = array_merge([$taxon->getKey()], $taxon->activeChildren->pluck('id')->all());
 
                 $subjects = app(SubjectInterface::class)
-                    ->getByCategory($allRelatedCategoryIds, (int)theme_option('number_of_subjects_in_a_category', 12));
+                    ->getByTaxon($allRelatedTaxonIds, (int)theme_option('number_of_subjects_in_a_taxon', 12));
 
-                if ($category->parents->isNotEmpty()) {
-                    foreach ($category->parents->reverse() as $parentCategory) {
-                        Theme::breadcrumb()->add($parentCategory->name, $parentCategory->url);
+                if ($taxon->parents->isNotEmpty()) {
+                    foreach ($taxon->parents->reverse() as $parentTaxon) {
+                        Theme::breadcrumb()->add($parentTaxon->name, $parentTaxon->url);
                     }
                 }
 
-                Theme::breadcrumb()->add($category->name, $category->url);
+                Theme::breadcrumb()->add($taxon->name, $taxon->url);
 
-                do_action(BASE_ACTION_PUBLIC_RENDER_SINGLE, CATEGORY_MODULE_SCREEN_NAME, $category);
+                do_action(BASE_ACTION_PUBLIC_RENDER_SINGLE, TAXON_MODULE_SCREEN_NAME, $taxon);
 
                 return [
-                    'view' => 'category',
-                    'default_view' => 'plugins/collection::themes.category',
-                    'data' => compact('category', 'subjects'),
-                    'slug' => $category->slug,
+                    'view' => 'taxon',
+                    'default_view' => 'plugins/collection::themes.taxon',
+                    'data' => compact('taxon', 'subjects'),
+                    'slug' => $taxon->slug,
                 ];
             case Tag::class:
                 $tag = Tag::query()

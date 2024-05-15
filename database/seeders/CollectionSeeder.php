@@ -15,7 +15,7 @@ class CollectionSeeder extends BaseSeeder
     {
         $this->uploadFiles('news');
 
-        $categories = [
+        $taxon = [
             ['name' => 'Artificial Intelligence'],
             ['name' => 'Cybersecurity'],
             ['name' => 'Blockchain Technology'],
@@ -26,7 +26,7 @@ class CollectionSeeder extends BaseSeeder
             ['name' => 'Edge Computing'],
         ];
 
-        $this->createCollectionCategories($categories);
+        $this->createCollectionTaxon($taxon);
 
         $tags = [
             ['name' => 'AI'],

@@ -11,9 +11,9 @@
                 <header>
                     <h3><a href="{{ $subject->url }}">{{ $subject->name }}</a></h3>
                     <div><span>{{ $subject->created_at->format('M d, Y') }}</span><span>{{ $subject->author->name }}</span> -
-                        {{ __('Categories') }}:
-                        @foreach ($subject->categories as $category)
-                            <a href="{{ $category->url }}">{{ $category->name }}</a>
+                        {{ __('Taon') }}:
+                        @foreach ($subject->taxon as $taxon)
+                            <a href="{{ $taxon->url }}">{{ $taxon->name }}</a>
                             @if (!$loop->last)
                                 ,
                             @endif

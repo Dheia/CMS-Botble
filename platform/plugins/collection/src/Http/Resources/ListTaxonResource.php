@@ -2,13 +2,13 @@
 
 namespace Botble\Collection\Http\Resources;
 
-use Botble\Collection\Models\Category;
+use Botble\Collection\Models\Taxon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin Category
+ * @mixin Taxon
  */
-class CategoryResource extends JsonResource
+class ListTaxonResource extends JsonResource
 {
     public function toArray($request): array
     {
@@ -16,8 +16,9 @@ class CategoryResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'slug' => $this->slug,
-            'url' => $this->url,
             'description' => $this->description,
+            'children' => TaxonResource::collection($this->children),
+            'parent' => new TaxonResource($this->parent),
         ];
     }
 }
