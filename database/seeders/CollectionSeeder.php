@@ -28,19 +28,6 @@ class CollectionSeeder extends BaseSeeder
 
         $this->createCollectionTaxon($taxon);
 
-        $tags = [
-            ['name' => 'AI'],
-            ['name' => 'Machine Learning'],
-            ['name' => 'Neural Networks'],
-            ['name' => 'Data Security'],
-            ['name' => 'Blockchain'],
-            ['name' => 'Cryptocurrency'],
-            ['name' => 'IoT'],
-            ['name' => 'AR Gaming'],
-        ];
-
-        $this->createCollectionTags($tags);
-
         $subjects = [
             [
                 'name' => 'Breakthrough in Quantum Computing: Computing Power Reaches Milestone',
