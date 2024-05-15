@@ -19,7 +19,7 @@ use Botble\Base\Forms\Fields\TextField;
 use Botble\Base\Forms\Fields\TreeCategoryField;
 use Botble\Base\Forms\FormAbstract;
 use Botble\Collection\Http\Requests\SubjectRequest;
-use Botble\Collection\Models\Category;
+use Botble\Collection\Models\Taxon;
 use Botble\Collection\Models\Subject;
 
 class SubjectForm extends FormAbstract
@@ -60,17 +60,17 @@ class SubjectForm extends FormAbstract
                 }
             })
             ->add(
-                'categories[]',
+                'taxon[]',
                 TreeCategoryField::class,
                 SelectFieldOption::make()
-                    ->label(trans('plugins/collection::subjects.form.categories'))
-                    ->choices(get_categories_with_children())
+                    ->label(trans('plugins/collection::subjects.form.taxon'))
+                    ->choices(get_taxon_with_children())
                     ->when($this->getModel()->id, function (SelectFieldOption $fieldOption) {
-                        return $fieldOption->selected($this->getModel()->categories()->pluck('category_id')->all());
+                        return $fieldOption->selected($this->getModel()->taxon()->pluck('taxon_id')->all());
                     })
                     ->when(! $this->getModel()->id, function (SelectFieldOption $fieldOption) {
                         return $fieldOption
-                            ->selected(Category::query()
+                            ->selected(Taxon::query()
                                 ->where('is_default', 1)
                                 ->pluck('id')
                                 ->all());
