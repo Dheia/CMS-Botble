@@ -12,20 +12,6 @@
         <h1 class="subject__title">{{ $subject->name }}</h1>
         <div class="subject__meta">
             {!! Theme::partial('collection.subject-meta', compact('subject')) !!}
-
-            @if ($subject->tags->isNotEmpty())
-                @php
-                    if (is_plugin_active('language-advanced')) {
-                        $subject->tags->loadMissing('translations');
-                    }
-                @endphp
-                <span class="subject__tags">
-                    {!! BaseHelper::renderIcon('ti ti-tags') !!}
-                    @foreach ($subject->tags as $tag)
-                        <a href="{{ $tag->url }}" class="me-0">{{ $tag->name }}</a>@if (!$loop->last), @endif
-                    @endforeach
-                </span>
-            @endif
         </div>
     </header>
     <div class="subject__content">
