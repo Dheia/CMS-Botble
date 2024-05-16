@@ -262,9 +262,9 @@ class HookServiceProvider extends ServiceProvider
     public function renderCollectionPage(string|null $content, Page $page): string|null
     {
         if ($page->getKey() == $this->getCollectionPageId()) {
-            $view = 'plugins/collection::themes.loop';
+            $view = 'plugins/collection::themes.subject_loop';
 
-            if (view()->exists($viewPath = Theme::getThemeNamespace() . '::views.loop')) {
+            if (view()->exists($viewPath = Theme::getThemeNamespace() . '::views.subject_loop')) {
                 $view = $viewPath;
             }
 

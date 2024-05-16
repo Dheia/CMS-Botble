@@ -129,7 +129,7 @@
                 </div>
                 <div class="clearfix"></div>
             </div>
-            @if (is_plugin_active('blog')))
+            @if (is_plugin_active('blog'))
                 <div class="super-search hide" data-search-url="{{ route('public.ajax.search') }}">
                     <form class="quick-search" action="{{ route('public.search') }}">
                         <input type="text" name="q" placeholder="{{ __('Type to search...') }}" class="form-control search-input" autocomplete="off">
