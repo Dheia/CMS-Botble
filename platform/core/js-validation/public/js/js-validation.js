@@ -3267,7 +3267,7 @@ $.extend(true, laravelValidation, {
             var newResponse = ['Whoops, looks like something went wrong.']
             if ('responseText' in response) {
                 var errorMsg = response.responseText.match(/<h1\s*>(.*)<\/h1\s*>/i)
-                if ($.isArray(errorMsg)) {
+                if (Array.isArray(errorMsg)) {
                     newResponse = [errorMsg[1]]
                 }
             }
