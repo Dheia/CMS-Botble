@@ -42,7 +42,7 @@ class Subject extends BaseModel
     protected static function booted(): void
     {
         static::deleted(function (Subject $subject) {
-            $subject->taxon()->detach();
+            $subject->taxons()->detach();
         });
     }
 
@@ -52,9 +52,9 @@ class Subject extends BaseModel
         'description' => SafeContent::class,
     ];
 
-    public function taxon(): BelongsToMany
+    public function taxons(): BelongsToMany
     {
-        return $this->belongsToMany(Taxon::class, 'subject_taxon');
+        return $this->belongsToMany(Taxon::class, 'subject_taxons');
     }
 
     public function author(): MorphTo
@@ -65,9 +65,9 @@ class Subject extends BaseModel
     protected function firstTaxon(): Attribute
     {
         return Attribute::get(function (): ?Taxon {
-            $this->loadMissing('taxon');
+            $this->loadMissing('taxons');
 
-            return $this->taxon->first();
+            return $this->taxons->first();
         });
     }
 
