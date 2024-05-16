@@ -41,7 +41,7 @@ class CollectionService
                  */
                 $subject = Subject::query()
                     ->where($condition)
-                    ->with(['taxon', 'slugable', 'taxon.slugable'])
+                    ->with(['taxons', 'slugable', 'taxons.slugable'])
                     ->firstOrFail();
 
                 Helper::handleViewCount($subject, 'viewed_subject');
@@ -75,7 +75,7 @@ class CollectionService
                     shortcode()->getCompiler()->setEditLink(route('subjects.edit', $subject->id), 'subjects.edit');
                 }
 
-                $taxon = $subject->taxon->sortByDesc('id')->first();
+                $taxon = $subject->taxons->sortByDesc('id')->first();
                 if ($taxon) {
                     if ($taxon->parents->isNotEmpty()) {
                         foreach ($taxon->parents as $parentTaxon) {
@@ -120,10 +120,10 @@ class CollectionService
 
                 if (function_exists('admin_bar')) {
                     AdminBar::registerLink(
-                        trans('plugins/collection::taxon.edit_this_taxon'),
-                        route('taxon.edit', $taxon->getKey()),
+                        trans('plugins/collection::taxons.edit_this_taxon'),
+                        route('taxons.edit', $taxon->getKey()),
                         null,
-                        'taxon.edit'
+                        'taxons.edit'
                     );
                 }
 

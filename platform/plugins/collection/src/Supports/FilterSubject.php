@@ -25,8 +25,8 @@ class FilterSubject
             'order' => isset($request['order']) && in_array($request['order'], ['asc', 'desc']) ? $request['order'] : 'desc',
             'order_by' => $request['order_by'] ?? 'updated_at',
             'status' => BaseStatusEnum::PUBLISHED,
-            'taxon' => $request['taxon'] ?? null,
-            'taxon_exclude' => $request['taxon_exclude'] ?? null,
+            'taxons' => $request['taxons'] ?? null,
+            'taxons_exclude' => $request['taxons_exclude'] ?? null,
             'featured' => $request['featured'] ?? null,
         ];
     }

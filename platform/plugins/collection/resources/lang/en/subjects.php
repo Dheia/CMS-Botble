@@ -7,7 +7,7 @@ return [
         'name_placeholder' => 'Subject\'s name (Maximum :c characters)',
         'description' => 'Description',
         'description_placeholder' => 'Short description for subject (Maximum :c characters)',
-        'taxon' => 'Taxon',
+        'taxons' => 'Taxons',
         'content' => 'Content',
         'is_featured' => 'Is featured?',
         'note' => 'Note content',
@@ -21,8 +21,7 @@ return [
     'no_new_subject_now' => 'There is no new subject now!',
     'menu_name' => 'Subjects',
     'widget_subjects_recent' => 'Recent Subjects',
+    'taxons' => 'Taxons',
     'taxon' => 'Taxon',
-    'categories' => 'Categories',
-    'category' => 'Category',
     'author' => 'Author',
 ];

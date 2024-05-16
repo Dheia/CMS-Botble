@@ -19,7 +19,7 @@ class ListSubjectResource extends JsonResource
             'slug' => $this->slug,
             'description' => $this->description,
             'image' => $this->image ? RvMedia::url($this->image) : null,
-            'taxon' => TaxonResource::collection($this->taxon),
+            'taxons' => TaxonResource::collection($this->taxons),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

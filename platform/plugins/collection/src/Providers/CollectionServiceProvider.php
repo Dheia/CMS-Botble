@@ -44,7 +44,7 @@ class CollectionServiceProvider extends ServiceProvider
     public function boot(): void
     {
         SlugHelper::registerModule(Subject::class, 'Collection Subjects');
-        SlugHelper::registerModule(Taxon::class, 'Collection Taxon');
+        SlugHelper::registerModule(Taxon::class, 'Collection Taxons');
         SlugHelper::setPrefix(Subject::class, null, true);
         SlugHelper::setPrefix(Taxon::class, null, true);
 
@@ -66,7 +66,7 @@ class CollectionServiceProvider extends ServiceProvider
 
         $this->app['events']->listen(ThemeRoutingBeforeEvent::class, function () {
             SiteMapManager::registerKey([
-                'collection-taxon',
+                'collection-taxons',
                 'collection-subjects-((?:19|20|21|22)\d{2})-(0?[1-9]|1[012])',
             ]);
         });
@@ -87,11 +87,11 @@ class CollectionServiceProvider extends ServiceProvider
                     'route' => 'subjects.index',
                 ])
                 ->registerItem([
-                    'id' => 'cms-plugins-collection-taxon',
+                    'id' => 'cms-plugins-collection-taxons',
                     'priority' => 2,
                     'parent_id' => 'cms-plugins-collection',
-                    'name' => 'plugins/collection::taxon.menu_name',
-                    'route' => 'taxon.index',
+                    'name' => 'plugins/collection::taxons.menu_name',
+                    'route' => 'taxons.index',
                 ]);
         });
 

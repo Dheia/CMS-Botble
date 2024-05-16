@@ -9,10 +9,10 @@ Route::group([
 ], function () {
     Route::get('search', 'SubjectController@getSearch');
     Route::get('subjects', 'SubjectController@index');
-    Route::get('taxon', 'TaxonController@index');
+    Route::get('taxons', 'TaxonController@index');
 
     Route::get('subjects/filters', 'SubjectController@getFilters');
     Route::get('subjects/{slug}', 'SubjectController@findBySlug');
-    Route::get('taxon/filters', 'TaxonController@getFilters');
-    Route::get('taxon/{slug}', 'TaxonController@findBySlug');
+    Route::get('taxons/filters', 'TaxonController@getFilters');
+    Route::get('taxons/{slug}', 'TaxonController@findBySlug');
 });

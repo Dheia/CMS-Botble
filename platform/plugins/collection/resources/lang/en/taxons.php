@@ -2,9 +2,9 @@
 
 return [
     'create' => 'Create new taxon',
-    'menu' => 'Taxon',
+    'menu' => 'Taxons',
     'edit_this_taxon' => 'Edit this taxon',
-    'menu_name' => 'Taxon',
+    'menu_name' => 'Taxons',
     'none' => 'None',
     'total_subjects' => 'Total subjects: :total',
 ];

@@ -23,7 +23,7 @@ class TaxonRepository extends RepositoriesAbstract implements TaxonInterface
         return $this->applyBeforeExecuteQuery($data)->get();
     }
 
-    public function getFeaturedTaxon(int|null $limit, array $with = []): Collection
+    public function getFeaturedTaxons(int|null $limit, array $with = []): Collection
     {
         $data = $this->model
             ->with(array_merge(['slugable'], $with))
@@ -44,7 +44,7 @@ class TaxonRepository extends RepositoriesAbstract implements TaxonInterface
         return $this->applyBeforeExecuteQuery($data)->get();
     }
 
-    public function getAllTaxon(array $condition = [], array $with = []): Collection
+    public function getAllTaxons(array $condition = [], array $with = []): Collection
     {
         $data = $this->model->with('slugable');
         if (! empty($condition)) {
@@ -73,7 +73,7 @@ class TaxonRepository extends RepositoriesAbstract implements TaxonInterface
         return $this->applyBeforeExecuteQuery($data, true)->first();
     }
 
-    public function getTaxon(array $select, array $orderBy, array $conditions = ['status' => BaseStatusEnum::PUBLISHED]): Collection
+    public function getTaxons(array $select, array $orderBy, array $conditions = ['status' => BaseStatusEnum::PUBLISHED]): Collection
     {
         $data = $this->model
             ->with('slugable')
@@ -116,7 +116,7 @@ class TaxonRepository extends RepositoriesAbstract implements TaxonInterface
         return array_unique($result);
     }
 
-    public function getAllTaxonWithChildren(array $condition = [], array $with = [], array $select = ['*']): Collection
+    public function getAllTaxonsWithChildren(array $condition = [], array $with = [], array $select = ['*']): Collection
     {
         $data = $this->model
             ->where($condition)
@@ -137,7 +137,7 @@ class TaxonRepository extends RepositoriesAbstract implements TaxonInterface
         return $this->applyBeforeExecuteQuery($data)->paginate((int)$filters['per_page']);
     }
 
-    public function getPopularTaxon(int $limit, array $with = ['slugable'], array $withCount = ['subjects']): Collection
+    public function getPopularTaxons(int $limit, array $with = ['slugable'], array $withCount = ['subjects']): Collection
     {
         $data = $this->model
             ->with($with)

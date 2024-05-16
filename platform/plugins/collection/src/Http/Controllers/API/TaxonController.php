@@ -15,7 +15,7 @@ use Illuminate\Http\Request;
 class TaxonController extends BaseController
 {
     /**
-     * List taxon
+     * List taxons
      *
      * @group Collection
      */
@@ -34,7 +34,7 @@ class TaxonController extends BaseController
     }
 
     /**
-     * Filters taxon
+     * Filters taxons
      *
      * @group Collection
      */

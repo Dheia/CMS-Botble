@@ -15,11 +15,11 @@ class Plugin extends PluginOperationAbstract
     public static function remove(): void
     {
         Schema::disableForeignKeyConstraints();
-        Schema::dropIfExists('subject_taxon');
+        Schema::dropIfExists('subject_taxons');
         Schema::dropIfExists('subjects');
-        Schema::dropIfExists('taxon');
+        Schema::dropIfExists('taxons');
         Schema::dropIfExists('subjects_translations');
-        Schema::dropIfExists('taxon_translations');
+        Schema::dropIfExists('taxons_translations');
 
         Widget::query()
             ->where('widget_id', 'widget_subjects_recent')

@@ -19,7 +19,7 @@ class Taxon extends BaseModel implements HasTreeCategoryContract
 {
     use HasTreeCategory;
 
-    protected $table = 'taxon';
+    protected $table = 'taxons';
 
     protected $fillable = [
         'name',
@@ -53,7 +53,7 @@ class Taxon extends BaseModel implements HasTreeCategoryContract
 
     public function subjects(): BelongsToMany
     {
-        return $this->belongsToMany(Subject::class, 'subject_taxon')->with('slugable');
+        return $this->belongsToMany(Subject::class, 'subject_taxons')->with('slugable');
     }
 
     public function parent(): BelongsTo
@@ -95,7 +95,7 @@ class Taxon extends BaseModel implements HasTreeCategoryContract
         return Attribute::get(function (): HtmlString {
             return Html::tag('span', sprintf('(%s)', $this->subjects_count), [
                 'data-bs-toggle' => 'tooltip',
-                'data-bs-original-title' => trans('plugins/collection::taxon.total_subjects', ['total' => $this->subjects_count]),
+                'data-bs-original-title' => trans('plugins/collection::taxons.total_subjects', ['total' => $this->subjects_count]),
             ]);
         });
     }

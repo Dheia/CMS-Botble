@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 trait HasCollectionSeeder
 {
-    protected function createCollectionTaxons(array $taxon, bool $truncate = true): void
+    protected function createCollectionTaxons(array $taxons, bool $truncate = true): void
     {
         if ($truncate) {
             Taxon::query()->truncate();
@@ -19,7 +19,7 @@ trait HasCollectionSeeder
 
         $faker = $this->fake();
 
-        foreach ($taxon as $index => $item) {
+        foreach ($taxons as $index => $item) {
             $item['description'] ??= $faker->text();
             $item['is_featured'] ??= ! isset($item['parent_id']) && $index != 0;
             $item['author_id'] ??= 1;
@@ -43,7 +43,7 @@ trait HasCollectionSeeder
     {
         if ($truncate) {
             Subject::query()->truncate();
-            DB::table('subject_taxon')->truncate();
+            DB::table('subject_taxons')->truncate();
         }
 
         $faker = $this->fake();
@@ -64,7 +64,7 @@ trait HasCollectionSeeder
              */
             $subject = Subject::query()->create(Arr::except($item, ['metadata']));
 
-            $subject->taxon()->sync(array_unique([
+            $subject->taxons()->sync(array_unique([
                 $taxonIds->random(),
                 $taxonIds->random(),
             ]));

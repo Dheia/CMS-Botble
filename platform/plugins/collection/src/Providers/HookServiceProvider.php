@@ -75,7 +75,7 @@ class HookServiceProvider extends ServiceProvider
                 ->setAdminConfig(
                     $shortcodeName,
                     function (array $attributes) {
-                        $taxon = Taxon::query()
+                        $taxons = Taxon::query()
                             ->wherePublished()
                             ->pluck('name', 'id')
                             ->all();
@@ -91,14 +91,14 @@ class HookServiceProvider extends ServiceProvider
                                 'taxon_ids[]',
                                 SelectField::class,
                                 SelectFieldOption::make()
-                                    ->label(__('Select taxon'))
-                                    ->choices($taxon)
-                                    ->when(Arr::get($attributes, 'taxon_ids'), function (SelectFieldOption $option, $taxonIds) {
-                                        $option->selected(explode(',', $taxonIds));
+                                    ->label(__('Select taxons'))
+                                    ->choices($taxons)
+                                    ->when(Arr::get($attributes, 'taxon_ids'), function (SelectFieldOption $option, $taxonsIds) {
+                                        $option->selected(explode(',', $taxonsIds));
                                     })
                                     ->multiple()
                                     ->searchable()
-                                    ->helperText(__('Leave taxon empty if you want to show subjects from all taxon.'))
+                                    ->helperText(__('Leave taxons empty if you want to show subjects from all taxons.'))
                                     ->toArray()
                             );
                     }
@@ -204,8 +204,8 @@ class HookServiceProvider extends ServiceProvider
 
     public function registerMenuOptions(): void
     {
-        if (Auth::guard()->user()->hasPermission('taxon.index')) {
-            Menu::registerMenuOptions(Taxon::class, trans('plugins/collection::taxon.menu'));
+        if (Auth::guard()->user()->hasPermission('taxons.index')) {
+            Menu::registerMenuOptions(Taxon::class, trans('plugins/collection::taxons.menu'));
         }
     }
 
@@ -243,8 +243,8 @@ class HookServiceProvider extends ServiceProvider
             ->orderByDesc('created_at')
             ->with('slugable')
             ->when(! empty($taxonIds), function ($query) use ($taxonIds) {
-                $query->whereHas('taxon', function ($query) use ($taxonIds) {
-                    $query->whereIn('taxon.id', $taxonIds);
+                $query->whereHas('taxons', function ($query) use ($taxonIds) {
+                    $query->whereIn('taxons.id', $taxonIds);
                 });
             })
             ->paginate((int)$shortcode->paginate ?: 12);

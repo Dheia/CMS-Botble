@@ -11,13 +11,13 @@ use Botble\Widget\AbstractWidget;
 use Botble\Widget\Forms\WidgetForm;
 use Illuminate\Support\Collection;
 
-class Taxon extends AbstractWidget
+class Taxons extends AbstractWidget
 {
     public function __construct()
     {
         parent::__construct([
-            'name' => __('Collection Taxon'),
-            'description' => __('Widget display collection taxon'),
+            'name' => __('Collection Taxons'),
+            'description' => __('Widget display collection taxons'),
             'number_display' => 10,
         ]);
     }
@@ -28,14 +28,14 @@ class Taxon extends AbstractWidget
             return [];
         }
 
-        $taxon = Taxon::query()
+        $taxons = Taxon::query()
             ->wherePublished()
             ->with('slugable')
             ->take((int)$this->getConfig('number_display') ?: 10)
             ->get();
 
         return [
-            'taxon' => $taxon,
+            'taxons' => $taxons,
         ];
     }
 
@@ -51,7 +51,7 @@ class Taxon extends AbstractWidget
                 'number_display',
                 NumberField::class,
                 NumberFieldOption::make()
-                    ->label(__('Number taxon to display'))
+                    ->label(__('Number taxons to display'))
                     ->toArray()
             );
     }

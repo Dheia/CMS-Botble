@@ -10,6 +10,6 @@ class StoreTaxonService extends StoreTaxonServiceAbstract
 {
     public function execute(Request $request, Subject $subject): void
     {
-        $subject->taxon()->sync($request->input('taxon', []));
+        $subject->taxons()->sync($request->input('taxons', []));
     }
 }

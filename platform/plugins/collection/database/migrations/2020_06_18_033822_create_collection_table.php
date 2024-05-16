@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Schema;
 return new class () extends Migration {
     public function up(): void
     {
-        Schema::create('taxon', function (Blueprint $table) {
+        Schema::create('taxons', function (Blueprint $table) {
             $table->id();
             $table->string('name', 120);
             $table->foreignId('parent_id')->default(0);
@@ -38,7 +38,7 @@ return new class () extends Migration {
             $table->timestamps();
         });
 
-        Schema::create('subject_taxon', function (Blueprint $table) {
+        Schema::create('subject_taxons', function (Blueprint $table) {
             $table->foreignId('taxon_id')->index();
             $table->foreignId('subject_id')->index();
         });
@@ -47,8 +47,8 @@ return new class () extends Migration {
     public function down(): void
     {
         Schema::disableForeignKeyConstraints();
-        Schema::dropIfExists('subject_taxon');
+        Schema::dropIfExists('subject_taxons');
         Schema::dropIfExists('subjects');
-        Schema::dropIfExists('taxon');
+        Schema::dropIfExists('taxons');
     }
 };

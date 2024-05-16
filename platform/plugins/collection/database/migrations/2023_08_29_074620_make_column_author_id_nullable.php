@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class () extends Migration {
     public function up(): void
     {
-        Schema::table('taxon', function (Blueprint $table) {
+        Schema::table('taxons', function (Blueprint $table) {
             $table->foreignId('author_id')->nullable()->change();
         });
 

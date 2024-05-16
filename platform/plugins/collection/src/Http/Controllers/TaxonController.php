@@ -23,24 +23,24 @@ class TaxonController extends BaseController
     {
         return parent::breadcrumb()
             ->add(trans('plugins/collection::base.menu_name'))
-            ->add(trans('plugins/collection::taxon.menu'), route('taxon.index'));
+            ->add(trans('plugins/collection::taxons.menu'), route('taxons.index'));
     }
 
     public function index(Request $request)
     {
-        $this->pageTitle(trans('plugins/collection::taxon.menu'));
+        $this->pageTitle(trans('plugins/collection::taxons.menu'));
 
-        $taxon = Taxon::query()
+        $taxons = Taxon::query()
             ->orderByDesc('is_default')
             ->orderBy('order')
             ->orderBy('created_at')
             ->with('slugable')
             ->withCount('subjects');
 
-        $taxon = RepositoryHelper::applyBeforeExecuteQuery($taxon, new Taxon())->get();
+        $taxons = RepositoryHelper::applyBeforeExecuteQuery($taxons, new Taxon())->get();
 
         if ($request->ajax()) {
-            $data = view('core/base::forms.partials.tree-taxon', $this->getOptions(compact('taxon')))
+            $data = view('core/base::forms.partials.tree-categories', $this->getOptions(compact('taxons')))
                 ->render();
 
             return $this
@@ -52,14 +52,14 @@ class TaxonController extends BaseController
             ->addScriptsDirectly('vendor/core/core/base/js/tree-category.js');
 
         $form = TaxonForm::create(['template' => 'core/base::forms.form-tree-category']);
-        $form = $this->setFormOptions($form, null, compact('taxon'));
+        $form = $this->setFormOptions($form, null, compact('taxons'));
 
         return $form->renderForm();
     }
 
     public function create(Request $request)
     {
-        $this->pageTitle(trans('plugins/collection::taxon.create'));
+        $this->pageTitle(trans('plugins/collection::taxons.create'));
 
         if ($request->ajax()) {
             return $this
@@ -106,8 +106,8 @@ class TaxonController extends BaseController
         }
 
         return $response
-            ->setPreviousRoute('taxon.index')
-            ->setNextRoute('taxon.edit', $taxon->getKey())
+            ->setPreviousRoute('taxons.index')
+            ->setNextRoute('taxons.edit', $taxon->getKey())
             ->withCreatedSuccessMessage();
     }
 
@@ -148,7 +148,7 @@ class TaxonController extends BaseController
         }
 
         return $response
-            ->setPreviousRoute('taxon.index')
+            ->setPreviousRoute('taxons.index')
             ->withUpdatedSuccessMessage();
     }
 
@@ -184,10 +184,10 @@ class TaxonController extends BaseController
     protected function setFormOptions(FormAbstract $form, ?Taxon $model = null, array $options = []): FormAbstract
     {
         if (! $model) {
-            $form->setUrl(route('taxon.create'));
+            $form->setUrl(route('taxons.create'));
         }
 
-        if (! Auth::guard()->user()->hasPermission('taxon.create') && ! $model) {
+        if (! Auth::guard()->user()->hasPermission('taxons.create') && ! $model) {
             $class = $form->getFormOption('class');
             $form->setFormOption('class', $class . ' d-none');
         }
@@ -200,13 +200,13 @@ class TaxonController extends BaseController
     protected function getOptions(array $options = []): array
     {
         return array_merge([
-            'canCreate' => Auth::guard()->user()->hasPermission('taxon.create'),
-            'canEdit' => Auth::guard()->user()->hasPermission('taxon.edit'),
-            'canDelete' => Auth::guard()->user()->hasPermission('taxon.destroy'),
-            'createRoute' => 'taxon.create',
-            'editRoute' => 'taxon.edit',
-            'deleteRoute' => 'taxon.destroy',
-            'updateTreeRoute' => 'taxon.update-tree',
+            'canCreate' => Auth::guard()->user()->hasPermission('taxons.create'),
+            'canEdit' => Auth::guard()->user()->hasPermission('taxons.edit'),
+            'canDelete' => Auth::guard()->user()->hasPermission('taxons.destroy'),
+            'createRoute' => 'taxons.create',
+            'editRoute' => 'taxons.edit',
+            'deleteRoute' => 'taxons.destroy',
+            'updateTreeRoute' => 'taxons.update-tree',
         ], $options);
     }
 }

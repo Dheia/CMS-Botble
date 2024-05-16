@@ -52,8 +52,8 @@ class SubjectRepository extends RepositoriesAbstract implements SubjectInterface
             ->limit($limit)
             ->with('slugable')
             ->orderByDesc('created_at')
-            ->whereHas('taxon', function (Builder $query) use ($id) {
-                $query->whereIn('taxon.id', $this->getRelatedTaxonIds($id));
+            ->whereHas('taxons', function (Builder $query) use ($id) {
+                $query->whereIn('taxons.id', $this->getRelatedTaxonIds($id));
             });
 
         return $this->applyBeforeExecuteQuery($data)->get();
@@ -68,7 +68,7 @@ class SubjectRepository extends RepositoriesAbstract implements SubjectInterface
         }
 
         try {
-            return $model->taxon()->allRelatedIds()->toArray();
+            return $model->taxons()->allRelatedIds()->toArray();
         } catch (Exception) {
             return [];
         }
@@ -81,8 +81,8 @@ class SubjectRepository extends RepositoriesAbstract implements SubjectInterface
     ): Collection|LengthAwarePaginator {
         $data = $this->model
             ->wherePublished()
-            ->whereHas('taxon', function (Builder $query) use ($taxonId) {
-                $query->whereIn('taxon.id', array_filter((array)$taxonId));
+            ->whereHas('taxons', function (Builder $query) use ($taxonId) {
+                $query->whereIn('taxons.id', array_filter((array)$taxonId));
             })
             ->select('*')
             ->distinct()
@@ -117,14 +117,27 @@ class SubjectRepository extends RepositoriesAbstract implements SubjectInterface
         return $this->applyBeforeExecuteQuery($data)->get();
     }
 
+    // public function getByTag(int|string $tag, int $paginate = 12): Collection|LengthAwarePaginator
+    // {
+    //     $data = $this->model
+    //         ->with(['slugable', 'taxons', 'taxons.slugable', 'author'])
+    //         ->wherePublished()
+    //         ->whereHas('tags', function (Builder $query) use ($tag) {
+    //             $query->where('tags.id', $tag);
+    //         })
+    //         ->orderByDesc('created_at');
+
+    //     return $this->applyBeforeExecuteQuery($data)->paginate($paginate);
+    // }
+
     public function getRecentSubjects(int $limit = 5, int|string $taxonId = 0): Collection
     {
         $data = $this->model->wherePublished();
 
         if ($taxonId != 0) {
             $data = $data
-                ->whereHas('taxon', function (Builder $query) use ($taxonId) {
-                    $query->where('taxon.id', $taxonId);
+                ->whereHas('taxons', function (Builder $query) use ($taxonId) {
+                    $query->where('taxons.id', $taxonId);
                 });
         }
 
@@ -194,18 +207,18 @@ class SubjectRepository extends RepositoriesAbstract implements SubjectInterface
     {
         $data = $this->originalModel;
 
-        if ($filters['taxon'] !== null) {
-            $taxon = array_filter((array)$filters['taxon']);
+        if ($filters['taxons'] !== null) {
+            $taxons = array_filter((array)$filters['taxons']);
 
-            $data = $data->whereHas('taxon', function (Builder $query) use ($taxon) {
-                $query->whereIn('taxon.id', $taxon);
+            $data = $data->whereHas('taxons', function (Builder $query) use ($taxons) {
+                $query->whereIn('taxons.id', $taxons);
             });
         }
 
-        if ($filters['taxon_exclude'] !== null) {
+        if ($filters['taxons_exclude'] !== null) {
             $data = $data
-                ->whereHas('taxon', function (Builder $query) use ($filters) {
-                    $query->whereNotIn('taxon.id', array_filter((array)$filters['taxon_exclude']));
+                ->whereHas('taxons', function (Builder $query) use ($filters) {
+                    $query->whereNotIn('taxons.id', array_filter((array)$filters['taxons_exclude']));
                 });
         }
 

@@ -14,15 +14,15 @@ class RenderingSiteMapListener
     {
         if ($key = $event->key) {
             switch ($key) {
-                case 'collection-taxon':
-                    $taxon = Taxon::query()
+                case 'collection-taxons':
+                    $taxons = Taxon::query()
                         ->with('slugable')
                         ->wherePublished()
                         ->select(['id', 'name', 'updated_at'])
                         ->orderByDesc('created_at')
                         ->get();
 
-                    foreach ($taxon as $taxon) {
+                    foreach ($taxons as $taxon) {
                         SiteMapManager::add($taxon->url, $taxon->updated_at, '0.8');
                     }
 
@@ -74,7 +74,7 @@ class RenderingSiteMapListener
             ->value('updated_at');
 
         if ($taxonLastUpdated) {
-            SiteMapManager::addSitemap(SiteMapManager::route('collection-taxon'), $taxonLastUpdated);
+            SiteMapManager::addSitemap(SiteMapManager::route('collection-taxons'), $taxonLastUpdated);
         }
     }
 }

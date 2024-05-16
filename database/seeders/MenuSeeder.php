@@ -6,7 +6,7 @@ use Botble\Base\Supports\BaseSeeder;
 use Botble\Blog\Database\Traits\HasBlogSeeder;
 use Botble\Blog\Models\Category;
 use Botble\Collection\Database\Traits\HasCollectionSeeder;
-use Botble\Collection\Models\Taxon as Taxon;
+use Botble\Collection\Models\Taxon;
 use Botble\Menu\Database\Traits\HasMenuSeeder;
 use Botble\Page\Database\Traits\HasPageSeeder;
 use Botble\Page\Models\Page;

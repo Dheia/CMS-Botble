@@ -13,19 +13,19 @@ interface TaxonInterface extends RepositoryInterface
 {
     public function getDataSiteMap(): Collection;
 
-    public function getFeaturedTaxon(int|null $limit, array $with = []): Collection;
+    public function getFeaturedTaxons(int|null $limit, array $with = []): Collection;
 
-    public function getAllTaxon(array $condition = [], array $with = []): Collection;
+    public function getAllTaxons(array $condition = [], array $with = []): Collection;
 
     public function getTaxonById(int|string|null $id): ?Taxon;
 
-    public function getTaxon(array $select, array $orderBy, array $conditions = ['status' => BaseStatusEnum::PUBLISHED]): Collection;
+    public function getTaxons(array $select, array $orderBy, array $conditions = ['status' => BaseStatusEnum::PUBLISHED]): Collection;
 
     public function getAllRelatedChildrenIds(int|string|null|BaseModel $id): array;
 
-    public function getAllTaxonWithChildren(array $condition = [], array $with = [], array $select = ['*']): Collection;
+    public function getAllTaxonsWithChildren(array $condition = [], array $with = [], array $select = ['*']): Collection;
 
     public function getFilters(array $filters): LengthAwarePaginator;
 
-    public function getPopularTaxon(int $limit, array $with = ['slugable'], array $withCount = ['subjects']): Collection;
+    public function getPopularTaxons(int $limit, array $with = ['slugable'], array $withCount = ['subjects']): Collection;
 }

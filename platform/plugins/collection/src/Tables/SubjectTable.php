@@ -48,22 +48,22 @@ class SubjectTable extends TableAbstract
                 IdColumn::make(),
                 ImageColumn::make(),
                 NameColumn::make()->route('subjects.edit'),
-                FormattedColumn::make('taxon_name')
-                    ->title(trans('plugins/collection::subjects.taxon'))
+                FormattedColumn::make('taxons_name')
+                    ->title(trans('plugins/collection::subjects.taxons'))
                     ->width(150)
                     ->orderable(false)
                     ->searchable(false)
                     ->getValueUsing(function (FormattedColumn $column) {
-                        $taxon = $column
+                        $taxons = $column
                             ->getItem()
-                            ->taxon
+                            ->taxons
                             ->sortBy('name')
                             ->map(function (Taxon $taxon) {
-                                return Html::link(route('taxon.edit', $taxon->getKey()), $taxon->name, ['target' => '_blank']);
+                                return Html::link(route('taxons.edit', $taxon->getKey()), $taxon->name, ['target' => '_blank']);
                             })
                             ->all();
 
-                        return implode(', ', $taxon);
+                        return implode(', ', $taxons);
                     })
                     ->withEmptyState(),
                 FormattedColumn::make('author_id')
@@ -106,8 +106,8 @@ class SubjectTable extends TableAbstract
             ->queryUsing(function (Builder $query) {
                 return $query
                     ->with([
-                        'taxon' => function (BelongsToMany $query) {
-                            $query->select(['taxon.id', 'taxon.name']);
+                        'taxons' => function (BelongsToMany $query) {
+                            $query->select(['taxons.id', 'taxons.name']);
                         },
                         'author',
                     ])
@@ -133,7 +133,7 @@ class SubjectTable extends TableAbstract
 
                                 return $query
                                     ->where('name', 'LIKE', $keyword)
-                                    ->orWhereHas('taxon', function ($subQuery) use ($keyword) {
+                                    ->orWhereHas('taxons', function ($subQuery) use ($keyword) {
                                         return $subQuery
                                             ->where('name', 'LIKE', $keyword);
                                     })
@@ -161,8 +161,8 @@ class SubjectTable extends TableAbstract
                     }
 
                     return $query->whereHas(
-                        'taxon',
-                        fn (BaseQueryBuilder $query) => $query->where('taxon.id', $value)
+                        'taxons',
+                        fn (BaseQueryBuilder $query) => $query->where('taxons.id', $value)
                     );
                 }
             )
@@ -171,7 +171,7 @@ class SubjectTable extends TableAbstract
                     return null;
                 }
 
-                $item->taxon()->sync([$inputValue]);
+                $item->taxons()->sync([$inputValue]);
 
                 return $item;
             });

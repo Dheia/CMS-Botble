@@ -14,10 +14,10 @@ return new class () extends Migration {
             $table->index('created_at', 'subjects_created_at_index');
         });
 
-        Schema::table('taxon', function (Blueprint $table) {
-            $table->index('parent_id', 'taxon_parent_id_index');
-            $table->index('status', 'taxon_status_index');
-            $table->index('created_at', 'taxon_created_at_index');
+        Schema::table('taxons', function (Blueprint $table) {
+            $table->index('parent_id', 'taxons_parent_id_index');
+            $table->index('status', 'taxons_status_index');
+            $table->index('created_at', 'taxons_created_at_index');
         });
     }
 
@@ -30,10 +30,10 @@ return new class () extends Migration {
             $table->dropIndex('subjects_created_at_index');
         });
 
-        Schema::table('taxon', function (Blueprint $table) {
-            $table->dropIndex('taxon_parent_id_index');
-            $table->dropIndex('taxon_status_index');
-            $table->dropIndex('taxon_created_at_index');
+        Schema::table('taxons', function (Blueprint $table) {
+            $table->dropIndex('taxons_parent_id_index');
+            $table->dropIndex('taxons_status_index');
+            $table->dropIndex('taxons_created_at_index');
         });
     }
 };

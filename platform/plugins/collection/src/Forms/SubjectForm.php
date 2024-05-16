@@ -60,13 +60,13 @@ class SubjectForm extends FormAbstract
                 }
             })
             ->add(
-                'taxon[]',
+                'taxons[]',
                 TreeCategoryField::class,
                 SelectFieldOption::make()
-                    ->label(trans('plugins/collection::subjects.form.taxon'))
-                    ->choices(get_taxon_with_children())
+                    ->label(trans('plugins/collection::subjects.form.taxons'))
+                    ->choices(get_taxons_with_children())
                     ->when($this->getModel()->id, function (SelectFieldOption $fieldOption) {
-                        return $fieldOption->selected($this->getModel()->taxon()->pluck('taxon_id')->all());
+                        return $fieldOption->selected($this->getModel()->taxons()->pluck('taxon_id')->all());
                     })
                     ->when(! $this->getModel()->id, function (SelectFieldOption $fieldOption) {
                         return $fieldOption

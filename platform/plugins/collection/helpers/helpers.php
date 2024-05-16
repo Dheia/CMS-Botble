@@ -51,7 +51,7 @@ if (! function_exists('get_all_subjects')) {
     function get_all_subjects(
         bool $active = true,
         int $perPage = 12,
-        array $with = ['slugable', 'taxon', 'taxon.slugable', 'author']
+        array $with = ['slugable', 'taxons', 'taxons.slugable', 'author']
     ): Collection|LengthAwarePaginator {
         return app(SubjectInterface::class)->getAllSubjects($perPage, $active, $with);
     }
@@ -64,17 +64,17 @@ if (! function_exists('get_recent_subjects')) {
     }
 }
 
-if (! function_exists('get_featured_taxon')) {
-    function get_featured_taxon(int $limit, array $with = []): Collection|LengthAwarePaginator
+if (! function_exists('get_featured_taxons')) {
+    function get_featured_taxons(int $limit, array $with = []): Collection|LengthAwarePaginator
     {
-        return app(TaxonInterface::class)->getFeaturedTaxon($limit, $with);
+        return app(TaxonInterface::class)->getFeaturedTaxons($limit, $with);
     }
 }
 
-if (! function_exists('get_all_taxon')) {
-    function get_all_taxon(array $condition = [], array $with = []): Collection|LengthAwarePaginator
+if (! function_exists('get_all_taxons')) {
+    function get_all_taxons(array $condition = [], array $with = []): Collection|LengthAwarePaginator
     {
-        return app(TaxonInterface::class)->getAllTaxon($condition, $with);
+        return app(TaxonInterface::class)->getAllTaxons($condition, $with);
     }
 }
 
@@ -85,13 +85,13 @@ if (! function_exists('get_popular_subjects')) {
     }
 }
 
-if (! function_exists('get_popular_taxon')) {
-    function get_popular_taxon(
+if (! function_exists('get_popular_taxons')) {
+    function get_popular_taxons(
         int $limit = 10,
         array $with = ['slugable'],
         array $withCount = ['subjects']
     ): Collection|LengthAwarePaginator {
-        return app(TaxonInterface::class)->getPopularTaxon($limit, $with, $withCount);
+        return app(TaxonInterface::class)->getPopularTaxons($limit, $with, $withCount);
     }
 }
 
@@ -102,14 +102,14 @@ if (! function_exists('get_taxon_by_id')) {
     }
 }
 
-if (! function_exists('get_taxon')) {
-    function get_taxon(array $args = []): array
+if (! function_exists('get_taxons')) {
+    function get_taxons(array $args = []): array
     {
         $indent = Arr::get($args, 'indent', '——');
 
         $repo = app(TaxonInterface::class);
 
-        $taxons = $repo->getTaxon(Arr::get($args, 'select', ['*']), [
+        $taxons = $repo->getTaxons(Arr::get($args, 'select', ['*']), [
             'is_default' => 'DESC',
             'order' => 'ASC',
             'created_at' => 'DESC',
@@ -127,15 +127,15 @@ if (! function_exists('get_taxon')) {
     }
 }
 
-if (! function_exists('get_taxon_with_children')) {
-    function get_taxon_with_children(): array
+if (! function_exists('get_taxons_with_children')) {
+    function get_taxons_with_children(): array
     {
-        $taxon = app(TaxonInterface::class)
-            ->getAllTaxonWithChildren(['status' => BaseStatusEnum::PUBLISHED], [], ['id', 'name', 'parent_id']);
+        $taxons = app(TaxonInterface::class)
+            ->getAllTaxonsWithChildren(['status' => BaseStatusEnum::PUBLISHED], [], ['id', 'name', 'parent_id']);
 
         return app(SortItemsWithChildrenHelper::class)
             ->setChildrenProperty('child_cats')
-            ->setItems($taxon)
+            ->setItems($taxons)
             ->sort();
     }
 }

@@ -19,14 +19,14 @@ return new class () extends Migration {
             });
         }
 
-        if (! Schema::hasTable('taxon_translations')) {
-            Schema::create('taxon_translations', function (Blueprint $table) {
+        if (! Schema::hasTable('taxons_translations')) {
+            Schema::create('taxons_translations', function (Blueprint $table) {
                 $table->string('lang_code', 20);
-                $table->foreignId('taxon_id');
+                $table->foreignId('taxons_id');
                 $table->string('name')->nullable();
                 $table->string('description', 400)->nullable();
 
-                $table->primary(['lang_code', 'taxon_id'], 'taxon_translations_primary');
+                $table->primary(['lang_code', 'taxons_id'], 'taxons_translations_primary');
             });
         }
     }
