@@ -7,7 +7,7 @@ use Botble\Base\Facades\Assets;
 use Botble\Base\Forms\FormAbstract;
 use Botble\Base\Http\Actions\DeleteResourceAction;
 use Botble\Base\Http\Controllers\BaseController;
-use Botble\Base\Http\Requests\UpdateTreeCategoryRequest;
+use Botble\Base\Http\Requests\UpdateTreeTaxonRequest;
 use Botble\Base\Http\Responses\BaseHttpResponse;
 use Botble\Base\Supports\Breadcrumb;
 use Botble\Base\Supports\RepositoryHelper;
@@ -40,7 +40,7 @@ class TaxonController extends BaseController
         $taxons = RepositoryHelper::applyBeforeExecuteQuery($taxons, new Taxon())->get();
 
         if ($request->ajax()) {
-            $data = view('core/base::forms.partials.tree-categories', $this->getOptions(compact('taxons')))
+            $data = view('core/base::forms.partials.tree-taxons', $this->getOptions(compact('taxons')))
                 ->render();
 
             return $this
@@ -51,7 +51,7 @@ class TaxonController extends BaseController
         Assets::addStylesDirectly('vendor/core/core/base/css/tree-category.css')
             ->addScriptsDirectly('vendor/core/core/base/js/tree-category.js');
 
-        $form = TaxonForm::create(['template' => 'core/base::forms.form-tree-category']);
+        $form = TaxonForm::create(['template' => 'core/base::forms.form-tree-taxon']);
         $form = $this->setFormOptions($form, null, compact('taxons'));
 
         return $form->renderForm();
@@ -157,7 +157,7 @@ class TaxonController extends BaseController
         return DeleteResourceAction::make($taxon);
     }
 
-    public function updateTree(UpdateTreeCategoryRequest $request): BaseHttpResponse
+    public function updateTree(UpdateTreeTaxonRequest $request): BaseHttpResponse
     {
         Taxon::updateTree($request->validated('data'));
 
