@@ -61,6 +61,11 @@
                     <small>{{ __('Posts approved') }}</small>
                     <h3>{{ number_format(auth('member')->user()->posts()->wherePublished()->count()) }}</h3>
                 </div>
+
+                <div class="ps-block--earning-count">
+                    <small>{{ __('Subjects approved') }}</small>
+                    <h3>{{ number_format(auth('member')->user()->subjects()->wherePublished()->count()) }}</h3>
+                </div>
             </div>
             <div class="ps-sidebar__content">
                 <div class="ps-sidebar__center">
