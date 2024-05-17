@@ -16,7 +16,7 @@ use Botble\Base\Forms\Fields\RadioField;
 use Botble\Base\Forms\Fields\SelectField;
 use Botble\Base\Forms\Fields\TextareaField;
 use Botble\Base\Forms\Fields\TextField;
-use Botble\Base\Forms\Fields\TreeCategoryField;
+use Botble\Base\Forms\Fields\TreeTaxonField;
 use Botble\Base\Forms\FormAbstract;
 use Botble\Collection\Http\Requests\SubjectRequest;
 use Botble\Collection\Models\Taxon;
@@ -61,7 +61,7 @@ class SubjectForm extends FormAbstract
             })
             ->add(
                 'taxons[]',
-                TreeCategoryField::class,
+                TreeTaxonField::class,
                 SelectFieldOption::make()
                     ->label(trans('plugins/collection::subjects.form.taxons'))
                     ->choices(get_taxons_with_children())

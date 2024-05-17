@@ -3,11 +3,11 @@
 namespace Botble\Collection\Models;
 
 use Botble\Base\Casts\SafeContent;
-use Botble\Base\Contracts\HasTreeCategory as HasTreeCategoryContract;
+use Botble\Base\Contracts\HasTreeTaxon as HasTreeTaxonContract;
 use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Base\Facades\Html;
 use Botble\Base\Models\BaseModel;
-use Botble\Base\Traits\HasTreeCategory;
+use Botble\Base\Traits\HasTreeTaxon;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -15,9 +15,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use Illuminate\Support\HtmlString;
 
-class Taxon extends BaseModel implements HasTreeCategoryContract
+class Taxon extends BaseModel implements HasTreeTaxonContract
 {
-    use HasTreeCategory;
+    use HasTreeTaxon;
 
     protected $table = 'taxons';
 
