@@ -126,13 +126,6 @@ if (defined('THEME_MODULE_SCREEN_NAME')) {
                 ], function () {
                     Route::resource('', 'SubjectController')->parameters(['' => 'subject']);
                 });
-
-                Route::group(['prefix' => 'ajax/members'], function () {
-                    Route::get('tags/all', [
-                        'as' => 'tags.all',
-                        'uses' => 'SubjectController@getAllTags',
-                    ]);
-                });
             }
         });
     });

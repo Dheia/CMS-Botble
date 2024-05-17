@@ -28,6 +28,7 @@ return [
     'last_name' => 'Last Name',
     'email_placeholder' => 'Ex: example@gmail.com',
     'write_a_post' => 'Write a post',
+    'write_a_subject' => 'Write a subject',
     'phone' => 'Phone',
     'phone_placeholder' => 'Phone',
     'confirmed_at' => 'Confirmed at',

@@ -6,9 +6,7 @@ use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Base\Facades\EmailHandler;
 use Botble\Base\Http\Controllers\BaseController;
 use Botble\Collection\Models\Subject;
-use Botble\Collection\Models\Tag;
 use Botble\Collection\Services\StoreTaxonService;
-use Botble\Collection\Services\StoreTagService;
 use Botble\Media\Facades\RvMedia;
 use Botble\Member\Forms\SubjectForm;
 use Botble\Member\Http\Requests\SubjectRequest;
@@ -33,13 +31,13 @@ class SubjectController extends BaseController
         return SubjectForm::create()->renderForm();
     }
 
-    public function store(SubjectRequest $request, StoreTagService $tagService, StoreTaxonService $taxonService)
+    public function store(SubjectRequest $request, StoreTaxonService $taxonService)
     {
         $this->processRequestData($request);
 
         $subjectForm = SubjectForm::create();
         $subjectForm
-            ->saving(function (SubjectForm $form) use ($taxonService, $tagService, $request) {
+            ->saving(function (SubjectForm $form) use ($taxonService, $request) {
                 $subject = $form->getModel();
                 $subject
                     ->fill([...$request->except('status'),
@@ -54,8 +52,6 @@ class SubjectController extends BaseController
                     'reference_name' => $subject->name,
                     'reference_url' => route('public.member.subjects.edit', $subject->getKey()),
                 ]);
-
-                $tagService->execute($request, $subject);
 
                 $taxonService->execute($request, $subject);
 
@@ -93,7 +89,7 @@ class SubjectController extends BaseController
         return SubjectForm::createFromModel($subject)->renderForm();
     }
 
-    public function update(Subject $subject, SubjectRequest $request, StoreTagService $tagService, StoreTaxonService $taxonService)
+    public function update(Subject $subject, SubjectRequest $request, StoreTaxonService $taxonService)
     {
         /**
          * @var Subject $subject
@@ -111,7 +107,7 @@ class SubjectController extends BaseController
         $subjectForm = SubjectForm::createFromModel($subject);
 
         $subjectForm
-            ->saving(function (SubjectForm $form) use ($taxonService, $tagService, $request) {
+            ->saving(function (SubjectForm $form) use ($taxonService, $request) {
                 $subject = $form->getModel();
 
                 $subject
@@ -123,8 +119,6 @@ class SubjectController extends BaseController
                     'reference_name' => $subject->name,
                     'reference_url' => route('public.member.subjects.edit', $subject->getKey()),
                 ]);
-
-                $tagService->execute($request, $subject);
 
                 $taxonService->execute($request, $subject);
             });
@@ -188,10 +182,5 @@ class SubjectController extends BaseController
         return $this
             ->httpResponse()
             ->withDeletedSuccessMessage();
-    }
-
-    public function getAllTags()
-    {
-        return Tag::query()->pluck('name')->all();
     }
 }
