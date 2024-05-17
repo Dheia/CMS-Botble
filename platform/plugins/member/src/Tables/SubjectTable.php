@@ -38,13 +38,13 @@ class SubjectTable extends TableAbstract
                 CreatedAtColumn::make(),
                 ImageColumn::make(),
                 NameColumn::make()->route('public.member.subjects.edit'),
-                FormattedColumn::make('taxon_name')
-                    ->title(trans('plugins/collection::subjects.taxon'))
+                FormattedColumn::make('taxons_name')
+                    ->title(trans('plugins/collection::subjects.taxons'))
                     ->width(150)
                     ->orderable(false)
                     ->searchable(false)
                     ->getValueUsing(function (FormattedColumn $column) {
-                        return implode(', ', $column->getItem()->taxon->pluck('name')->all());
+                        return implode(', ', $column->getItem()->taxons->pluck('name')->all());
                     }),
                 CreatedAtColumn::make(),
                 StatusColumn::make(),
@@ -67,7 +67,7 @@ class SubjectTable extends TableAbstract
             ])
             ->queryUsing(function (EloquentBuilder $query) {
                 return $query
-                    ->with(['taxon'])
+                    ->with(['taxons'])
                     ->select([
                         'id',
                         'name',
@@ -93,8 +93,8 @@ class SubjectTable extends TableAbstract
                     }
 
                     return $query->whereHas(
-                        'taxon',
-                        fn (BaseQueryBuilder $query) => $query->where('taxon.id', $value)
+                        'taxons',
+                        fn (BaseQueryBuilder $query) => $query->where('taxons.id', $value)
                     );
                 }
             );
