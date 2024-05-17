@@ -6,17 +6,17 @@ return [
     'logo' => '/vendor/core/core/base/images/logo.png',
     'favicon' => '/vendor/core/core/base/images/favicon.png',
     'editor' => [
-        'ckeditor' => [
-            'js' => [
-                '/vendor/core/core/base/libraries/ckeditor/ckeditor.js',
-            ],
-        ],
         'tinymce' => [
             'js' => [
                 '/vendor/core/core/base/libraries/tinymce/tinymce.min.js',
             ],
         ],
-        'primary' => env('PRIMARY_EDITOR', 'ckeditor'),
+        'ckeditor' => [
+            'js' => [
+                '/vendor/core/core/base/libraries/ckeditor/ckeditor.js',
+            ],
+        ],
+        'primary' => env('PRIMARY_EDITOR', 'tinymce'),
     ],
     'error_reporting' => [
         'to' => null,

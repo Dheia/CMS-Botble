@@ -14,10 +14,7 @@
     :disabled="!$manageLicense"
 >
     <x-slot:helper-text>
-        If your profile page is <a
-            href="https://codecanyon.net/user/john-smith"
-            rel="nofollow"
-        >https://codecanyon.net/user/john-smith</a>, then your username on Envato is
+        If your profile page is <a href="#" rel="nofollow">xxx</a>, then your username on Envato is
         <strong>john-smith</strong>.
     </x-slot:helper-text>
 </x-core::form.text-input>
@@ -30,10 +27,7 @@
     placeholder="Ex: 10101000-0101-0100-0010-001101000010"
 >
     <x-slot:helper-text>
-        <a
-            href="https://help.market.envato.com/hc/en-us/articles/202822600-Where-Is-My-Purchase-Code"
-            target="_blank"
-        >What's this?</a>
+        <a href="#" target="_blank">What's this?</a>
     </x-slot:helper-text>
 </x-core::form.text-input>
 
@@ -45,7 +39,7 @@
     Confirm that, according to the Envato License Terms, each license entitles one person for a single
     project. Creating multiple unregistered installations is a copyright violation.
     <a
-        href="https://codecanyon.net/licenses/standard"
+        href=""
         target="_blank"
         rel="nofollow"
     >More info</a>.

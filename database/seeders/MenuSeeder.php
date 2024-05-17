@@ -50,11 +50,6 @@ class MenuSeeder extends BaseSeeder
                         'url' => '/',
                     ],
                     [
-                        'title' => 'Purchase',
-                        'url' => 'https://botble.com/go/download-cms',
-                        'target' => '_blank',
-                    ],
-                    [
                         'title' => 'Blog',
                         'reference_id' => $this->getPageId('Blog'),
                         'reference_type' => Page::class,
