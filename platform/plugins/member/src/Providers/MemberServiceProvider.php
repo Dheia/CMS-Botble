@@ -118,7 +118,7 @@ class MemberServiceProvider extends ServiceProvider
                     'priority' => 3,
                     'name' => 'plugins/collection::member.subjects',
                     'url' => fn () => route('public.member.subjects.index'),
-                    'icon' => 'ti ti-article',
+                    'icon' => 'ti ti-folder-star',
                 ])
                 ->registerItem([
                     'id' => 'cms-member-settings',

@@ -77,7 +77,7 @@ class CollectionServiceProvider extends ServiceProvider
                     'id' => 'cms-plugins-collection',
                     'priority' => 3,
                     'name' => 'plugins/collection::base.menu_name',
-                    'icon' => 'ti ti-article',
+                    'icon' => 'ti ti-folder-star',
                 ])
                 ->registerItem([
                     'id' => 'cms-plugins-collection-subject',
