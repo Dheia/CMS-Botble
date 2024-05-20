@@ -16,14 +16,14 @@ class CollectionSeeder extends BaseSeeder
         $this->uploadFiles('news');
 
         $taxons = [
-            ['name' => 'Artificial Intelligence'],
+            ['name' => 'AI'],
             ['name' => 'Cybersecurity'],
             ['name' => 'Blockchain Technology'],
-            ['name' => '5G and Connectivity'],
-            ['name' => 'Augmented Reality (AR)'],
-            ['name' => 'Green Technology'],
+            ['name' => '5G'],
+            ['name' => 'AR'],
+            ['name' => 'Green Energy'],
             ['name' => 'Quantum Computing'],
-            ['name' => 'Edge Computing'],
+            ['name' => 'Big Data'],
         ];
 
         $this->createCollectionTaxons($taxons);
