@@ -18,7 +18,7 @@ class CollectionSeeder extends BaseSeeder
         $taxons = [
             ['name' => 'AI'],
             ['name' => 'Cybersecurity'],
-            ['name' => 'Blockchain Technology'],
+            ['name' => 'Blockchain'],
             ['name' => '5G'],
             ['name' => 'AR'],
             ['name' => 'Green Energy'],
