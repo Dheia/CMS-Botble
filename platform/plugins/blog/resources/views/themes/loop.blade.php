@@ -1,7 +1,8 @@
 @foreach ($posts as $post)
     <div>
         <article>
-            <div><a href="{{ $post->url }}"></a>
+            <div>
+                <a href="{{ $post->url }}"></a>
                 <img
                     src="{{ RvMedia::getImageUrl($post->image, null, false, RvMedia::getDefaultImage()) }}"
                     alt="{{ $post->name }}"

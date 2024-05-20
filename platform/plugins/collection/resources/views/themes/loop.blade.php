@@ -1,6 +1,7 @@
 @foreach ($subjects as $subject)
     <article>
-        <div><a href="{{ $subject->url }}"></a>
+        <div>
+            <a href="{{ $subject->url }}"></a>
             <img
                 src="{{ RvMedia::getImageUrl($subject->image, null, false, RvMedia::getDefaultImage()) }}"
                 alt="{{ $subject->name }}"
