@@ -2,15 +2,18 @@
     @foreach ($subjects as $subject)
         <article>
             <div>
-                <a href="{{ $subject->url }}"><img
+                <a href="{{ $subject->url }}">
+                    <img
                         src="{{ RvMedia::getImageUrl($subject->image, null, false, RvMedia::getDefaultImage()) }}"
                         alt="{{ $subject->name }}"
-                    ></a>
+                    >
+                </a>
             </div>
             <div>
                 <header>
                     <h3><a href="{{ $subject->url }}">{{ $subject->name }}</a></h3>
-                    <div><span>{{ $subject->created_at->format('M d, Y') }}</span><span>{{ $subject->author->name }}</span> -
+                    <div>
+                        <span>{{ $subject->created_at->format('M d, Y') }}</span><span>{{ $subject->author->name }}</span> -
                         {{ __('Taxons') }}:
                         @foreach ($subject->taxons as $taxon)
                             <a href="{{ $taxon->url }}">{{ $taxon->name }}</a>
