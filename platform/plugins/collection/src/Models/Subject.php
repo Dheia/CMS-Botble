@@ -29,6 +29,7 @@ class Subject extends BaseModel
 
     protected $fillable = [
         'name',
+        'link',
         'description',
         'content',
         'image',
@@ -49,6 +50,7 @@ class Subject extends BaseModel
     protected $casts = [
         'status' => BaseStatusEnum::class,
         'name' => SafeContent::class,
+        'link' => SafeContent::class,
         'description' => SafeContent::class,
     ];
 

@@ -28,6 +28,7 @@ return [
     'description_placeholder' => 'Short description',
     'email_placeholder' => 'e.g: example@domain.com',
     'content_placeholder' => 'Write your content',
+    'link_placeholder' => 'Subject link url',
     'parent' => 'Parent',
     'icon' => 'Icon',
     'icon_placeholder' => 'Ex: ti ti-home',
