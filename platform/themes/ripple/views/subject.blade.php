@@ -45,6 +45,6 @@
             </div>
         </footer>
     @endif
-    <br>
+
     {!! apply_filters(BASE_FILTER_PUBLIC_COMMENT_AREA, null, $subject) !!}
 </article>
