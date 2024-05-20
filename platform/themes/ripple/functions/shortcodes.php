@@ -240,7 +240,7 @@ app('events')->listen(RouteMatched::class, function () {
         });
 
         Shortcode::register(
-            'featured-taxon-subjects',
+            'featured-taxons-subjects',
             __('Featured taxon subjects'),
             __('Featured taxon subjects'),
             function (ShortcodeCompiler $shortcode) {
@@ -298,7 +298,7 @@ app('events')->listen(RouteMatched::class, function () {
                 $withSidebar = ($shortcode->with_sidebar ?: 'yes') === 'yes';
 
                 return Theme::partial(
-                    'shortcodes.featured-taxon-subjects',
+                    'shortcodes.featured-taxons-subjects',
                     [
                         'title' => $shortcode->title,
                         'withSidebar' => $withSidebar,
@@ -309,11 +309,11 @@ app('events')->listen(RouteMatched::class, function () {
         );
 
         Shortcode::setPreviewImage(
-            'featured-taxon-subjects',
-            Theme::asset()->url('images/ui-blocks/featured-taxon-subjects.png')
+            'featured-taxons-subjects',
+            Theme::asset()->url('images/ui-blocks/featured-taxons-subjects.png')
         );
 
-        Shortcode::setAdminConfig('featured-taxon-subjects', function (array $attributes) {
+        Shortcode::setAdminConfig('featured-taxons-subjects', function (array $attributes) {
             $taxon = Taxon::query()
                 ->wherePublished()
                 ->select('name', 'id')
