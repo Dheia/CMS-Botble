@@ -16,7 +16,7 @@
 <div class='ck-content'>
     {!! BaseHelper::clean($subject->content) !!}
 </div>
-<br />
+
 {!! apply_filters(BASE_FILTER_PUBLIC_COMMENT_AREA, null, $subject) !!}
 
 @php $relatedSubjects = get_related_subjects($subject->getKey(), 2); @endphp

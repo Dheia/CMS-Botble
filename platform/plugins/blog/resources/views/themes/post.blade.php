@@ -24,7 +24,7 @@
 <div class='ck-content'>
     {!! BaseHelper::clean($post->content) !!}
 </div>
-<br />
+
 {!! apply_filters(BASE_FILTER_PUBLIC_COMMENT_AREA, null, $post) !!}
 
 @php $relatedPosts = get_related_posts($post->getKey(), 2); @endphp
