@@ -233,6 +233,70 @@ LOCK TABLES `categories_translations` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `taxons`
+--
+
+DROP TABLE IF EXISTS `taxons`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `taxons` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `parent_id` bigint unsigned NOT NULL DEFAULT '0',
+  `description` varchar(400) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` varchar(60) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'published',
+  `author_id` bigint unsigned DEFAULT NULL,
+  `author_type` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Botble\\ACL\\Models\\User',
+  `icon` varchar(60) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `order` tinyint NOT NULL DEFAULT '0',
+  `is_featured` tinyint NOT NULL DEFAULT '0',
+  `is_default` tinyint unsigned NOT NULL DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `taxons_parent_id_index` (`parent_id`),
+  KEY `taxons_status_index` (`status`),
+  KEY `taxons_created_at_index` (`created_at`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `taxons`
+--
+
+LOCK TABLES `taxons` WRITE;
+/*!40000 ALTER TABLE `taxons` DISABLE KEYS */;
+INSERT INTO `taxons` VALUES (1,'Artificial Intelligence',0,'Cum odit optio dicta optio. Qui alias sequi quis fuga explicabo saepe. Excepturi ipsam vitae aliquam voluptatem voluptatem.','published',1,'Botble\\ACL\\Models\\User',NULL,0,0,0,'2024-03-11 00:04:07','2024-03-11 00:04:07'),(2,'Cybersecurity',0,'Cum rerum sint magni aut itaque minima voluptas. Exercitationem nemo autem inventore vel doloribus enim. Et necessitatibus dolorem incidunt non non. Cumque ea cumque et sed a tenetur dolores sint.','published',1,'Botble\\ACL\\Models\\User',NULL,0,1,0,'2024-03-11 00:04:07','2024-03-11 00:04:07'),(3,'Blockchain Technology',0,'Voluptatum repellendus fugit quibusdam. Qui nostrum dolor consequuntur unde voluptatem. Facere in vel quibusdam totam et in consequatur. Qui iure enim iste id explicabo reiciendis labore.','published',1,'Botble\\ACL\\Models\\User',NULL,0,1,0,'2024-03-11 00:04:07','2024-03-11 00:04:07'),(4,'5G and Connectivity',0,'Ex quos dolorem est voluptatem unde tempora quia. Et ut ducimus eaque et nihil. Ut facere eligendi hic quaerat quidem. Provident temporibus omnis ratione nisi.','published',1,'Botble\\ACL\\Models\\User',NULL,0,1,0,'2024-03-11 00:04:07','2024-03-11 00:04:07'),(5,'Augmented Reality (AR)',0,'Quas odio ducimus hic in accusamus soluta nobis. Architecto similique modi quis maxime voluptatem expedita eveniet cum. Quasi magnam ipsam repellendus aut.','published',1,'Botble\\ACL\\Models\\User',NULL,0,1,0,'2024-03-11 00:04:07','2024-03-11 00:04:07'),(6,'Green Technology',0,'Aut dolorem quisquam cum non voluptatum id. Possimus officia asperiores deleniti aperiam nisi odio. Accusamus nobis voluptatem iure labore provident magni et.','published',1,'Botble\\ACL\\Models\\User',NULL,0,1,0,'2024-03-11 00:04:07','2024-03-11 00:04:07'),(7,'Quantum Computing',0,'Quia ut vero nostrum exercitationem. Magnam omnis fuga quaerat rem. Aut fugiat alias nihil qui dolorem. Esse culpa quaerat sit rerum ad tempora. Et ex qui quam. Voluptate ut autem ut.','published',1,'Botble\\ACL\\Models\\User',NULL,0,1,0,'2024-03-11 00:04:07','2024-03-11 00:04:07'),(8,'Edge Computing',0,'Commodi non aut minima vero consectetur aliquid dolorem. Earum et neque et sint amet. Porro assumenda odit omnis rerum hic accusantium.','published',1,'Botble\\ACL\\Models\\User',NULL,0,1,0,'2024-03-11 00:04:07','2024-03-11 00:04:07');
+/*!40000 ALTER TABLE `taxons` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `taxons_translations`
+--
+
+DROP TABLE IF EXISTS `taxons_translations`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `taxons_translations` (
+  `lang_code` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `taxons_id` bigint unsigned NOT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` varchar(400) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`lang_code`,`taxons_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `taxons_translations`
+--
+
+LOCK TABLES `taxons_translations` WRITE;
+/*!40000 ALTER TABLE `taxons_translations` DISABLE KEYS */;
+/*!40000 ALTER TABLE `taxons_translations` ENABLE KEYS */;
+UNLOCK TABLES;
+
+
+--
 -- Table structure for table `contact_replies`
 --
 
