@@ -6,7 +6,7 @@ use Botble\Base\Forms\FieldOptions\ContentFieldOption;
 use Botble\Base\Forms\FieldOptions\DescriptionFieldOption;
 use Botble\Base\Forms\FieldOptions\IsFeaturedFieldOption;
 use Botble\Base\Forms\FieldOptions\NameFieldOption;
-use Botble\Base\Forms\FieldOptions\LinkFieldOption;
+use Botble\Base\Forms\FieldOptions\WebsiteFieldOption;
 use Botble\Base\Forms\FieldOptions\RadioFieldOption;
 use Botble\Base\Forms\FieldOptions\SelectFieldOption;
 use Botble\Base\Forms\FieldOptions\StatusFieldOption;
@@ -32,7 +32,7 @@ class SubjectForm extends FormAbstract
             ->setValidatorClass(SubjectRequest::class)
             ->hasTabs()
             ->add('name', TextField::class, NameFieldOption::make()->required()->toArray())
-            ->add('link', TextField::class, LinkFieldOption::make()->required()->toArray())
+            ->add('website', TextField::class, WebsiteFieldOption::make()->required()->toArray())
             ->add('description', TextareaField::class, DescriptionFieldOption::make()->toArray())
             ->add(
                 'is_featured',

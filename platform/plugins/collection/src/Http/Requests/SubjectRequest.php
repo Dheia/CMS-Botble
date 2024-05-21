@@ -14,6 +14,7 @@ class SubjectRequest extends Request
     {
         $rules = [
             'name' => ['required', 'string', 'max:250'],
+            'website' => ['nullable', 'string', 'max:300'],
             'description' => ['nullable', 'string', 'max:400'],
             'content' => ['nullable', 'string', 'max:300000'],
             'taxons' => ['sometimes', 'array'],

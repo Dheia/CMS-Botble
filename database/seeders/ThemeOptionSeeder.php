@@ -16,13 +16,13 @@ class ThemeOptionSeeder extends BaseSeeder
 
         $this->createThemeOptions([
             'site_title' => 'Just another Botble CMS site',
-            'seo_description' => 'With experience, we make sure to get every project done very fast and in time with high quality using our Botble CMS https://1.envato.market/LWRBY',
+            'seo_description' => 'With experience, we make sure to get every project done very fast and in time with high quality using our Botble CMS',
             'copyright' => '©%Y Your Company. All rights reserved.',
             'favicon' => $this->filePath('general/favicon.png'),
             'logo' => $this->filePath('general/logo.png'),
-            'website' => 'https://botble.com',
+            'website' => '#',
             'contact_email' => 'support@company.com',
-            'site_description' => 'With experience, we make sure to get every project done very fast and in time with high quality using our Botble CMS https://1.envato.market/LWRBY',
+            'site_description' => 'With experience, we make sure to get every project done very fast and in time with high quality using our Botble CMS',
             'phone' => '+(123) 345-6789',
             'address' => '214 West Arnold St. New York, NY 10002',
             'cookie_consent_message' => 'Your experience on this site will be improved by allowing cookies ',

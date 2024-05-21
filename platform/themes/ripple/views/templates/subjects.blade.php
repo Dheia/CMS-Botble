@@ -11,10 +11,11 @@
             </div>
             <div class="subject__content-wrap">
                 <header class="subject__header">
-                    <h3 class="subject__title"><a
-                            href="{{ $subject->url }}"
-                            title="{{ $subject->name }}"
-                        >{{ $subject->name }}</a></h3>
+                    <h3 class="subject__title">
+                        <a href="{{ $subject->url }}" title="{{ $subject->name }}">
+                            {{ $subject->name }}
+                        </a>
+                    </h3>
                     <div class="subject__meta">
                         {!! Theme::partial('collection.subject-meta', compact('subject')) !!}
                     </div>

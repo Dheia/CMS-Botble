@@ -17,6 +17,7 @@ class SubjectResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'slug' => $this->slug,
+            'website' => $this->website,
             'description' => $this->description,
             'content' => $this->content,
             'image' => $this->image ? RvMedia::url($this->image) : null,

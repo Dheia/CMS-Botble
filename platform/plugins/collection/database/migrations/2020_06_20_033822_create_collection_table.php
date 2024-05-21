@@ -26,6 +26,7 @@ return new class () extends Migration {
         Schema::create('subjects', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('website', 400)->nullable();
             $table->string('description', 400)->nullable();
             $table->longText('content')->nullable();
             $table->string('status', 60)->default('published');

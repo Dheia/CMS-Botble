@@ -14,8 +14,8 @@
             {!! Theme::partial('collection.subject-meta', compact('subject')) !!}
         </div>
     </header>
-    <div class="subject_link">
-        <a href="{{ $subject->link }}" target="_blank">{{ $subject->link }}</a>
+    <div class="subject_website">
+        <a href="{{ $subject->website }}" target="_blank">{{ $subject->website }}</a>
     </div>
     <div class="subject__content">
         @if (defined('GALLERY_MODULE_SCREEN_NAME') && !empty($galleries = gallery_meta_data($subject)))
