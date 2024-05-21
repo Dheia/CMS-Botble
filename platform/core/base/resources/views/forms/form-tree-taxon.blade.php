@@ -39,7 +39,7 @@
                                 color="primary"
                                 :href="route($createRoute)"
                                 icon="ti ti-plus"
-                                @class(['tree-taxons-create mx-2', 'd-none' => !$canCreate])
+                                @class(['tree-taxons-create tree-categories-create mx-2', 'd-none' => !$canCreate])
                             >
                                 {{ trans('core/base::forms.create') }}
                             </x-core::button>
