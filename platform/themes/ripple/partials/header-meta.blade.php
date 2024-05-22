@@ -2,8 +2,8 @@
 
 <style>
     :root {
-        --color-1st: {{ theme_option('primary_color', '#AF0F26') }};
-        --primary-color: {{ theme_option('primary_color', '#AF0F26') }};
+        --color-1st: {{ theme_option('primary_color', '#2E76E2') }};
+        --primary-color: {{ theme_option('primary_color', '#2E76E2') }};
         --primary-font: '{{ theme_option('primary_font', 'Roboto') }}', sans-serif;
     }
 </style>

@@ -14,13 +14,13 @@
             {!! Theme::partial('collection.subject-meta', compact('subject')) !!}
         </div>
     </header>
-    <div class="subject_website">
-        <a href="{{ $subject->website }}" target="_blank">{{ $subject->website }}</a>
-    </div>
     <div class="subject__content">
         @if (defined('GALLERY_MODULE_SCREEN_NAME') && !empty($galleries = gallery_meta_data($subject)))
             {!! render_object_gallery($galleries, ($subject->first_taxon ? $subject->first_taxon->name : __('Uncategorized'))) !!}
         @endif
+        <div class="subject-website">
+            <a href="{{ $subject->website }}" target="_blank">{{ $subject->website }}</a>
+        </div>
         <div class="subject-content">{!! BaseHelper::clean($subject->content) !!}</div>
         <div class="fb-like" data-href="{{ request()->url() }}" data-layout="standard" data-action="like" data-show-faces="false" data-share="true"></div>
     </div>
@@ -34,7 +34,8 @@
                         <div class="subject__relate-group @if ($loop->last) subject__relate-group--right text-end @else text-start @endif">
                             <h4 class="relate__title">@if ($loop->first) {{ __('Previous Subject') }} @else {{ __('Next Subject') }} @endif</h4>
                             <article class="subject subject--related">
-                                <div class="subject__thumbnail"><a href="{{ $relatedItem->url }}" title="{{ $relatedItem->name }}" class="subject__overlay"></a>
+                                <div class="subject__thumbnail">
+                                    <a href="{{ $relatedItem->url }}" title="{{ $relatedItem->name }}" class="subject__overlay"></a>
                                     {{ RvMedia::image($relatedItem->image, $relatedItem->name, 'thumb') }}
                                 </div>
                                 <header class="subject__header">

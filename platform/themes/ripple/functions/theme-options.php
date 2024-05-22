@@ -21,7 +21,7 @@ app('events')->listen(RenderingThemeOptionSettings::class, function () {
             'label' => __('Primary color'),
             'attributes' => [
                 'name' => 'primary_color',
-                'value' => '#AF0F26',
+                'value' => '#2E76E2',
             ],
         ])
         ->setField([

@@ -20,7 +20,7 @@ class ThemeOptionSeeder extends BaseSeeder
             'copyright' => '©%Y Your Company. All rights reserved.',
             'favicon' => $this->filePath('general/favicon.png'),
             'logo' => $this->filePath('general/logo.png'),
-            'website' => '#',
+            'website' => '',
             'contact_email' => 'support@company.com',
             'site_description' => 'With experience, we make sure to get every project done very fast and in time with high quality using our Botble CMS',
             'phone' => '+(123) 345-6789',
@@ -31,7 +31,7 @@ class ThemeOptionSeeder extends BaseSeeder
             'homepage_id' => Page::query()->value('id'),
             'blog_page_id' => Page::query()->skip(1)->value('id'),
             'collection_page_id' => Page::query()->skip(2)->value('id'),
-            'primary_color' => '#AF0F26',
+            'primary_color' => '#2E76E2',
             'primary_font' => 'Roboto',
             'social_links' => [
                 [
