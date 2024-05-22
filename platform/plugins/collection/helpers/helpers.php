@@ -154,6 +154,14 @@ if (! function_exists('get_subject_formats')) {
     }
 }
 
+if (! function_exists('is_collection_page')) {
+    function is_collection_page(int|string|null $pageId = null): bool
+    {
+        $collectionPageId = get_collection_page_id();
+        return $pageId && $collectionPageId && $pageId == $collectionPageId;
+    }
+}
+
 if (! function_exists('get_collection_page_id')) {
     function get_collection_page_id(): string|null
     {

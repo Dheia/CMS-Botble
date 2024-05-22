@@ -280,9 +280,9 @@ class HookServiceProvider extends ServiceProvider
     public function renderBlogPage(string|null $content, Page $page): string|null
     {
         if ($page->getKey() == $this->getBlogPageId()) {
-            $view = 'plugins/blog::themes.loop';
+            $view = 'plugins/blog::themes.post_loop';
 
-            if (view()->exists($viewPath = Theme::getThemeNamespace() . '::views.loop')) {
+            if (view()->exists($viewPath = Theme::getThemeNamespace() . '::views.post_loop')) {
                 $view = $viewPath;
             }
 

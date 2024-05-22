@@ -11,5 +11,5 @@ mix
 
 if (mix.inProduction()) {
     mix.copy(`${dist}/css/style.css`, `${source}/public/css`)
-        .copy(`${dist}/js/ripple.js`, `${source}/public/js`)
+    .copy(`${dist}/js/ripple.js`, `${source}/public/js`)
 }

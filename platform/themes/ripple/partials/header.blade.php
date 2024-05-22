@@ -24,7 +24,6 @@
                                     <ul class="social social--simple">
                                         @foreach($socialLinks as $socialLink)
                                             @continue(! $icon = $socialLink->getIconHtml())
-
                                             <li>
                                                 <a {{ $socialLink->getAttributes() }}>
                                                     {{ $icon }}
@@ -118,12 +117,10 @@
                                     @endif
                                 </ul>
                             @endif
-
                             <li class="language-wrapper d-block d-sm-none">
                                 {!! apply_filters('language_switcher') !!}
                             </li>
                         </nav>
-
                     </div>
                     <div class="clearfix"></div>
                 </div>

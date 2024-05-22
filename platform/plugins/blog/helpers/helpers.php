@@ -179,6 +179,14 @@ if (! function_exists('get_post_formats')) {
     }
 }
 
+if (! function_exists('is_blog_page')) {
+    function is_blog_page(int|string|null $pageId = null): bool
+    {
+        $blogPageId = get_blog_page_id();
+        return $pageId && $blogPageId && $pageId == $blogPageId;
+    }
+}
+
 if (! function_exists('get_blog_page_id')) {
     function get_blog_page_id(): string|null
     {

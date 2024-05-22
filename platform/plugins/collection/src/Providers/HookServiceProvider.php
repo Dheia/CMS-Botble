@@ -171,7 +171,7 @@ class HookServiceProvider extends ServiceProvider
                 'title' => trans('plugins/collection::base.settings.title'),
                 'id' => 'opt-text-subsection-collection',
                 'subsection' => true,
-                'icon' => 'ti ti-edit',
+                'icon' => 'ti ti-bookmark-edit',
                 'fields' => [
                     [
                         'id' => 'collection_page_id',
