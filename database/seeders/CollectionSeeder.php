@@ -115,11 +115,7 @@ class CollectionSeeder extends BaseSeeder
 
         foreach ($subjects as $index => &$item) {
             $item['content'] =
-                ($index % 3 == 0 ? Html::tag(
-                    'p',
-                    '[youtube-video]https://www.youtube.com/watch?v=SlPhMPnQ58k[/youtube-video]'
-                ) : '') .
-                Html::tag('p', $faker->realText(1000)) .
+                Html::tag('p', $faker->realText(500)) .
                 Html::tag(
                     'p',
                     Html::image(
@@ -152,7 +148,7 @@ class CollectionSeeder extends BaseSeeder
                         ->toHtml(),
                     ['class' => 'text-center']
                 ) .
-                Html::tag('p', $faker->realText(1000));
+                Html::tag('p', $faker->realText(500));
             $item['is_featured'] = $index < 6;
             $item['image'] = $this->filePath('news/' . ($index + 1) . '.jpg');
         }
