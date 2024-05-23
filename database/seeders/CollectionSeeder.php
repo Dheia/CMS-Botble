@@ -126,28 +126,6 @@ class CollectionSeeder extends BaseSeeder
                         ->toHtml(),
                     ['class' => 'text-center']
                 ) .
-                Html::tag('p', $faker->realText(500)) .
-                Html::tag(
-                    'p',
-                    Html::image(
-                        RvMedia::getImageUrl('news/' . $faker->numberBetween(6, 10) . '.jpg', 'medium'),
-                        'image',
-                        ['style' => 'width: 100%', 'class' => 'image_resized']
-                    )
-                        ->toHtml(),
-                    ['class' => 'text-center']
-                ) .
-                Html::tag('p', $faker->realText(1000)) .
-                Html::tag(
-                    'p',
-                    Html::image(
-                        RvMedia::getImageUrl('news/' . $faker->numberBetween(11, 14) . '.jpg', 'medium'),
-                        'image',
-                        ['style' => 'width: 100%', 'class' => 'image_resized']
-                    )
-                        ->toHtml(),
-                    ['class' => 'text-center']
-                ) .
                 Html::tag('p', $faker->realText(500));
             $item['is_featured'] = $index < 6;
             $item['image'] = $this->filePath('news/' . ($index + 1) . '.jpg');
