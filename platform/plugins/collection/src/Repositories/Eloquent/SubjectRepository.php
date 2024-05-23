@@ -117,19 +117,6 @@ class SubjectRepository extends RepositoriesAbstract implements SubjectInterface
         return $this->applyBeforeExecuteQuery($data)->get();
     }
 
-    // public function getByTag(int|string $tag, int $paginate = 12): Collection|LengthAwarePaginator
-    // {
-    //     $data = $this->model
-    //         ->with(['slugable', 'taxons', 'taxons.slugable', 'author'])
-    //         ->wherePublished()
-    //         ->whereHas('tags', function (Builder $query) use ($tag) {
-    //             $query->where('tags.id', $tag);
-    //         })
-    //         ->orderByDesc('created_at');
-
-    //     return $this->applyBeforeExecuteQuery($data)->paginate($paginate);
-    // }
-
     public function getRecentSubjects(int $limit = 5, int|string $taxonId = 0): Collection
     {
         $data = $this->model->wherePublished();

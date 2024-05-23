@@ -25,10 +25,12 @@ class PublicController extends BaseController
             ->setDescription($title);
 
         $subjects = $subjectRepository->getSearch($query, 0, (int)theme_option('number_of_subjects_in_a_taxon', 12));
+        
+        $posts = $subjects;
 
-        Theme::breadcrumb()->add($title, route('public.search'));
+        Theme::breadcrumb()->add($title, route('public.subject_search'));
 
-        return Theme::scope('search', compact('subjects'))
+        return Theme::scope('search', compact('posts'))
             ->render();
     }
 }

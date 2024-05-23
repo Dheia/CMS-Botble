@@ -129,12 +129,22 @@
             @if (is_plugin_active('blog'))
                 <div class="super-search hide" data-search-url="{{ route('public.ajax.search') }}">
                     <form class="quick-search" action="{{ route('public.search') }}">
-                        <input type="text" name="q" placeholder="{{ __('Type to search...') }}" class="form-control search-input" autocomplete="off">
+                        <input type="text" name="q" placeholder="{{ __('Type to search posts...') }}" class="form-control search-input" autocomplete="off">
                         <span class="close-search">&times;</span>
                     </form>
                     <div class="search-result"></div>
                 </div>
             @endif
+
+            <!--@if (is_plugin_active('collection'))-->
+            <!--    <div class="super-search subject-search hide" data-search-url="{{ route('public.ajax.search_subject') }}">-->
+            <!--        <form class="quick-search" action="{{ route('public.subject_search') }}">-->
+            <!--            <input type="text" name="q" placeholder="{{ __('Type to search...') }}" class="form-control search-input" autocomplete="off">-->
+            <!--            <span class="close-search">&times;</span>-->
+            <!--        </form>-->
+            <!--        <div class="search-result"></div>-->
+            <!--    </div>-->
+            <!--@endif-->
         </div>
     </header>
     <div id="page-wrap">

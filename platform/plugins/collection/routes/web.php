@@ -44,8 +44,8 @@ Route::group(['namespace' => 'Botble\Collection\Http\Controllers'], function () 
 
     if (defined('THEME_MODULE_SCREEN_NAME')) {
         Theme::registerRoutes(function () {
-            Route::get('search', [
-                'as' => 'public.search',
+            Route::get('subject_search', [
+                'as' => 'public.subject_search',
                 'uses' => 'PublicController@getSearch',
             ]);
         });
