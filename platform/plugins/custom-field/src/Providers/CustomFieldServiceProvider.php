@@ -64,7 +64,7 @@ class CustomFieldServiceProvider extends ServiceProvider
             DashboardMenu::make()
                 ->registerItem([
                     'id' => 'cms-plugins-custom-field',
-                    'priority' => 400,
+                    'priority' => 60,
                     'name' => 'plugins/custom-field::base.admin_menu.title',
                     'icon' => 'ti ti-table-options',
                     'route' => 'custom-fields.index',

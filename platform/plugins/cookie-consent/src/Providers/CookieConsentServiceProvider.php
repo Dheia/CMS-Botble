@@ -71,7 +71,7 @@ class CookieConsentServiceProvider extends ServiceProvider
                     'id' => 'opt-text-subsection-cookie-consent',
                     'subsection' => true,
                     'icon' => 'ti ti-cookie',
-                    'priority' => 9999,
+                    'priority' => 999,
                     'fields' => [
                         [
                             'id' => 'cookie_consent_enable',

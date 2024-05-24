@@ -201,7 +201,7 @@ class MediaServiceProvider extends ServiceProvider
             DashboardMenu::make()
                 ->registerItem([
                     'id' => 'cms-core-media',
-                    'priority' => 999,
+                    'priority' => 90,
                     'icon' => 'ti ti-folder',
                     'name' => 'core/media::media.menu_name',
                     'route' => 'media.index',

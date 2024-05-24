@@ -48,7 +48,7 @@ class ContactServiceProvider extends ServiceProvider
             DashboardMenu::make()
                 ->registerItem([
                     'id' => 'cms-plugins-contact',
-                    'priority' => 120,
+                    'priority' => 70,
                     'name' => 'plugins/contact::contact.menu',
                     'icon' => 'ti ti-mail',
                     'route' => 'contacts.index',
@@ -61,7 +61,7 @@ class ContactServiceProvider extends ServiceProvider
                 fn () => PanelSectionItem::make('contact')
                     ->setTitle(trans('plugins/contact::contact.settings.title'))
                     ->withIcon('ti ti-mail-cog')
-                    ->withPriority(140)
+                    ->withPriority(80)
                     ->withDescription(trans('plugins/contact::contact.settings.description'))
                     ->withRoute('contact.settings')
             );

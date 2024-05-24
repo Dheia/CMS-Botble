@@ -63,7 +63,7 @@ class WidgetServiceProvider extends ServiceProvider
             DashboardMenu::make()
                 ->registerItem([
                     'id' => 'cms-core-widget',
-                    'priority' => 3,
+                    'priority' => 30,
                     'parent_id' => 'cms-core-appearance',
                     'name' => 'packages/widget::widget.name',
                     'route' => 'widgets.index',

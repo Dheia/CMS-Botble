@@ -75,7 +75,7 @@ class CollectionServiceProvider extends ServiceProvider
             DashboardMenu::make()
                 ->registerItem([
                     'id' => 'cms-plugins-collection',
-                    'priority' => 3,
+                    'priority' => 4,
                     'name' => 'plugins/collection::base.menu_name',
                     'icon' => 'ti ti-folder-star',
                 ])

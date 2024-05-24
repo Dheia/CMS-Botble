@@ -38,7 +38,7 @@ class BlockServiceProvider extends ServiceProvider
             DashboardMenu::make()
                 ->registerItem([
                     'id' => 'cms-plugins-block',
-                    'priority' => 410,
+                    'priority' => 50,
                     'name' => 'plugins/block::block.menu',
                     'icon' => 'ti ti-code',
                     'route' => 'block.index',

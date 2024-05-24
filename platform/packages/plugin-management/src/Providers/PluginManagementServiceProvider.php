@@ -49,7 +49,7 @@ class PluginManagementServiceProvider extends ServiceProvider
                             DashboardMenu::make()
                                 ->registerItem([
                                     'id' => 'cms-core-plugins',
-                                    'priority' => 3000,
+                                    'priority' => 100,
                                     'name' => 'packages/plugin-management::plugin.plugins',
                                     'icon' => 'ti ti-plug',
                                     'permissions' => ['plugins.index'],

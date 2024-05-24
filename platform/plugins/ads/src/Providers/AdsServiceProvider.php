@@ -45,7 +45,7 @@ class AdsServiceProvider extends ServiceProvider
         Event::listen(RouteMatched::class, function () {
             dashboard_menu()->registerItem([
                 'id' => 'cms-plugins-ads',
-                'priority' => 5,
+                'priority' => 80,
                 'parent_id' => null,
                 'name' => 'plugins/ads::ads.name',
                 'icon' => 'ti ti-speakerphone',

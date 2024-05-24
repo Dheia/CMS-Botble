@@ -42,7 +42,7 @@ class ThemeServiceProvider extends ServiceProvider
             $menu
                 ->registerItem([
                     'id' => 'cms-core-appearance',
-                    'priority' => 2000,
+                    'priority' => 120,
                     'parent_id' => null,
                     'name' => 'packages/theme::theme.appearance',
                     'icon' => 'ti ti-brush',

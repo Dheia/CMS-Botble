@@ -88,7 +88,7 @@ class MemberServiceProvider extends ServiceProvider
         DashboardMenu::default()->beforeRetrieving(function () {
             DashboardMenu::registerItem([
                 'id' => 'cms-core-member',
-                'priority' => 50,
+                'priority' => 130,
                 'parent_id' => null,
                 'name' => 'plugins/member::member.menu_name',
                 'icon' => 'ti ti-users',
