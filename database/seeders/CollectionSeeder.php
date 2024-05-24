@@ -127,6 +127,7 @@ class CollectionSeeder extends BaseSeeder
                     ['class' => 'text-center']
                 ) .
                 Html::tag('p', $faker->realText(500));
+            $item['website'] = 'http://localhost.dev';
             $item['is_featured'] = $index < 6;
             $item['image'] = $this->filePath('news/' . ($index + 1) . '.jpg');
         }

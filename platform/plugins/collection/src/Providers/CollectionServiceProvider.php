@@ -45,8 +45,8 @@ class CollectionServiceProvider extends ServiceProvider
     {
         SlugHelper::registerModule(Subject::class, 'Collection Subjects');
         SlugHelper::registerModule(Taxon::class, 'Collection Taxons');
-        SlugHelper::setPrefix(Subject::class, null, true);
-        SlugHelper::setPrefix(Taxon::class, null, true);
+        SlugHelper::setPrefix(Subject::class, 'collection', true);
+        SlugHelper::setPrefix(Taxon::class, 'taxon', true);
 
         $this
             ->setNamespace('plugins/collection')

@@ -3,6 +3,7 @@
     data-bs-theme="dark"
 >
     <div class="{{ AdminAppearance::getContainerWidth() }}">
+        <!--
         <button
             class="navbar-toggler"
             type="button"
@@ -14,6 +15,7 @@
         >
             <span class="navbar-toggler-icon"></span>
         </button>
+        -->
 
         <div class="flex-row navbar-nav">
             <div class="d-flex align-items-center me-3">
