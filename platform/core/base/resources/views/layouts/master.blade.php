@@ -1,19 +1,19 @@
 <x-core::layouts.base>
     @php
-    $currentLayout = AdminAppearance::getCurrentLayout();
+        $currentLayout = AdminAppearance::getCurrentLayout();
     @endphp
-    <div class="page layout-{{$currentLayout}}">
-        @if($currentLayout === 'vertical')
-            @include('core/base::layouts.' . $currentLayout . '.partials.aside')
-        @elseif($currentLayout === 'horizontal')
-            @include('core/base::layouts.' . $currentLayout . '.partials.topbar')
-        @endif
 
-        <main @class([
+    <div class="page layout-{{$currentLayout}}">
+
+        @include('core/base::layouts.' . $currentLayout . '.partials.navbar')
+
+        <main 
+            @class([
                 'page-wrapper',
                 'rv-media-integrate-wrapper' => Route::currentRouteName() === 'media.index',
-            ])>
-            @include('core/base::layouts.' . $currentLayout . '.partials.navbar')
+            ])
+        >
+            @include('core/base::layouts.' . $currentLayout . '.partials.topbar')
             
             @include('core/base::layouts.partials.page-header')
 
@@ -26,9 +26,9 @@
                     {!! apply_filters('core_layout_after_content', null) !!}
                 </div>
             </div>
-
-            @include('core/base::layouts.partials.footer')
         </main>
+
+        @include('core/base::layouts.partials.footer')
 
     </div>
 
