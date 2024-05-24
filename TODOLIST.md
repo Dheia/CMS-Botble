@@ -1,3 +1,0 @@
-# Todo List
-
-- Theme stories: pending...
