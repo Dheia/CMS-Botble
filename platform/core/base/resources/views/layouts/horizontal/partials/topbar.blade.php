@@ -14,10 +14,9 @@
         >
             <span class="navbar-toggler-icon"></span>
         </button>
-        <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3">
+        <div class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3">
             @include('core/base::partials.logo')
-        </h1>
-
+        </div>
         <div class="flex-row navbar-nav order-md-last">
             <div class="nav-item d-none d-md-flex me-3">
                 @include('core/base::global-search.navbar-input')

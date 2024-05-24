@@ -14,9 +14,9 @@
         >
             <span class="navbar-toggler-icon"></span>
         </button>
-        <h1 class="navbar-brand navbar-brand-autodark">
+        <div class="navbar-brand navbar-brand-autodark">
             @include('core/base::partials.logo')
-        </h1>
+        </div>
         <div class="navbar-nav flex-row d-lg-none">
             <x-core::dropdown
                 wrapper-class="nav-item"

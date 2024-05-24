@@ -197,8 +197,8 @@ class BaseHelper
     public function availableRichEditors(): array
     {
         return apply_filters(BASE_FILTER_AVAILABLE_EDITORS, [
-            'ckeditor' => 'CKEditor',
             'tinymce' => 'TinyMCE',
+            'ckeditor' => 'CKEditor',
         ]);
     }
 
@@ -210,9 +210,9 @@ class BaseHelper
             return $richEditor;
         }
 
-        setting()->set(['rich_editor' => 'ckeditor'])->save();
+        setting()->set(['rich_editor' => 'tinymce'])->save();
 
-        return 'ckeditor';
+        return 'tinymce';
     }
 
     public function removeQueryStringVars(string|null $url, array|string $key): string|null
