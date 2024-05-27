@@ -44,62 +44,85 @@ class SystemController extends BaseSystemController
 
     public function getCheckUpdate(Core $core)
     {
-        $response = $this->httpResponse();
+        // $response = $this->httpResponse();
 
-        if (! config('core.base.general.enable_system_updater') || BaseHelper::hasDemoModeEnabled()) {
-            return $response;
-        }
+        // if (! config('core.base.general.enable_system_updater') || BaseHelper::hasDemoModeEnabled()) {
+        //     return $response;
+        // }
 
-        $response
-            ->setData(['has_new_version' => false]);
+        // $response
+        //     ->setData(['has_new_version' => false]);
 
-        $updateData = $core->checkUpdate();
+        // $updateData = $core->checkUpdate();
 
-        if ($updateData) {
-            $response
-                ->setData(['has_new_version' => true])
-                ->setMessage(
-                    sprintf(
-                        'A new version (%s / released on %s) is available to update',
-                        $updateData->version,
-                        BaseHelper::formatDate($updateData->releasedDate)
-                    )
-                );
-        }
+        // if ($updateData) {
+        //     $response
+        //         ->setData(['has_new_version' => true])
+        //         ->setMessage(
+        //             sprintf(
+        //                 'A new version (%s / released on %s) is available to update',
+        //                 $updateData->version,
+        //                 BaseHelper::formatDate($updateData->releasedDate)
+        //             )
+        //         );
+        // }
+        
+        $response = json_decode('{}');
 
         return $response;
     }
 
     public function getUpdater(Core $core)
     {
-        if (! config('core.base.general.enable_system_updater')) {
-            abort(404);
-        }
+        // if (! config('core.base.general.enable_system_updater')) {
+        //     abort(404);
+        // }
 
-        header('Cache-Control: no-cache');
+        // header('Cache-Control: no-cache');
 
-        Assets::addScriptsDirectly('vendor/core/core/base/js/system-update.js');
-        Assets::usingVueJS();
+        // Assets::addScriptsDirectly('vendor/core/core/base/js/system-update.js');
+        // Assets::usingVueJS();
 
+        // $memoryLimit = SystemManagement::getMemoryLimitAsMegabyte();
+        // $requiredMemoryLimit = 256;
+        // $maximumExecutionTime = SystemManagement::getMaximumExecutionTime();
+        // $requiredMaximumExecutionTime = 300;
+
+        // BaseHelper::maximumExecutionTimeAndMemoryLimit();
+
+        // $this->pageTitle(trans('core/base::system.updater'));
+
+        // $activated = $core->verifyLicense();
+        // $isOutdated = false;
+        // $latestUpdate = $core->getLatestVersion();
+
+        // if ($latestUpdate) {
+        //     $isOutdated = version_compare($core->version(), $latestUpdate->version, '<');
+        // }
+
+        // $updateData = ['message' => null, 'status' => false];
+
+        // return view('core/base::system.updater', compact(
+        //     'memoryLimit',
+        //     'requiredMemoryLimit',
+        //     'maximumExecutionTime',
+        //     'requiredMaximumExecutionTime',
+        //     'activated',
+        //     'latestUpdate',
+        //     'isOutdated',
+        //     'updateData'
+        // ));
+        
+        
         $memoryLimit = SystemManagement::getMemoryLimitAsMegabyte();
         $requiredMemoryLimit = 256;
         $maximumExecutionTime = SystemManagement::getMaximumExecutionTime();
         $requiredMaximumExecutionTime = 300;
-
-        BaseHelper::maximumExecutionTimeAndMemoryLimit();
-
-        $this->pageTitle(trans('core/base::system.updater'));
-
-        $activated = $core->verifyLicense();
+        $activated = true;
+        $latestUpdate = null;
         $isOutdated = false;
-        $latestUpdate = $core->getLatestVersion();
-
-        if ($latestUpdate) {
-            $isOutdated = version_compare($core->version(), $latestUpdate->version, '<');
-        }
-
         $updateData = ['message' => null, 'status' => false];
-
+        
         return view('core/base::system.updater', compact(
             'memoryLimit',
             'requiredMemoryLimit',
