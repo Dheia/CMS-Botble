@@ -3,20 +3,6 @@
     data-bs-theme="dark"
 >
     <div class="{{ AdminAppearance::getContainerWidth() }}">
-        <!--
-        <button
-            class="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbar-menu"
-            aria-controls="navbar-menu"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
-        >
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        -->
-
         <div class="flex-row navbar-nav">
             <div class="d-flex align-items-center me-3">
                 @include('core/base::global-search.navbar-input')
@@ -46,9 +32,5 @@
 
             @include('core/base::layouts.partials.user-menu')
         </div>
-        <div
-            class="navbar-collapse collapse"
-            id="navbar-menu"
-        ></div>
     </div>
 </div>

@@ -17,7 +17,7 @@
         <div class="navbar-brand navbar-brand-autodark">
             @include('core/base::partials.logo')
         </div>
-        <div class="navbar-nav flex-row d-lg-none">
+        <div class="navbar-text flex-row d-lg-none">
             <x-core::dropdown
                 wrapper-class="nav-item"
                 :has-arrow="true"
@@ -61,8 +61,8 @@
         >
             @include('core/base::layouts.partials.navbar-nav-vertical', [
                 'autoClose' => 'false',
+                'navbarClass' => 'mb-4',
             ])
         </div>
-
     </div>
 </aside>

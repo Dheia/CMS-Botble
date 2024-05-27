@@ -98,6 +98,7 @@
 }
 
 .navbar-vertical {
+    border: none !important;
     overflow: auto !important;
 
     .navbar-collapse {
@@ -135,11 +136,17 @@
                     }
                 }
             }
+
+            &:not(.active):hover {
+                .nav-link {
+                    background: var(--bb-navbar-hover-bg) !important;
+                }
+            }
         }
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 992px) {
     .navbar-vertical {
         overflow: inherit !important;
     }
