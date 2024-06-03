@@ -73,9 +73,7 @@ return [
         // Listen on event before render a layout,
         // this should call to assign style, script for a layout.
         'beforeRenderLayout' => [
-
-            'default' => function (Theme $theme) {
-            },
+            'default' => function (Theme $theme) {},
         ],
     ],
 ];
