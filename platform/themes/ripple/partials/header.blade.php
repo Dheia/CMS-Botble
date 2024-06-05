@@ -147,4 +147,4 @@
             <!--@endif-->
         </div>
     </header>
-    <div id="page-wrap">
+    <main id="page-wrap">
