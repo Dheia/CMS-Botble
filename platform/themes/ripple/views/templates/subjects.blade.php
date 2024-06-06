@@ -23,6 +23,9 @@
                 <div class="subject__content p-0">
                     <p data-number-line="4">{{ $subject->description }}</p>
                 </div>
+                <div class="subject__footer">
+                <a href="{{ $subject->website }}" target="_blank">{!! BaseHelper::renderIcon('ti ti-external-link') !!} {{ $subject->website }}</a>
+                </div>
             </div>
         </article>
     @endforeach

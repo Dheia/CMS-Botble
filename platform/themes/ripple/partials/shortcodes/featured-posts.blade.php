@@ -24,7 +24,7 @@
                             </article>
                         </div>
                         <div class="post-group__right">
-                        @else
+                    @else
                             <div class="post-group__item">
                                 <article class="post post__inside post__inside--feature post__inside--feature-small">
                                     <div class="post__thumbnail">
@@ -36,18 +36,18 @@
                                         ></a>
                                     </div>
                                     <header class="post__header">
-                                        <h3 class="post__title text-truncate"><a
-                                                href="{{ $post->url }}">{{ $post->name }}</a>
+                                        <h3 class="post__title text-truncate">
+                                            <a href="{{ $post->url }}">{{ $post->name }}</a>
                                         </h3>
                                     </header>
                                 </article>
                             </div>
-                            @if ($loop->last)
+                        @if ($loop->last)
                         </div>
+                        @endif
                     @endif
-                @endif
-@endforeach
-</div>
-</div>
-</section>
+                @endforeach
+            </div>
+        </div>
+    </section>
 @endif
