@@ -40,7 +40,7 @@ class HookServiceProvider extends ServiceProvider
         Menu::addMenuOptionModel(Tag::class);
 
         $this->app['events']->listen(RenderingMenuOptions::class, function () {
-            add_action(MENU_ACTION_SIDEBAR_OPTIONS, [$this, 'registerMenuOptions'], 2);
+            add_action(MENU_ACTION_SIDEBAR_OPTIONS, [$this, 'registerMenuOptions'], 5);
         });
 
         $this->app['events']->listen(RenderingDashboardWidgets::class, function () {
