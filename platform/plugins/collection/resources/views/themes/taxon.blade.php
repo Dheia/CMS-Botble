@@ -7,10 +7,12 @@
         @foreach ($subjects as $subject)
             <article>
                 <div>
-                    <a href="{{ $subject->url }}"><img
+                    <a href="{{ $subject->url }}">
+                        <img
                             src="{{ RvMedia::getImageUrl($subject->image, null, false, RvMedia::getDefaultImage()) }}"
                             alt="{{ $subject->name }}"
-                        ></a>
+                        >
+                    </a>
                 </div>
                 <div>
                     <header>

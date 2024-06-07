@@ -26,7 +26,8 @@
         @foreach ($relatedSubjects as $relatedItem)
             <div>
                 <article>
-                    <div><a href="{{ $relatedItem->url }}"></a>
+                    <div>
+                        <a href="{{ $relatedItem->url }}"></a>
                         <img
                             src="{{ RvMedia::getImageUrl($relatedItem->image, null, false, RvMedia::getDefaultImage()) }}"
                             alt="{{ $relatedItem->name }}"

@@ -15,7 +15,7 @@ class CollectionSettingRequest extends Request
             'collection_subject_schema_type' => [
                 'nullable',
                 'string',
-                Rule::in(['NewsArticle', 'News', 'Article', 'CollectionSubjecting']),
+                Rule::in(['NewsArticle', 'News', 'Article']),
             ],
         ];
     }

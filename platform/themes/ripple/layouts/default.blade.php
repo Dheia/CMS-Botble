@@ -4,7 +4,7 @@
     {!! Theme::partial('breadcrumbs') !!}
 @endif
 
-<section class="section pt-50 pb-100">
+<section class="section default-template pt-50 pb-100">
     <div class="container">
         <div class="row">
             <div class="col-lg-9">

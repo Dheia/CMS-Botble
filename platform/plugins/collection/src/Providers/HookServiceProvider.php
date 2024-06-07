@@ -118,7 +118,7 @@ class HookServiceProvider extends ServiceProvider
 
                     $schemaType = setting('collection_subject_schema_type', 'NewsArticle');
 
-                    if (! in_array($schemaType, ['NewsArticle', 'News', 'Article', 'CollectionSubjecting'])) {
+                    if (! in_array($schemaType, ['NewsArticle', 'News', 'Article'])) {
                         $schemaType = 'NewsArticle';
                     }
 
@@ -269,6 +269,7 @@ class HookServiceProvider extends ServiceProvider
             }
 
             return view($view, [
+                'taxons' => get_all_taxons(),
                 'subjects' => get_all_subjects(true, (int)theme_option('number_of_subjects_in_a_taxon', 12)),
             ])->render();
         }

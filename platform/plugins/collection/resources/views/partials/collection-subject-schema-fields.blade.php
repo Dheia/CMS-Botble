@@ -21,7 +21,6 @@
             'NewsArticle' => 'NewsArticle',
             'News' => 'News',
             'Article' => 'Article',
-            // 'CollectionSubjecting' => 'CollectionSubjecting',
         ]"
         :value="setting('collection_subject_schema_type', 'NewsArticle')"
     />

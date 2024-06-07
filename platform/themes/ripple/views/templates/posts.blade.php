@@ -31,7 +31,7 @@
 @endif
 
 <style>
-    .section.pt-50.pb-100 {
+    .section.default-template {
         background-color: #ecf0f1;
     }
 </style>

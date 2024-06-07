@@ -4,7 +4,7 @@
     {!! Theme::partial('breadcrumbs') !!}
 @endif
 
-<section class="section pt-50 pb-100">
+<section class="section grid-template pt-50 pb-100">
     <div class="container">
         {!! Theme::content() !!}
     </div>
