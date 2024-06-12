@@ -68,6 +68,7 @@
                                     </x-core::button>
                                 @endif
                                 @if (Auth::guard()->user()->hasPermission('theme.remove'))
+                                    <!--
                                     <x-core::button
                                         type="button"
                                         icon="ti ti-trash"
@@ -77,6 +78,7 @@
                                     >
                                         {{ trans('packages/theme::theme.remove') }}
                                     </x-core::button>
+                                    -->
                                 @endif
                             @endif
                         </div>
