@@ -33,16 +33,16 @@
                     <div class="col-md-6 col-sm-6 col-12">
                         <div class="subject__relate-group @if ($loop->last) subject__relate-group--right text-end @else text-start @endif">
                             <h4 class="relate__title">@if ($loop->first) {{ __('Previous Subject') }} @else {{ __('Next Subject') }} @endif</h4>
-                            <article class="subject subject--related">
+                            <div class="subject subject--related">
                                 <div class="subject__thumbnail">
                                     <a href="{{ $relatedItem->url }}" title="{{ $relatedItem->name }}" class="subject__overlay"></a>
                                     {{ RvMedia::image($relatedItem->image, $relatedItem->name, 'thumb') }}
                                 </div>
-                                <header class="subject__header">
+                                <div class="subject__header">
                                     <p><a href="{{ $relatedItem->url }}" class="subject__title"> {{ $relatedItem->name }}</a></p>
                                     <div class="subject__meta"><span class="subject__created-at">{{ $subject->created_at->translatedFormat('M d, Y') }}</span></div>
-                                </header>
-                            </article>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 @endforeach

@@ -28,9 +28,6 @@ app('events')->listen(RouteMatched::class, function () {
 
     register_page_template([
         'grid' => __('Grid'),
-    ]);
-
-    register_page_template([
         'no-sidebar' => __('No sidebar'),
     ]);
 

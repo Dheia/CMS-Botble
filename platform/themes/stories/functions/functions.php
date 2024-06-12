@@ -5,6 +5,8 @@ use Botble\Base\Forms\FormAbstract;
 use Botble\Base\Models\MetaBox as MetaBoxModel;
 use Botble\Blog\Models\Category;
 use Botble\Blog\Models\Post;
+use Botble\Collection\Models\Taxon;
+use Botble\Collection\Models\Subject;
 use Kris\LaravelFormBuilder\FormHelper;
 use Theme\Stories\Fields\ThemeIconField;
 
@@ -92,9 +94,80 @@ if (is_plugin_active('blog')) {
     }, 230, 3);
 }
 
+if (is_plugin_active('collection')) {
+    add_action(BASE_ACTION_META_BOXES, function ($context, $object) {
+        switch (get_class($object)) {
+            case Subject::class:
+                if ($context == 'top') {
+                    MetaBox::addMetaBox(
+                        'additional_post_fields',
+                        __('Addition Information'),
+                        function () {
+                            $layout = null;
+                            $args = func_get_args();
+                            if (! empty($args[0])) {
+                                $layout = MetaBox::getMetaData($args[0], 'layout', true);
+                            }
+
+                            if (! $layout && theme_option('collection_single_layout')) {
+                                $layout = theme_option('collection_single_layout');
+                            }
+
+                            return Theme::partial('collection-subject-fields', compact('layout'));
+                        },
+                        get_class($object),
+                        $context
+                    );
+                }
+
+                break;
+            case Taxon::class:
+                if ($context == 'side') {
+                    MetaBox::addMetaBox('additional_collection_taxon_fields', __('Addition Information'), function () {
+                        $image = null;
+                        $args = func_get_args();
+                        if (! empty($args[0])) {
+                            $image = MetaBox::getMetaData($args[0], 'image', true);
+                        }
+
+                        return Theme::partial('collection-taxon-fields', compact('image'));
+                    }, get_class($object), $context);
+                }
+
+                break;
+        }
+    }, 30, 3);
+
+    add_action([BASE_ACTION_AFTER_CREATE_CONTENT, BASE_ACTION_AFTER_UPDATE_CONTENT], function ($type, $request, $object) {
+        switch (get_class($object)) {
+            case Post::class:
+                if ($request->has('time_to_read')) {
+                    MetaBox::saveMetaBoxData($object, 'time_to_read', $request->input('time_to_read'));
+                }
+
+                if ($request->has('layout')) {
+                    MetaBox::saveMetaBoxData($object, 'layout', $request->input('layout'));
+                }
+
+                break;
+            case Category::class:
+                if ($request->has('image')) {
+                    MetaBox::saveMetaBoxData($object, 'image', $request->input('image'));
+                }
+
+                break;
+        }
+    }, 230, 3);
+}
+
 app()->booted(function () {
     if (is_plugin_active('blog')) {
         Category::resolveRelationUsing('image', function ($model) {
+            return $model->morphOne(MetaBoxModel::class, 'reference')->where('meta_key', 'image');
+        });
+    }
+    if (is_plugin_active('collection')) {
+        Taxon::resolveRelationUsing('image', function ($model) {
             return $model->morphOne(MetaBoxModel::class, 'reference')->where('meta_key', 'image');
         });
     }
@@ -181,6 +254,29 @@ if (! function_exists('get_blog_single_layouts')) {
 
 if (! function_exists('get_blog_layouts')) {
     function get_blog_layouts(): array
+    {
+        return [
+            'grid' => __('Grid layout'),
+            'list' => __('List layout'),
+            'big' => __('Big layout'),
+        ];
+    }
+}
+
+if (! function_exists('get_collection_single_layouts')) {
+    function get_collection_single_layouts(): array
+    {
+        return [
+            '' => __('Inherit'),
+            'collection-right-sidebar' => __('Blog Right Sidebar'),
+            'collection-left-sidebar' => __('Blog Left Sidebar'),
+            'collection-full-width' => __('Full width'),
+        ];
+    }
+}
+
+if (! function_exists('get_collection_layouts')) {
+    function get_collection_layouts(): array
     {
         return [
             'grid' => __('Grid layout'),

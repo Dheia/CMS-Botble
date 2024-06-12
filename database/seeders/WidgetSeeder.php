@@ -84,11 +84,11 @@ class WidgetSeeder extends BaseSeeder
                         [
                             [
                                 'key' => 'label',
-                                'value' => 'Speckyboy Magazine',
+                                'value' => 'NiceBoy',
                             ],
                             [
                                 'key' => 'url',
-                                'value' => 'https://speckyboy.com',
+                                'value' => 'http://nice-boy.com',
                             ],
                             [
                                 'key' => 'attributes',
@@ -102,11 +102,11 @@ class WidgetSeeder extends BaseSeeder
                         [
                             [
                                 'key' => 'label',
-                                'value' => 'Tympanus-Codrops',
+                                'value' => 'KeKe.Love',
                             ],
                             [
                                 'key' => 'url',
-                                'value' => 'https://tympanus.com',
+                                'value' => 'http://keke.love',
                             ],
                             [
                                 'key' => 'attributes',
@@ -120,11 +120,11 @@ class WidgetSeeder extends BaseSeeder
                         [
                             [
                                 'key' => 'label',
-                                'value' => 'Botble Blog',
+                                'value' => 'Lyove',
                             ],
                             [
                                 'key' => 'url',
-                                'value' => 'https://botble.com/blog',
+                                'value' => 'http://lyove.com',
                             ],
                             [
                                 'key' => 'attributes',
@@ -138,47 +138,11 @@ class WidgetSeeder extends BaseSeeder
                         [
                             [
                                 'key' => 'label',
-                                'value' => 'Laravel Vietnam',
+                                'value' => 'Lyove Tool',
                             ],
                             [
                                 'key' => 'url',
-                                'value' => 'https://blog.laravelvietnam.org',
-                            ],
-                            [
-                                'key' => 'attributes',
-                                'value' => '',
-                            ],
-                            [
-                                'key' => 'is_open_new_tab',
-                                'value' => '1',
-                            ],
-                        ],
-                        [
-                            [
-                                'key' => 'label',
-                                'value' => 'CreativeBlog',
-                            ],
-                            [
-                                'key' => 'url',
-                                'value' => 'https://www.creativebloq.com',
-                            ],
-                            [
-                                'key' => 'attributes',
-                                'value' => '',
-                            ],
-                            [
-                                'key' => 'is_open_new_tab',
-                                'value' => '1',
-                            ],
-                        ],
-                        [
-                            [
-                                'key' => 'label',
-                                'value' => 'Archi Elite JSC',
-                            ],
-                            [
-                                'key' => 'url',
-                                'value' => 'https://archielite.com',
+                                'value' => 'http://tool.lyove.com',
                             ],
                             [
                                 'key' => 'attributes',
