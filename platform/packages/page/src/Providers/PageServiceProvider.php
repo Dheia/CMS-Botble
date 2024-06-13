@@ -13,9 +13,6 @@ use Botble\Theme\Events\RenderingAdminBar;
 use Botble\Theme\Facades\AdminBar;
 use Illuminate\Support\Facades\View as ViewFacade;
 
-/**
- * @since 02/07/2016 09:50 AM
- */
 class PageServiceProvider extends ServiceProvider
 {
     use LoadAndPublishDataTrait;

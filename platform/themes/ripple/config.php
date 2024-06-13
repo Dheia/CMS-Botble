@@ -74,6 +74,7 @@ return [
         // this should call to assign style, script for a layout.
         'beforeRenderLayout' => [
             'default' => function (Theme $theme) {},
+            'grid' => function (Theme $theme) {},
         ],
     ],
 ];
