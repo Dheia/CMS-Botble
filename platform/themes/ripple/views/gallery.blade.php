@@ -1,4 +1,7 @@
-@php Theme::set('section-name', $gallery->name) @endphp
+@php 
+    Theme::set('no-sidebar', true);
+    Theme::set('section-name', $gallery->name) 
+@endphp
 
 <article class="post post--single">
     <div class="post__content">

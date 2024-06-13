@@ -318,6 +318,11 @@
     bottom: 0 !important;
 }
 
+.gallery-wrap {
+    display: flex;
+    flex-wrap: wrap;
+}
+
 .gallery-wrap .gallery-item {
     width: 32.8%;
     margin-right: 0.8%;

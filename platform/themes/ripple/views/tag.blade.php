@@ -1,4 +1,6 @@
-@php Theme::set('section-name', $tag->name) @endphp
+@php 
+    Theme::set('section-name', $tag->name) 
+@endphp
 
 @if ($posts->isNotEmpty())
     @foreach ($posts as $post)

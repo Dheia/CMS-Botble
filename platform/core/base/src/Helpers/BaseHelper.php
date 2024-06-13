@@ -174,6 +174,38 @@ class BaseHelper
         return theme_option('homepage_id', setting('show_on_front'));
     }
 
+    public function isBlogPage(int|string|null $pageId = null): bool
+    {
+        $blogPageId = $this->getBlogPageId();
+
+        return $pageId && $blogPageId && $pageId == $blogPageId;
+    }
+
+    public function getBlogPageId(): string|null
+    {
+        if (! function_exists('theme_option')) {
+            return null;
+        }
+
+        return theme_option('blog_page_id', setting('show_on_front'));
+    }
+
+    public function isCollectionPage(int|string|null $pageId = null): bool
+    {
+        $collectionPageId = $this->getCollectionPageId();
+
+        return $pageId && $collectionPageId && $pageId == $collectionPageId;
+    }
+
+    public function getCollectionPageId(): string|null
+    {
+        if (! function_exists('theme_option')) {
+            return null;
+        }
+
+        return theme_option('collection_page_id', setting('show_on_front'));
+    }
+
     /**
      * @param \Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder $query
      */

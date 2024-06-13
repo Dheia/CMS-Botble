@@ -1,4 +1,5 @@
 @php
+    Theme::set('no-sidebar', true);
     Theme::set('section-name', $subject->name);
     $subject->loadMissing('metadata');
 
