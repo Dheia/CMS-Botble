@@ -20,7 +20,9 @@
             {!! render_object_gallery($galleries, ($subject->first_taxon ? $subject->first_taxon->name : __('Uncategorized'))) !!}
         @endif
         <div class="subject-website">
-            <a href="{{ $subject->website }}" target="_blank">{{ $subject->website }}</a>
+            <a href="{{ $subject->website }}" target="_blank">
+                {!! BaseHelper::renderIcon('ti ti-external-link') !!} {{ $subject->website }}
+            </a>
         </div>
         <div class="subject-content">{!! BaseHelper::clean($subject->content) !!}</div>
         <div class="fb-like" data-href="{{ request()->url() }}" data-layout="standard" data-action="like" data-show-faces="false" data-share="true"></div>

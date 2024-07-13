@@ -5,10 +5,10 @@
     </span>
 @endif
 
-<span class="created_at">
+<!-- <span class="created_at">
     {!! BaseHelper::renderIcon('ti ti-clock') !!} {{ $subject->created_at->translatedFormat('M d Y') }}
 </span>
 
 @if ($subject->author->name)
     <span class="subject-author">{!! BaseHelper::renderIcon('ti ti-user-circle') !!} <span>{{ $subject->author->name }}</span></span>
-@endif
+@endif -->
