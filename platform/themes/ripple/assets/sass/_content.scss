@@ -2023,8 +2023,6 @@ p:empty {
     position: relative;
 
     &.subject__horizontal {
-        display: flex;
-        flex-direction: row;
         background-color: #fff;
         -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
         -moz-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
@@ -2036,9 +2034,7 @@ p:empty {
         }
 
         .subject__content-wrap {
-            flex: 1;
             padding: 16px 20px;
-            width: calc(100% - 350px);
 
             .subject__header {
                 position: relative;
