@@ -13,12 +13,13 @@
         @foreach ($subjects as $subject)
             <article class="subject subject__horizontal mb-40 clearfix">
                 <div class="subject__thumbnail">
-                    {{ RvMedia::image($subject->image, $subject->name, 'medium') }}
                     <a
                         class="subject__overlay"
                         href="{{ $subject->url }}"
                         title="{{ $subject->name }}"
-                    ></a>
+                    >
+                    {{ RvMedia::image($subject->image, $subject->name, 'medium') }}
+                    </a>
                 </div>
                 <div class="subject__content-wrap">
                     <header class="subject__header">

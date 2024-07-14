@@ -2014,7 +2014,18 @@ p:empty {
 .collection {
     position: relative;
 
-    &.collection--list {}
+    &.collection--list {
+        article.subject {
+            .subject__thumbnail {
+                .subject__meta {
+                    position: absolute;
+                    bottom: 1rem;
+                    left: 1rem;
+                    color: var(--color-1st);
+                }
+            }
+        }
+    }
 
     .collection__content {}
 }
@@ -2030,7 +2041,6 @@ p:empty {
 
         .subject__thumbnail {
             position: relative;
-            width: 350px;
         }
 
         .subject__content-wrap {
