@@ -24,7 +24,8 @@
                 {!! BaseHelper::renderIcon('ti ti-external-link') !!} {{ $subject->website }}
             </a>
         </div>
-        <div class="subject-content">{!! BaseHelper::clean($subject->content) !!}</div>
+        <div class="subject-description">{!! BaseHelper::clean($subject->description) !!}</div>
+        <!--<div class="subject-content">{!! BaseHelper::clean($subject->content) !!}</div>-->
         <div class="fb-like" data-href="{{ request()->url() }}" data-layout="standard" data-action="like" data-show-faces="false" data-share="true"></div>
     </div>
     @php $relatedSubjects = get_related_subjects($subject->id, 2); @endphp
