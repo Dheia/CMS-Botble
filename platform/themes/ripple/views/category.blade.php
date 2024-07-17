@@ -1,25 +1,29 @@
 @php Theme::set('section-name', $category->name) @endphp
 
 @if ($posts->isNotEmpty())
-    @foreach ($posts->loadMissing('author') as $post)
-        <article class="post post__horizontal mb-40 clearfix">
-            <div class="post__thumbnail">
-                {{ RvMedia::image($post->image, $post->name, 'medium') }}
-                <a href="{{ $post->url }}" title="{{ $post->name }}" class="post__overlay"></a>
-            </div>
-            <div class="post__content-wrap">
-                <header class="post__header">
-                    <h3 class="post__title"><a href="{{ $post->url }}" title="{{ $post->name }}">{{ $post->name }}</a></h3>
-                    <div class="post__meta">
-                        {!! Theme::partial('blog.post-meta', compact('post')) !!}
-                    </div>
-                </header>
-                <div class="post__content">
-                    <p data-number-line="4">{{ $post->description }}</p>
+    <div class="categories">
+        <div class="categories blog--list">
+        @foreach ($posts->loadMissing('author') as $post)
+            <article class="post post__horizontal mb-40 clearfix">
+                <div class="post__thumbnail">
+                    {{ RvMedia::image($post->image, $post->name, 'medium') }}
+                    <a href="{{ $post->url }}" title="{{ $post->name }}" class="post__overlay"></a>
                 </div>
-            </div>
-        </article>
-    @endforeach
+                <div class="post__content-wrap">
+                    <header class="post__header">
+                        <h3 class="post__title"><a href="{{ $post->url }}" title="{{ $post->name }}">{{ $post->name }}</a></h3>
+                        <div class="post__meta">
+                            {!! Theme::partial('blog.post-meta', compact('post')) !!}
+                        </div>
+                    </header>
+                    <div class="post__content">
+                        <p data-number-line="4">{{ $post->description }}</p>
+                    </div>
+                </div>
+            </article>
+        @endforeach
+        </div>
+    </div>
     <div class="page-pagination text-right">
         {!! $posts->links() !!}
     </div>
