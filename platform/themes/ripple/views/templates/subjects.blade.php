@@ -9,7 +9,7 @@
 @endif
 
 @if ($subjects->isNotEmpty())
-    <div class="subject-list">
+    <div class="subject-list grid grid-cols-1 sm:grid-cols-3 gap-4">
         @foreach ($subjects as $subject)
             <article class="subject subject__horizontal mb-40 clearfix">
                 <div class="subject__thumbnail">
@@ -18,8 +18,11 @@
                         href="{{ $subject->url }}"
                         title="{{ $subject->name }}"
                     >
-                    {{ RvMedia::image($subject->image, $subject->name, 'medium') }}
+                        {{ RvMedia::image($subject->image, $subject->name, 'medium') }}
                     </a>
+                    <div class="subject__meta">
+                        {!! Theme::partial('collection.subject-meta', compact('subject')) !!}
+                    </div>
                 </div>
                 <div class="subject__content-wrap">
                     <header class="subject__header">
@@ -28,9 +31,6 @@
                                 {{ $subject->name }}
                             </a>
                         </h3>
-                        <div class="subject__meta">
-                            {!! Theme::partial('collection.subject-meta', compact('subject')) !!}
-                        </div>
                     </header>
                     <div class="subject__content p-0">
                         <p data-number-line="4">{{ $subject->description }}</p>
