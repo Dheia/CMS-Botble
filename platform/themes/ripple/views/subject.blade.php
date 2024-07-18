@@ -37,6 +37,9 @@
         </div>
         <div class="fb-like" data-href="{{ request()->url() }}" data-layout="standard" data-action="like" data-show-faces="false" data-share="true"></div>
     </div>
+
+    <hr />
+
     @php $relatedSubjects = get_related_subjects($subject->id, 2); @endphp
 
     @if ($relatedSubjects->isNotEmpty())
