@@ -314,6 +314,8 @@ body.show-admin-bar {
 
 .single-content {
     article.entry-wraper {
+        max-width: 100%;
+        
         @import 'reset-styles';
 
         .wp-block-gallery {
@@ -351,6 +353,7 @@ body.show-admin-bar {
 
 .single-content {
     article.entry-wraper {
+        max-width: 100%;
         .single-more-articles {
             ul {
                 list-style: none;

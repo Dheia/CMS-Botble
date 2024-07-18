@@ -10,8 +10,6 @@
             {!! Theme::partial('breadcrumbs') !!}
             <div class="bt-1 border-color-1 mt-30 mb-50"></div>
         </div>
-    @else
-        <div class="mt-30 mb-50"></div>
     @endif
 
     <div class="row">
