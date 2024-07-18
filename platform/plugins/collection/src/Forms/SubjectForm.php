@@ -40,6 +40,7 @@ class SubjectForm extends FormAbstract
                 IsFeaturedFieldOption::make()
                     ->toArray()
             )
+            // Hide content area
             // ->add('content', EditorField::class, ContentFieldOption::make()->allowedShortcodes(false)->toArray())
             ->add('status', SelectField::class, StatusFieldOption::make()->toArray())
             ->when(get_subject_formats(true), function (SubjectForm $form, array $subjectFormats) {

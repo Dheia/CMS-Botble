@@ -14,7 +14,7 @@ use Botble\SeoHelper\SeoOpenGraph;
 use Botble\SeoHelper\SeoTwitter;
 
 /**
- * @since 02/12/2015 14:09 PM
+ * SeoHelperServiceProvider
  */
 class SeoHelperServiceProvider extends ServiceProvider
 {

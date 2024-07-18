@@ -23,9 +23,6 @@ use Botble\Slug\Facades\SlugHelper;
 use Botble\Theme\Events\ThemeRoutingBeforeEvent;
 use Botble\Theme\Facades\SiteMapManager;
 
-/**
- * @since 02/07/2016 09:50 AM
- */
 class CollectionServiceProvider extends ServiceProvider
 {
     use LoadAndPublishDataTrait;

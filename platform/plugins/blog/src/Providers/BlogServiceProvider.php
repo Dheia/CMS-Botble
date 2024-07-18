@@ -27,7 +27,7 @@ use Botble\Theme\Events\ThemeRoutingBeforeEvent;
 use Botble\Theme\Facades\SiteMapManager;
 
 /**
- * @since 02/07/2016 09:50 AM
+ * BlogServiceProvider
  */
 class BlogServiceProvider extends ServiceProvider
 {

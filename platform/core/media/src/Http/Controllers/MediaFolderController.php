@@ -10,7 +10,7 @@ use Exception;
 use Illuminate\Support\Facades\Auth;
 
 /**
- * @since 19/08/2015 07:55 AM
+ * MediaFolderController
  */
 class MediaFolderController extends BaseController
 {

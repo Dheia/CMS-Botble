@@ -34,7 +34,7 @@ use League\Flysystem\AwsS3V3\AwsS3V3Adapter;
 use League\Flysystem\Filesystem;
 
 /**
- * @since 02/07/2016 09:50 AM
+ * MediaServiceProvider
  */
 class MediaServiceProvider extends ServiceProvider
 {

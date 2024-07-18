@@ -16,7 +16,7 @@ use Illuminate\Database\Console\PruneCommand;
 use Illuminate\Foundation\AliasLoader;
 
 /**
- * @since 02/07/2016 09:05 AM
+ * AuditLogServiceProvider
  */
 class AuditLogServiceProvider extends ServiceProvider
 {

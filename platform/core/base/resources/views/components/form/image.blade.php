@@ -31,7 +31,6 @@
     @endif
 
     <div
-        style="width: 8rem"
         @class([
             'preview-image-wrapper mb-1',
             'preview-image-wrapper-not-allow-thumb' => !($allowThumb = Arr::get(

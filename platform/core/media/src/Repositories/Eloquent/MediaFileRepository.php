@@ -17,7 +17,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 
 /**
- * @since 19/08/2015 07:45 AM
+ * MediaFileRepository
  */
 class MediaFileRepository extends RepositoriesAbstract implements MediaFileInterface
 {

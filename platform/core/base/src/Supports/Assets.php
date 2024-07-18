@@ -8,9 +8,6 @@ use Botble\Base\Facades\AdminHelper;
 use Botble\Base\Facades\BaseHelper;
 use Illuminate\Config\Repository;
 
-/**
- * @since 22/07/2015 11:23 PM
- */
 class Assets extends BaseAssets
 {
     protected bool $hasVueJs = false;

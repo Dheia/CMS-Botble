@@ -8,7 +8,7 @@ use Botble\Support\Repositories\Eloquent\RepositoriesAbstract;
 use Illuminate\Database\Query\Builder;
 
 /**
- * @since 19/08/2015 07:45 AM
+ * MediaFolderRepository
  */
 class MediaFolderRepository extends RepositoriesAbstract implements MediaFolderInterface
 {

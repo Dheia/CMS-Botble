@@ -1,7 +1,8 @@
 @if ($post->first_category?->name)
     <span class="post-category">
-        {!! BaseHelper::renderIcon('ti ti-cube') !!}
-        <a href="{{ $post->first_category->url }}">{{ $post->first_category->name }}</a>
+        <a href="{{ $post->first_category->url }}">
+        {!! BaseHelper::renderIcon('ti ti-cube') !!} {{ $post->first_category->name }}
+        </a>
     </span>
 @endif
 

@@ -13,7 +13,7 @@ use Botble\Dashboard\Repositories\Interfaces\DashboardWidgetInterface;
 use Botble\Dashboard\Repositories\Interfaces\DashboardWidgetSettingInterface;
 
 /**
- * @since 02/07/2016 09:50 AM
+ * 
  */
 class DashboardServiceProvider extends ServiceProvider
 {

@@ -12,7 +12,7 @@ use Botble\RequestLog\Repositories\Eloquent\RequestLogRepository;
 use Botble\RequestLog\Repositories\Interfaces\RequestLogInterface;
 
 /**
- * @since 02/07/2016 09:50 AM
+ * RequestLogServiceProvider
  */
 class RequestLogServiceProvider extends ServiceProvider
 {

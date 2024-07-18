@@ -28,7 +28,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 /**
- * @since 19/08/2015 08:05 AM
+ * MediaController
  */
 class MediaController extends BaseController
 {

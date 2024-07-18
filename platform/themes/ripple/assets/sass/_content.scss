@@ -2138,12 +2138,19 @@ p:empty {
 
         .subject__content {
             position: relative;
-            padding: 30px 0;
+            padding: 48px 0;
 
             .subject-website {
                 margin-bottom: 16px;
                 color:#666;
-                border: 1px dotted #ccc;
+
+                a {
+                    padding-bottom: 4px;
+                    border-bottom: 1px dotted #ccc;
+                    &:hover {
+                        color: var(--color-1st);
+                    }
+                }
             }
         }
 

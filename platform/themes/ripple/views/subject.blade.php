@@ -11,21 +11,30 @@
 <article class="subject subject--single">
     <header class="subject__header">
         <h1 class="subject__title">{{ $subject->name }}</h1>
-        <div class="subject__meta">
-            {!! Theme::partial('collection.subject-meta', compact('subject')) !!}
-        </div>
     </header>
     <div class="subject__content">
         @if (defined('GALLERY_MODULE_SCREEN_NAME') && !empty($galleries = gallery_meta_data($subject)))
             {!! render_object_gallery($galleries, ($subject->first_taxon ? $subject->first_taxon->name : __('Uncategorized'))) !!}
         @endif
-        <div class="subject-website">
-            <a href="{{ $subject->website }}" target="_blank">
-                {!! BaseHelper::renderIcon('ti ti-external-link') !!} {{ $subject->website }}
-            </a>
+        <div class="row">
+            <div class="col-lg-2">
+                {{ RvMedia::image($subject->image, $subject->name, 'thumb') }}
+            </div>
+            <div class="col-lg-7">
+                <div class="subject-website">
+                    <a href="{{ $subject->website }}" target="_blank">
+                        {!! BaseHelper::renderIcon('ti ti-external-link') !!} {{ $subject->website }}
+                    </a>
+                </div>
+                <div class="subject-description">{!! BaseHelper::clean($subject->description) !!}</div>
+                <div class="subject__meta">
+                    {!! Theme::partial('collection.subject-meta', compact('subject')) !!}
+                </div>
+            </div>
+            <div class="col-lg-3">
+                ADS
+            </div>
         </div>
-        <div class="subject-description">{!! BaseHelper::clean($subject->description) !!}</div>
-        <!--<div class="subject-content">{!! BaseHelper::clean($subject->content) !!}</div>-->
         <div class="fb-like" data-href="{{ request()->url() }}" data-layout="standard" data-action="like" data-show-faces="false" data-share="true"></div>
     </div>
     @php $relatedSubjects = get_related_subjects($subject->id, 2); @endphp
@@ -44,7 +53,11 @@
                                 </div>
                                 <div class="subject__header">
                                     <p><a href="{{ $relatedItem->url }}" class="subject__title"> {{ $relatedItem->name }}</a></p>
-                                    <div class="subject__meta"><span class="subject__created-at">{{ $subject->created_at->translatedFormat('M d, Y') }}</span></div>
+                                    <div class="subject__meta">
+                                        <span class="subject__created-at">
+                                            {{ $subject->created_at->translatedFormat('M d, Y') }}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>

@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Validator;
 use Throwable;
 
 /**
- * @since 19/08/2015 07:50 AM
+ * MediaFileController
  */
 class MediaFileController extends BaseController
 {

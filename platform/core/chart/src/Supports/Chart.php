@@ -128,8 +128,6 @@ class Chart extends Base
      * This has a significant performance impact, so is disabled by default.
      *
      * @brief Resize
-     *
-     * @since Morris 0.5.0
      */
     protected bool $resize = false;
 
