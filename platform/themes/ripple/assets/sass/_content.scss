@@ -2051,6 +2051,10 @@ p:empty {
 
                 .subject__title {
                     margin-bottom: 10px;
+
+                    &:hover {
+                        color: $color-1st;
+                    }
                 }
 
                 .subject__meta {
@@ -2107,6 +2111,10 @@ p:empty {
                 font-size: 24px;
                 font-weight: 700;
                 letter-spacing: .05em;
+
+                &:hover {
+                    color: $color-1st;
+                }
             }
 
             .subject__meta {
@@ -2150,6 +2158,19 @@ p:empty {
                     &:hover {
                         color: var(--color-1st);
                     }
+                }
+            }
+
+            .subject-description {
+                margin-bottom: 16px;
+                color:#666;
+            }
+
+            .subject-meta {
+                color:#666;
+
+                a:hover {
+                    color: $color-1st
                 }
             }
         }

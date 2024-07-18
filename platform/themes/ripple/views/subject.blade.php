@@ -27,7 +27,7 @@
                     </a>
                 </div>
                 <div class="subject-description">{!! BaseHelper::clean($subject->description) !!}</div>
-                <div class="subject__meta">
+                <div class="subject-meta">
                     {!! Theme::partial('collection.subject-meta', compact('subject')) !!}
                 </div>
             </div>
