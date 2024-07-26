@@ -10,6 +10,10 @@ Theme::registerRoutes(function () {
         Route::middleware(RequiresJsonRequestMiddleware::class)
             ->group(function () {
                 Route::get('ajax/search', 'getSearch')->name('public.ajax.search');
+            });
+
+        Route::middleware(RequiresJsonRequestMiddleware::class)
+            ->group(function () {
                 Route::get('ajax/search_subject', 'getSearchSubject')->name('public.ajax.search_subject');
             });
 
