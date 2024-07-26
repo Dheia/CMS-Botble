@@ -128,7 +128,7 @@
             </div>
             @if (Theme::get('search-type') === 'collection' && is_plugin_active('collection'))
                 <div class="super-search subject-search hide" data-search-url="{{ route('public.ajax.search_subject') }}">
-                    <form class="quick-search" action="{{ route('public.subject_search') }}">
+                    <form class="quick-search" action="{{ route('public.search_subject') }}">
                         <input type="text" name="q" placeholder="{{ __('Type to search subjects...') }}" class="form-control search-input" autocomplete="off">
                         <span class="close-search">&times;</span>
                     </form>
