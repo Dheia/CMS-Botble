@@ -84,7 +84,7 @@
                     <div class="navigation-toggle navigation-toggle--dark" style="display: none"><span></span></div>
                     <div class="float-start">
                         <div class="search-btn c-search-toggler">
-                            {!! BaseHelper::renderIcon('ti ti-search', attributes: ['class' => 'close-search']) !!}
+                            {!! BaseHelper::renderIcon('ti ti-search', attributes: ['class' => 'open-search']) !!}
                         </div>
                         <nav class="navigation navigation--light navigation--fade navigation--fadeLeft">
                             {!!
@@ -126,25 +126,25 @@
                 </div>
                 <div class="clearfix"></div>
             </div>
-            @if (is_plugin_active('blog'))
-                <div class="super-search hide" data-search-url="{{ route('public.ajax.search') }}">
-                    <form class="quick-search" action="{{ route('public.search') }}">
-                        <input type="text" name="q" placeholder="{{ __('Type to search posts...') }}" class="form-control search-input" autocomplete="off">
+            @if (Theme::get('search-type') === 'collection' && is_plugin_active('collection'))
+                <div class="super-search subject-search hide" data-search-url="{{ route('public.ajax.search_subject') }}">
+                    <form class="quick-search" action="{{ route('public.subject_search') }}">
+                        <input type="text" name="q" placeholder="{{ __('Type to search subjects...') }}" class="form-control search-input" autocomplete="off">
                         <span class="close-search">&times;</span>
                     </form>
                     <div class="search-result"></div>
                 </div>
+            @else
+                @if (is_plugin_active('blog'))
+                    <div class="super-search hide" data-search-url="{{ route('public.ajax.search') }}">
+                        <form class="quick-search" action="{{ route('public.search') }}">
+                            <input type="text" name="q" placeholder="{{ __('Type to search posts...') }}" class="form-control search-input" autocomplete="off">
+                            <span class="close-search">&times;</span>
+                        </form>
+                        <div class="search-result"></div>
+                    </div>
+                @endif
             @endif
-
-            <!--@if (is_plugin_active('collection'))-->
-            <!--    <div class="super-search subject-search hide" data-search-url="{{ route('public.ajax.search_subject') }}">-->
-            <!--        <form class="quick-search" action="{{ route('public.subject_search') }}">-->
-            <!--            <input type="text" name="q" placeholder="{{ __('Type to search...') }}" class="form-control search-input" autocomplete="off">-->
-            <!--            <span class="close-search">&times;</span>-->
-            <!--        </form>-->
-            <!--        <div class="search-result"></div>-->
-            <!--    </div>-->
-            <!--@endif-->
         </div>
     </header>
     <main id="page-wrap">

@@ -1,65 +1,83 @@
-let searchInput = $('.search-input')
-let superSearch = $('.super-search')
-let closeSearch = $('.close-search')
-let searchResult = $('.search-result')
-let timeoutID = null
+/**
+ * Ripple
+ */
+class Ripple {
+    constructor() {
+        this.openSearch = $('.open-search');
+        this.superSearch = $('.super-search');
+        this.searchInput = $('.search-input');
+        this.closeSearch = $('.close-search');
+        this.searchResult = $('.search-result');
+        this.timeoutID = null;
+    }
 
-export class Ripple {
     searchFunction(keyword) {
-        clearTimeout(timeoutID)
-        timeoutID = setTimeout(() => {
-            superSearch.removeClass('search-finished')
-            searchResult.fadeOut()
+        clearTimeout(this.timeoutID);
+        this.timeoutID = setTimeout(() => {
+            this.superSearch.removeClass('search-finished');
+            this.searchResult.fadeOut();
             $.ajax({
                 type: 'GET',
                 cache: false,
-                url: superSearch.data('search-url'),
+                url: this.superSearch.data('search-url'),
                 data: {
                     q: keyword,
                 },
                 success: (res) => {
                     if (!res.error) {
-                        searchResult.html(res.data.items)
-                        superSearch.addClass('search-finished')
+                        this.searchResult.html(res.data.items);
+                        this.superSearch.addClass('search-finished');
                     } else {
-                        searchResult.html(res.message)
+                        this.searchResult.html(res.message);
                     }
-                    searchResult.fadeIn(500)
+                    this.searchResult.fadeIn(500);
                 },
                 error: (res) => {
-                    searchResult.html(res.responseText)
-                    searchResult.fadeIn(500)
+                    this.searchResult.html(res.responseText);
+                    this.searchResult.fadeIn(500);
                 },
-            })
-        }, 500)
+            });
+        }, 500);
     }
 
     bindActionToElement() {
-        closeSearch.on('click', (event) => {
-            event.preventDefault()
-            if (closeSearch.hasClass('active')) {
-                superSearch.removeClass('active')
-                searchResult.hide()
-                closeSearch.removeClass('active')
-                $('body').removeClass('overflow')
-                $('.quick-search > .form-control').focus()
+        this.openSearch.on('click', () => {
+            event.preventDefault();
+            if (this.openSearch.hasClass('active')) {
+                this.openSearch.removeClass('active');
+                this.superSearch.removeClass('active');
+                this.superSearch.addClass('hide');
+                $('body').removeClass('overflow');
+                this.searchResult.hide();
+                $('.quick-search > .form-control').focus();
             } else {
-                superSearch.addClass('active')
-                if (searchInput.val() !== '') {
-                    this.searchFunction(searchInput.val())
+                $('body').addClass('overflow');
+                this.openSearch.addClass('active');
+                this.superSearch.removeClass('hide');
+                this.superSearch.addClass('active');
+                if (this.searchInput.val() !== '') {
+                    this.searchFunction(this.searchInput.val());
                 }
-                $('body').addClass('overflow')
-                closeSearch.addClass('active')
             }
-        })
+        });
 
-        searchInput.keyup((e) => {
-            searchInput.val(e.target.value)
-            this.searchFunction(e.target.value)
-        })
+        this.closeSearch.on('click', (event) => {
+            event.preventDefault();
+            this.openSearch.removeClass('active');
+            this.superSearch.removeClass('active');
+            this.superSearch.addClass('hide');
+            $('body').removeClass('overflow');
+            this.searchResult.hide();
+            $('.quick-search > .form-control').focus();
+        });
+
+        this.searchInput.keyup((e) => {
+            this.searchInput.val(e.target.value);
+            this.searchFunction(e.target.value);
+        });
     }
 }
 
 $(() => {
-    new Ripple().bindActionToElement()
-})
+    new Ripple().bindActionToElement();
+});

@@ -1,3 +1,7 @@
+@php
+    Theme::set('search-type', 'collection');
+@endphp
+
 @if($taxons->isNotEmpty())
     <div class="taxon-list mb-40">
         @foreach ($taxons as $taxon)

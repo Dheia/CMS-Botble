@@ -1,6 +1,7 @@
 @php
     Theme::set('no-sidebar', true);
-    Theme::set('section-name', $taxon->name)
+    Theme::set('section-name', $taxon->name);
+    Theme::set('search-type', 'collection');
 @endphp
 
 @if ($subjects->isNotEmpty())

@@ -1,6 +1,8 @@
 @php
     Theme::set('no-sidebar', true);
     Theme::set('section-name', $subject->name);
+    Theme::set('search-type', 'collection');
+    
     $subject->loadMissing('metadata');
 
     if ($bannerImage = $subject->getMetaData('banner_image', true)) {

@@ -27,6 +27,7 @@
             $pageType = 'blog';
         } else if(is_collection_page($page->id)){
             $pageType = 'collection';
+            Theme::set('search-type', 'collection');
         }
     @endphp
     <div class="{{ $pageType . ' ' . $pageType . '--list' }}">
